@@ -52,12 +52,14 @@ public abstract class DataStreamContainer {
 	 * @param dimension
 	 *            The dimension for which a random conditional sample should be
 	 *            drawn.
-	 * @param selectionSize
-	 *            The number of instances that should be selected per dimension.
+	 * @param selectionAlpha
+	 *            The fraction of instances that should be selected per
+	 *            dimension (i.e. the number of selected instances becomes
+	 *            smaller per selection step).
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
 	public abstract double[] getSlicedData(Subspace subspace, int dimension,
-			int selectionSize);
+			double selectionAlpha);
 
 }
