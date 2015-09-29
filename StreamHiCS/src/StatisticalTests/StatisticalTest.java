@@ -1,4 +1,4 @@
-package StatisticalTests;
+package statisticalTests;
 
 public abstract class StatisticalTest {
 	public abstract double calculateDeviation(double[] sample1, double[] sample2);

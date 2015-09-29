@@ -1,4 +1,4 @@
-package StreamDataStructures;
+package streamDataStructures;
 
 import java.util.ArrayList;
 

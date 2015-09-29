@@ -1,11 +1,11 @@
-import java.util.ArrayList;
 import java.util.Random;
 
-import StatisticalTests.StatisticalTest;
-import StatisticalTests.WelchTtest;
-import StreamDataStructures.DataStreamContainer;
-import StreamDataStructures.SlidingWindow;
-import StreamDataStructures.Subspace;
+import statisticalTests.StatisticalTest;
+import statisticalTests.WelchTtest;
+import streamDataStructures.DataStreamContainer;
+import streamDataStructures.SlidingWindow;
+import streamDataStructures.Subspace;
+import streamDataStructures.SubspaceSet;
 import weka.core.Instance;
 
 public class StreamHiCS {
@@ -20,7 +20,10 @@ public class StreamHiCS {
 	 * {@link Subspace} evaluation.
 	 */
 	private int currentCount = 0;
-	private ArrayList<Subspace> correlatedSubspaces;
+	/**
+	 * The set of the currently correlated {@link Subspace}s.
+	 */
+	private SubspaceSet correlatedSubspaces;
 	/**
 	 * Data structure holding the {@link Instance}s.
 	 */
@@ -56,16 +59,29 @@ public class StreamHiCS {
 	/**
 	 * Creates a {@link StreamHiCS} object with the specified update interval.
 	 * 
+	 * @param numberOfDimensions
+	 *            THe number of dimensions of the full space.
 	 * @param updateInterval
 	 *            The number how many {@link Instance}s are observed between
 	 *            evaluations of the correlated {@link Subspace}s.
+	 * @param m
+	 *            The number of Monte Carlo iterations for the estimation of the
+	 *            conditional density.
+	 * @param alpha
+	 *            THe fraction of data that should be selected in the estimation
+	 *            of the conditional density.
+	 * @param threshold
+	 *            The threshold for the contrast. {@link Subspace}s with a
+	 *            contrast above or equal to the threshold are considered as
+	 *            correlated.
 	 */
-	public StreamHiCS(int numberOfDimensions, int updateInterval, double alpha,
-			double threshold) {
-		this.updateInterval = updateInterval;
-		correlatedSubspaces = new ArrayList<Subspace>();
+	public StreamHiCS(int numberOfDimensions, int updateInterval, int m,
+			double alpha, double threshold) {
+		correlatedSubspaces = new SubspaceSet();
 		dataStreamContainer = new SlidingWindow(numberOfDimensions, 100);
 		this.numberOfDimensions = numberOfDimensions;
+		this.updateInterval = updateInterval;
+		this.m = m;
 		this.alpha = alpha;
 		this.threshold = threshold;
 		// Try out other tests
@@ -83,6 +99,7 @@ public class StreamHiCS {
 	 */
 	public void add(Instance instance) {
 		dataStreamContainer.add(instance);
+		currentCount++;
 		if (currentCount >= updateInterval) {
 			evaluateCorrelatedSubspaces();
 			currentCount = 0;
@@ -106,29 +123,52 @@ public class StreamHiCS {
 	 */
 	private void evaluateCorrelatedSubspaces() {
 		double contrast = 0;
+		boolean update = false;
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			buildCorrelatedSubspaces();
-		}
-		for (Subspace subspace : correlatedSubspaces) {
-			contrast = evaluateSubspaceContrast(subspace);
-			System.out.println(contrast);
+		} else {
+			for (Subspace subspace : correlatedSubspaces.getSubspaces()) {
+				contrast = evaluateSubspaceContrast(subspace);
+				System.out.println(contrast);
 
-			// If contrast has decreased in some subspaces we build new
-			// subspaces.
+				// If contrast has decreased below threshold it is discarded.
+				if (contrast < threshold) {
+					correlatedSubspaces.removeSubspace(subspace);
+					update = true;
+				}
 
+				// If a subspace has changed we should update the correlated
+				// subspaces.
+				if (update) {
+					buildCorrelatedSubspaces();
+				}
+			}
 		}
+
+		/*
+		 * // Parallel version List<Double> res =
+		 * correlatedSubspaces.parallelStream().map(s -> { return
+		 * evaluateSubspaceContrast(s); }).collect(Collectors.toList());
+		 * 
+		 * for (Double d : res) { if (d < threshold) { update = true; } }
+		 */
 	}
 
+	/**
+	 * Builds a new set of correlated subspaces. The old ones are kept if they
+	 * still are correlated.
+	 */
 	private void buildCorrelatedSubspaces() {
-		ArrayList<Subspace> c_K = new ArrayList<Subspace>();
+		SubspaceSet c_K = new SubspaceSet();
 		// Create all 2-dimensional candidates
 		for (int i = 0; i < numberOfDimensions; i++) {
-			for (int j = 0; j < numberOfDimensions && i < j; j++) {
+			for (int j = i + 1; j < numberOfDimensions; j++) {
 				Subspace s = new Subspace();
 				s.addDimension(i);
 				s.addDimension(j);
-				c_K.add(s);
+				s.sort();
+				c_K.addSubspace(s);
 			}
 		}
 
@@ -136,51 +176,63 @@ public class StreamHiCS {
 		apriori(c_K);
 	}
 
-	private void apriori(ArrayList<Subspace> c_K) {
-		if (!c_K.isEmpty()) {
-			correlatedSubspaces = c_K;
-			ArrayList<Subspace> c_Kplus1 = new ArrayList<Subspace>();
-			for (int i = 0; i < c_K.size(); i++) {
-				for (int j = 0; j < c_K.size() && i < j; j++) {
-					// Creating new candidates
-					Subspace kPlus1Candidate = merge(c_K.get(i), c_K.get(j));
+	/**
+	 * Carries out the apriori-algorithm recursively.
+	 * 
+	 * @param c_K
+	 *            The current candidate set for correlated subspaces in the
+	 *            recursion.
+	 */
+	private void apriori(SubspaceSet c_K) {
+		SubspaceSet c_Kplus1 = new SubspaceSet();
+		for (int i = 0; i < c_K.size(); i++) {
+			for (int j = i + 1; j < c_K.size(); j++) {
+				// Creating new candidates
+				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i),
+						c_K.getSubspace(j));
 
-					if (kPlus1Candidate != null) {
-						// Pruning
-						if (checkCandidates(c_K, kPlus1Candidate)) {
-							c_Kplus1.add(kPlus1Candidate);
-						}
-						c_Kplus1.add(kPlus1Candidate);
+				if (kPlus1Candidate != null) {
+					// Pruning
+					if (checkCandidates(c_K, kPlus1Candidate)) {
+						c_Kplus1.addSubspace(kPlus1Candidate);
 					}
 				}
 			}
+		}
+		if (!c_Kplus1.isEmpty()) {
 			// Recurse
 			apriori(c_Kplus1);
+		} else {
+			correlatedSubspaces.addSubspaces(c_K);
 		}
+
+		// TODO: Parallel excecution? At least checking procedure -> forEach()
 	}
 
-	private Subspace merge(Subspace s1, Subspace s2) {
-		int k = s1.getSize();
-		for (int i = 0; i < k - 1; i++) {
-			if (s1.getDimension(i) != s2.getDimension(i)) {
-				return null;
-			}
-		}
-		s1.addDimension(s2.getDimension(k));
-		return s1;
-
-	}
-
-	private boolean checkCandidates(ArrayList<Subspace> c_K, Subspace s) {
-		// Does the candidate contain a subset, which is not correlated?
-		Subspace sKminus1 = s.copy();
-		for (int i = 0; i < s.getSize(); i++) {
-			sKminus1.discardDimension(i);
-			if (!c_K.contains(sKminus1)) {
-				return false;
-			}
-			sKminus1.addDimension(i);
-		}
+	/**
+	 * Checks if a candidate for a correlated subspace is a correlated subspace.
+	 * 
+	 * @param c_K
+	 *            The candidate set.
+	 * @param s
+	 *            the {@link Subspace}.
+	 * @return True is the subspace is correlated, false otherwise.
+	 */
+	private boolean checkCandidates(SubspaceSet c_K, Subspace s) {
+		/*
+		 * Formally, we are not allowed to apply apriori monocity principles.
+		 * 
+		 * 
+		 * // If a candidate is a subset of a subspace which is correlated //
+		 * (contrast above or equal to threshold), then the candidate is //
+		 * correlated, too.
+		 * 
+		 * 
+		 * // Does the candidate contain a subset, which is not correlated?
+		 * Subspace sKminus1 = s.copy(); for (int i = 0; i < s.getSize(); i++) {
+		 * sKminus1.discardDimension(i); if (!c_K.contains(sKminus1)) { return
+		 * false; } sKminus1.addDimension(i); }
+		 */
 
 		// Is the contrast higher or equal to the threshold?
 		if (evaluateSubspaceContrast(s) < threshold) {
@@ -199,6 +251,8 @@ public class StreamHiCS {
 	 * @return The contrast of the given {@link Subspace}.
 	 */
 	private double evaluateSubspaceContrast(Subspace subspace) {
+		// TODO: Parallel exceution? But in higher level
+
 		// Variable for collecting the intermediate results of the iterations
 		double sum = 0;
 

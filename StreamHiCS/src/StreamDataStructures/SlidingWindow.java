@@ -1,4 +1,4 @@
-package StreamDataStructures;
+package streamDataStructures;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -65,9 +65,9 @@ public class SlidingWindow extends DataStreamContainer {
 		this.windowLength = windowLength;
 		this.instanceQueue = new ArrayList<Queue<Double>>(numberOfDimensions);
 		// Creating all the single queues
-		for (Queue<Double> q : instanceQueue) {
+		for (int i = 0; i < numberOfDimensions; i++) {
 			// Array Deque is not thread safe!
-			q = new ArrayDeque<Double>();
+			instanceQueue.add(new ArrayDeque<Double>());
 		}
 		this.numberOfDimensions = numberOfDimensions;
 		generator = new Random();
@@ -110,110 +110,65 @@ public class SlidingWindow extends DataStreamContainer {
 	@Override
 	public double[] getSlicedData(Subspace subspace, int dimension,
 			double selectionAlpha) {
-		// Store the indexes of all selected instances in a bit vector
-		boolean[] selectedObjects = new boolean[numberOfInstances];
-		for (int i = 0; i < numberOfInstances; i++) {
-			selectedObjects[i] = false;
-		}
-		Double[] tempData = new Double[numberOfInstances];
-		double[] dimData = new double[numberOfInstances];
-
 		// Get subspace dimensions and shuffle them
 		int[] dimensions = subspace.getDimensions();
 		MathArrays.shuffle(dimensions);
 
-		int selectionSize;
+		double[] dimData;
+		ArrayList<Integer> selectedIndexes = new ArrayList<Integer>(
+				numberOfInstances);
+		// Fill the list with all the indexes
+		for (int i = 0; i < numberOfInstances; i++) {
+			selectedIndexes.add(i);
+		}
+		int selectionSize = (int) (numberOfInstances * selectionAlpha);
 
 		for (int dim : dimensions) {
 			if (dim != dimension) {
-				selectionSize = (int) (countUnselected(selectedObjects) * selectionAlpha);
-				// Select a random block of sorted data of size selectionSize
-				// for that dimension
-				tempData = instanceQueue.get(dim).toArray(tempData);
-				// Cast all elements to double
-				for (int i = 0; i < numberOfInstances; i++) {
-					dimData[i] = (double) tempData[i];
-				}
-				// Sort the array indexes according to the double array
+				// Get all the data for the specific dimension that is selected
+				dimData = getSelectedData(dim, selectedIndexes);
 				indexComparator.setArray(dimData);
-				Integer[] indexes = indexComparator.createIndexArray();
-				Arrays.sort(indexes, indexComparator);
+				Arrays.sort(selectedIndexes, indexComparator);
 
-				// Select a random starting point
 				if (selectionSize > numberOfInstances) {
 					// Take all data
-					maskIndexes(selectedObjects, indexes, 0, selectionSize);
+					selectIndexes(selectedIndexes, 0, selectionSize);
 				} else {
 					// Start at a random point and take the selectionSize
 					int rnd = generator.nextInt(numberOfInstances
 							- selectionSize + 1);
-					maskIndexes(selectedObjects, indexes, rnd, selectionSize);
+					selectIndexes(selectedIndexes, rnd, selectionSize);
 				}
+
+				selectionSize = (int) (selectedIndexes.size() * selectionAlpha);
 			}
 		}
 
-		// Get the data from dimension
-		tempData = new Double[numberOfInstances];
-		tempData = instanceQueue.get(dimension).toArray(tempData);
-		dimData = new double[numberOfInstances];
-		// Cast all elements to double
-		for (int i = 0; i < numberOfInstances; i++) {
-			dimData[i] = (double) tempData[i];
-		}
-
-		// Select all the data from the given dimension according to the mask
-		double[] slicedData = new double[numberOfDimensions
-				- countUnselected(selectedObjects)];
-		int j = 0;
-		for (int index = 0; index < numberOfInstances; index++) {
-			if (selectedObjects[index]) {
-				slicedData[j] = dimData[index];
-				j++;
-			}
-		}
-
-		return slicedData;
+		// Get the selected data from dimension
+		return getSelectedData(dimension, selectedIndexes);
 	}
 
-	/**
-	 * Masks the mask array at the indexes specified in the indexes array
-	 * starting at a specific point and taking a specific amount.
-	 * 
-	 * @param mask
-	 *            The mask array
-	 * @param indexes
-	 *            The array containing the indexes.
-	 * @param startingPoint
-	 *            The point from which index to start masking.
-	 * @param selectionSize
-	 *            The number of indexes which should be masked.
-	 */
-	private void maskIndexes(boolean[] mask, Integer[] indexes,
-			int startingPoint, int selectionSize) {
-		if (startingPoint < 0 || startingPoint + selectionSize > mask.length) {
+	private double[] getSelectedData(int dimension,
+			ArrayList<Integer> selectedIndexes) {
+		double[] data = new double[selectedIndexes.size()];
+		Double[] tempData = new Double[numberOfInstances];
+		tempData = instanceQueue.get(dimension).toArray(tempData);
+		for (int i = 1; i < selectedIndexes.size(); i++) {
+			data[i] = tempData[selectedIndexes.get(i)];
+		}
+		return data;
+	}
+
+	private void selectIndexes(ArrayList<Integer> indexes, int startingPoint,
+			int selectionSize) {
+		if (startingPoint < 0 || startingPoint + selectionSize > indexes.size()) {
 			throw new IllegalArgumentException("Selection outside of range.");
 		}
-		for (int i = startingPoint; i < startingPoint + selectionSize; i++) {
-			mask[indexes[i]] = true;
-		}
-	}
-
-	/**
-	 * Returns the number of false, i.e. unselected, entries in the given
-	 * boolean array.
-	 * 
-	 * @param mask
-	 *            THe boolean array
-	 * @return The number of false, i.e. unselected, entries.
-	 */
-	private int countUnselected(boolean[] mask) {
-		int count = 0;
-		for (int i = 0; i < mask.length; i++) {
-			if (!mask[i]) {
-				count++;
+		// Keep all the indexes within the range
+		for (int i = 0; i < indexes.size(); i++) {
+			if (!(startingPoint <= i && i < startingPoint + selectionSize)) {
+				indexes.remove(i);
 			}
 		}
-		return count;
 	}
-
 }

@@ -1,4 +1,4 @@
-package StatisticalTests;
+package statisticalTests;
 
 import org.apache.commons.math3.stat.inference.TTest;
 

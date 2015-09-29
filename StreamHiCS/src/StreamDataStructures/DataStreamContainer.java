@@ -1,4 +1,4 @@
-package StreamDataStructures;
+package streamDataStructures;
 
 import weka.core.Instance;
 
