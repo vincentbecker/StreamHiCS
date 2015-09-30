@@ -96,6 +96,13 @@ public class SubspaceSet {
 	}
 
 	/**
+	 * Clears the set.
+	 */
+	public void clear() {
+		subspaces.clear();
+	}
+
+	/**
 	 * Returns a string representation of this object.
 	 * 
 	 * @return A string representation of this object.

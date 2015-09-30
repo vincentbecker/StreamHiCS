@@ -72,6 +72,12 @@ public class Subspace {
 		return result;
 	}
 
+	/**
+	 * Discards a dimension at the given index from this {@link Subspace}.
+	 * 
+	 * @param index
+	 *            The index of the dimension.
+	 */
 	public void discardDimension(int index) {
 		dimensions.remove(index);
 	}

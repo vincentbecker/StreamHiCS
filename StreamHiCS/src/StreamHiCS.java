@@ -78,7 +78,7 @@ public class StreamHiCS {
 	public StreamHiCS(int numberOfDimensions, int updateInterval, int m,
 			double alpha, double threshold) {
 		correlatedSubspaces = new SubspaceSet();
-		dataStreamContainer = new SlidingWindow(numberOfDimensions, 100);
+		dataStreamContainer = new SlidingWindow(numberOfDimensions, 1000);
 		this.numberOfDimensions = numberOfDimensions;
 		this.updateInterval = updateInterval;
 		this.m = m;
@@ -103,6 +103,7 @@ public class StreamHiCS {
 		if (currentCount >= updateInterval) {
 			evaluateCorrelatedSubspaces();
 			currentCount = 0;
+			System.out.println(correlatedSubspaces.toString());
 		}
 	}
 
@@ -122,27 +123,32 @@ public class StreamHiCS {
 	 * searches for new ones.
 	 */
 	private void evaluateCorrelatedSubspaces() {
-		double contrast = 0;
-		boolean update = false;
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			buildCorrelatedSubspaces();
 		} else {
-			for (Subspace subspace : correlatedSubspaces.getSubspaces()) {
+			double contrast = 0;
+			boolean update = false;
+			// This variable is needed to build a workaround of problems with
+			// the iterator when removing elements at the same time
+			int l = correlatedSubspaces.size();
+			for (int i = 1; i < l && !update; i++) {
+				Subspace subspace = correlatedSubspaces.getSubspace(i);
 				contrast = evaluateSubspaceContrast(subspace);
-				System.out.println(contrast);
+				// System.out.println(contrast);
 
-				// If contrast has decreased below threshold it is discarded.
+				// If contrast has decreased below threshold we start a new
+				// evaluation.
 				if (contrast < threshold) {
-					correlatedSubspaces.removeSubspace(subspace);
 					update = true;
+					// l--;
 				}
-
-				// If a subspace has changed we should update the correlated
-				// subspaces.
-				if (update) {
-					buildCorrelatedSubspaces();
-				}
+			}
+			// If a subspace has changed we should update the correlated
+			// subspaces.
+			if (update) {
+				correlatedSubspaces.clear();
+				buildCorrelatedSubspaces();
 			}
 		}
 
@@ -162,13 +168,17 @@ public class StreamHiCS {
 	private void buildCorrelatedSubspaces() {
 		SubspaceSet c_K = new SubspaceSet();
 		// Create all 2-dimensional candidates
-		for (int i = 0; i < numberOfDimensions; i++) {
+		for (int i = 0; i < numberOfDimensions - 1; i++) {
 			for (int j = i + 1; j < numberOfDimensions; j++) {
 				Subspace s = new Subspace();
 				s.addDimension(i);
 				s.addDimension(j);
-				s.sort();
-				c_K.addSubspace(s);
+				// Only use subspace for the further process which are
+				// correlated
+				if (checkCandidates(c_K, s)) {
+					correlatedSubspaces.addSubspace(s);
+					c_K.addSubspace(s);
+				}
 			}
 		}
 
@@ -185,8 +195,13 @@ public class StreamHiCS {
 	 */
 	private void apriori(SubspaceSet c_K) {
 		SubspaceSet c_Kplus1 = new SubspaceSet();
-		for (int i = 0; i < c_K.size(); i++) {
-			for (int j = i + 1; j < c_K.size(); j++) {
+		// The subspaces in the set are sorted. To speed up the process we can
+		// stop looking
+		// for a merge as soon as we have found the first "no merge" case
+		boolean continueMerging = true;
+		for (int i = 0; i < c_K.size() - 1; i++) {
+			continueMerging = true;
+			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
 				// Creating new candidates
 				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i),
 						c_K.getSubspace(j));
@@ -196,14 +211,17 @@ public class StreamHiCS {
 					if (checkCandidates(c_K, kPlus1Candidate)) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
 					}
+				} else {
+					continueMerging = false;
 				}
 			}
 		}
 		if (!c_Kplus1.isEmpty()) {
+			// Add all the subspaces from c_Kplus1 with contrast higher or equal
+			// to the threshold to the correlated subspaces.
+			correlatedSubspaces.addSubspaces(c_Kplus1);
 			// Recurse
 			apriori(c_Kplus1);
-		} else {
-			correlatedSubspaces.addSubspaces(c_K);
 		}
 
 		// TODO: Parallel excecution? At least checking procedure -> forEach()
@@ -255,16 +273,17 @@ public class StreamHiCS {
 
 		// Variable for collecting the intermediate results of the iterations
 		double sum = 0;
+		double selectionAlpha;
 
 		// Do Monte Carlo iterations
-		for (int i = 0; i < m - 1; i++) {
+		for (int i = 0; i < m; i++) {
 
 			// Get random dimension
 			int rnd = generator.nextInt(subspace.getSize());
 			int dim = subspace.getDimension(rnd);
 
 			// Calculate the number of instances selected per dimension
-			double selectionAlpha = Math.pow(alpha, 1.0 / subspace.getSize());
+			selectionAlpha = Math.pow(alpha, 1.0 / subspace.getSize());
 			// Get the projected data
 			double[] dimProjectedData = dataStreamContainer
 					.getProjectedData(dim);
@@ -278,5 +297,14 @@ public class StreamHiCS {
 
 		// Return the mean of the intermediate results
 		return sum / m;
+	}
+
+	/**
+	 * Returns a string representation of this object.
+	 * 
+	 * @return A string representation of this object.
+	 */
+	public String toString() {
+		return correlatedSubspaces.toString();
 	}
 }

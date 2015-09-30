@@ -4,13 +4,13 @@ import moa.streams.generators.RandomRBFGenerator;
 public class Main {
 
 	public static void main(String[] args) {
-		int numInstances = 1000;
+		int numInstances = 10000;
 		RandomRBFGenerator stream = new RandomRBFGenerator();
 		stream.prepareForUse();
 		int numberOfDimensions = stream.numAttsOption.getValue();
 
-		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 100, 10,
-				0.25, 0.7);
+		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 1000, 10,
+				0.3, 0.8);
 
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
