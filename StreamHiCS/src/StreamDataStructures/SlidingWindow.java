@@ -4,8 +4,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Queue;
 
-import org.apache.commons.math3.util.MathArrays;
-
 import weka.core.Instance;
 
 /**
@@ -49,8 +47,7 @@ public class SlidingWindow extends DataStreamContainer {
 	 */
 	public SlidingWindow(int numberOfDimensions, int windowLength) {
 		if (windowLength <= 0) {
-			throw new IllegalArgumentException(
-					"The window length cannot be 0 or negative.");
+			throw new IllegalArgumentException("The window length cannot be 0 or negative.");
 		}
 		this.windowLength = windowLength;
 		this.instanceQueue = new ArrayList<Queue<Double>>(numberOfDimensions);
@@ -79,6 +76,14 @@ public class SlidingWindow extends DataStreamContainer {
 	}
 
 	@Override
+	public void clear() {
+		for (Queue<Double> q : instanceQueue) {
+			q.clear();
+		}
+		numberOfInstances = 0;
+	}
+
+	@Override
 	public int getNumberOfInstances() {
 		return numberOfInstances;
 	}
@@ -96,30 +101,22 @@ public class SlidingWindow extends DataStreamContainer {
 	}
 
 	@Override
-	public double[] getSlicedData(Subspace subspace, int dimension,
-			double selectionAlpha) {
-		// Get subspace dimensions and shuffle them
-		int[] dimensions = subspace.getDimensions();
-		MathArrays.shuffle(dimensions);
-
+	public double[] getSlicedData(int[] dimensions, double selectionAlpha) {
 		double[] dimData;
-		Selection selectedIndexes = new Selection(numberOfInstances,
-				selectionAlpha);
+		Selection selectedIndexes = new Selection(numberOfInstances, selectionAlpha);
 		// Fill the list with all the indexes
 		selectedIndexes.fillRange();
-
-		for (int dim : dimensions) {
-			if (dim != dimension) {
-				// Get all the data for the specific dimension that is selected
-				dimData = getSelectedData(dim, selectedIndexes);
-				// Reduce the number of indexes according to a new selection in
-				// the current dimension
-				selectedIndexes.select(dimData);
-			}
+		
+		for(int i = 0; i < dimensions.length - 1; i++){
+			// Get all the data for the specific dimension that is selected
+			dimData = getSelectedData(dimensions[i], selectedIndexes);
+			// Reduce the number of indexes according to a new selection in
+			// the current dimension
+			selectedIndexes.select(dimData);
 		}
-
-		// Get the selected data from dimension
-		return getSelectedData(dimension, selectedIndexes);
+		
+		// Get the selected data from the last dimension
+		return getSelectedData(dimensions[dimensions.length - 1], selectedIndexes);
 	}
 
 	/**

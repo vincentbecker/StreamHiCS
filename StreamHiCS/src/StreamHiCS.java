@@ -1,5 +1,5 @@
-import java.util.Random;
-
+import org.apache.commons.math3.util.MathArrays;
+import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
 import statisticalTests.WelchTtest;
 import streamDataStructures.DataStreamContainer;
@@ -51,16 +51,12 @@ public class StreamHiCS {
 	 * marginal sample and the conditional (sliced) sample.
 	 */
 	private StatisticalTest statisticalTest;
-	/**
-	 * A generator for random numbers.
-	 */
-	private Random generator;
 
 	/**
 	 * Creates a {@link StreamHiCS} object with the specified update interval.
 	 * 
 	 * @param numberOfDimensions
-	 *            THe number of dimensions of the full space.
+	 *            The number of dimensions of the full space.
 	 * @param updateInterval
 	 *            The number how many {@link Instance}s are observed between
 	 *            evaluations of the correlated {@link Subspace}s.
@@ -75,10 +71,9 @@ public class StreamHiCS {
 	 *            contrast above or equal to the threshold are considered as
 	 *            correlated.
 	 */
-	public StreamHiCS(int numberOfDimensions, int updateInterval, int m,
-			double alpha, double threshold) {
+	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double threshold) {
 		correlatedSubspaces = new SubspaceSet();
-		dataStreamContainer = new SlidingWindow(numberOfDimensions, 1000);
+		dataStreamContainer = new SlidingWindow(numberOfDimensions, 10000);
 		this.numberOfDimensions = numberOfDimensions;
 		this.updateInterval = updateInterval;
 		this.m = m;
@@ -86,7 +81,16 @@ public class StreamHiCS {
 		this.threshold = threshold;
 		// Try out other tests
 		statisticalTest = new WelchTtest();
-		generator = new Random();
+	}
+
+	/**
+	 * Returns the correlated {@link Subspace}s.
+	 * 
+	 * @return The {@link SubspaceSet} containing the currently correlated
+	 *         {@link Subspace}s.
+	 */
+	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
+		return correlatedSubspaces;
 	}
 
 	/**
@@ -103,8 +107,16 @@ public class StreamHiCS {
 		if (currentCount >= updateInterval) {
 			evaluateCorrelatedSubspaces();
 			currentCount = 0;
-			System.out.println(correlatedSubspaces.toString());
+			System.out.println("Correlated: " + correlatedSubspaces.toString());
 		}
+	}
+
+	/**
+	 * Clears all stored data.
+	 */
+	public void clear() {
+		dataStreamContainer.clear();
+		currentCount = 0;
 	}
 
 	/**
@@ -203,8 +215,7 @@ public class StreamHiCS {
 			continueMerging = true;
 			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
 				// Creating new candidates
-				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i),
-						c_K.getSubspace(j));
+				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i), c_K.getSubspace(j));
 
 				if (kPlus1Candidate != null) {
 					// Pruning
@@ -268,35 +279,45 @@ public class StreamHiCS {
 	 *            calculated.
 	 * @return The contrast of the given {@link Subspace}.
 	 */
-	private double evaluateSubspaceContrast(Subspace subspace) {
+	public double evaluateSubspaceContrast(Subspace subspace) {
 		// TODO: Parallel exceution? But in higher level
 
 		// Variable for collecting the intermediate results of the iterations
 		double sum = 0;
+		// A deviation could be NaN, so we wont count that calculation
+		int numberOfCorrectTests = 0;
+		int[] shuffledDimensions;
 		double selectionAlpha;
-
+		double deviation;
 		// Do Monte Carlo iterations
 		for (int i = 0; i < m; i++) {
-
-			// Get random dimension
-			int rnd = generator.nextInt(subspace.getSize());
-			int dim = subspace.getDimension(rnd);
-
+			shuffledDimensions = subspace.getDimensions();
+			// Shuffle dimensions
+			MathArrays.shuffle(shuffledDimensions);
 			// Calculate the number of instances selected per dimension
-			selectionAlpha = Math.pow(alpha, 1.0 / subspace.getSize());
+			selectionAlpha = Math.pow(alpha, 1.0 / subspace.size());
 			// Get the projected data
 			double[] dimProjectedData = dataStreamContainer
-					.getProjectedData(dim);
+					.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
 			// Get the randomly sliced data
-			double[] slicedData = dataStreamContainer.getSlicedData(subspace,
-					dim, selectionAlpha);
+			// double[] slicedData = dataStreamContainer.getSlicedData(subspace,
+			// dim, selectionAlpha);
+			double[] slicedData = dataStreamContainer.getSlicedData(shuffledDimensions, selectionAlpha);
 			// Calculate the deviation and add it to the overall sum
-			sum += statisticalTest.calculateDeviation(dimProjectedData,
-					slicedData);
+			deviation = statisticalTest.calculateDeviation(dimProjectedData, slicedData);
+			if (!Double.isNaN(deviation)) {
+				sum += deviation;
+				numberOfCorrectTests++;
+			}
 		}
 
-		// Return the mean of the intermediate results
-		return sum / m;
+		// Return the mean of the intermediate results. If all results were NaN,
+		// 0 is returned.
+		double mean = 0;
+		if (numberOfCorrectTests > 0) {
+			mean = sum / numberOfCorrectTests;
+		}
+		return mean;
 	}
 
 	/**

@@ -103,10 +103,50 @@ public class SubspaceSet {
 	}
 
 	/**
+	 * Check if this set and another set are equal, meaning they contain the
+	 * same {@link Subspace}s.
+	 * 
+	 * @param set2
+	 *            The other {@link SubspaceSet}.
+	 * @return True, if equal, false otherwise.
+	 */
+	@Override
+	public boolean equals(Object set2) {
+		if (!(set2 instanceof SubspaceSet)) {
+			return false;
+		}
+		if (this == set2) {
+			return true;
+		}
+		SubspaceSet setToTest = (SubspaceSet) set2;
+		if (this.size() != setToTest.size()) {
+			return false;
+		}
+		for (Subspace s : subspaces) {
+			if (!setToTest.subspaces.contains(s)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Checks if this set contains the given {@link Subspace}.
+	 * 
+	 * @param s
+	 *            The subspace
+	 * @return True, if the {@link Subspace} is contained, false otherwise.
+	 */
+	public boolean contains(Subspace s) {
+		return subspaces.contains(s);
+	}
+
+	/**
 	 * Returns a string representation of this object.
 	 * 
 	 * @return A string representation of this object.
 	 */
+	@Override
 	public String toString() {
 		String rep = "";
 		for (Subspace s : subspaces) {

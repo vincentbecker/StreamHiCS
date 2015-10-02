@@ -20,6 +20,11 @@ public abstract class DataStreamContainer {
 	public abstract void add(Instance instance);
 
 	/**
+	 * Clears all stored data.
+	 */
+	public abstract void clear();
+
+	/**
 	 * Returns the number of {@link Instance}s currently contained.
 	 * 
 	 * @return The number of {@link Instance}s currently contained.
@@ -39,18 +44,14 @@ public abstract class DataStreamContainer {
 
 	/**
 	 * Returns the one dimensional data of a random conditional sample
-	 * corresponding to the given dimension and the {@link Subspace} which
+	 * corresponding to the last dimension in the int[] and the {@link Subspace} which
 	 * contains this dimension. On every dimension in the {@link Subspace}
 	 * except the specified one random range selections on instances (of the
 	 * specified selection size) are done, representing a conditional sample for
 	 * the given dimension.
 	 * 
-	 * @param subspace
-	 *            The {@link Subspace} which contains the given dimension and on
-	 *            which the constraints are placed.
-	 * 
-	 * @param dimension
-	 *            The dimension for which a random conditional sample should be
+	 * @param dimensions
+	 *            The dimensions. The last one is the one for which a random conditional sample should be
 	 *            drawn.
 	 * @param selectionAlpha
 	 *            The fraction of instances that should be selected per
@@ -59,7 +60,5 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
-	public abstract double[] getSlicedData(Subspace subspace, int dimension,
-			double selectionAlpha);
-
+	public abstract double[] getSlicedData(int[] dimensions, double selectionAlpha);
 }

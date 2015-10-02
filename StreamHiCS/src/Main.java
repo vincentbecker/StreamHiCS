@@ -1,16 +1,22 @@
 import weka.core.Instance;
 import moa.streams.generators.RandomRBFGenerator;
+import streams.CorrelatedStream;
+import streams.GaussianStream;
 
 public class Main {
 
 	public static void main(String[] args) {
-		int numInstances = 10000;
-		RandomRBFGenerator stream = new RandomRBFGenerator();
-		stream.prepareForUse();
-		int numberOfDimensions = stream.numAttsOption.getValue();
+		int numInstances = 100000;
+		// RandomRBFGenerator stream = new RandomRBFGenerator();
+		// stream.prepareForUse();
+		// int numberOfDimensions = stream.numAttsOption.getValue();
+		// CorrelatedStream stream = new CorrelatedStream();
+		double[][] covariances = { { 1, 0.9, 0, 0, 0 }, { 0.9, 1, 0, 0, 0 }, { 0, 0, 1, 0.5, 0.3 },
+				{ 0, 0, 0.5, 1, 0.3 }, { 0, 0, 0.3, 0.3, 1 } };
+		GaussianStream stream = new GaussianStream(covariances);
+		int numberOfDimensions = stream.getNumberOfDimensions();
 
-		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 1000, 10,
-				0.3, 0.8);
+		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 10000, 20, 0.3, 1);
 
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {

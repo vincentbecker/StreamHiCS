@@ -23,6 +23,19 @@ public class Subspace {
 	}
 
 	/**
+	 * Creates a {@link Subspace} object and adds the given dimensions.
+	 * 
+	 * @param dimensions
+	 *            A list of dimensions of variable length.
+	 */
+	public Subspace(int... dimensions) {
+		this.dimensions = new ArrayList<Integer>();
+		for (int i = 0; i < dimensions.length; i++) {
+			addDimension(dimensions[i]);
+		}
+	}
+
+	/**
 	 * Adds the specified dimension to the {@link Subspace}. If the dimension is
 	 * already contained in the {@link Subspace} nothing is changed.
 	 * 
@@ -40,7 +53,7 @@ public class Subspace {
 	 * 
 	 * @return The number of dimensions in the {@link Subspace}.
 	 */
-	public int getSize() {
+	public int size() {
 		return dimensions.size();
 	}
 
@@ -89,7 +102,7 @@ public class Subspace {
 	 */
 	public Subspace copy() {
 		Subspace c = new Subspace();
-		for (int i = 0; i < this.getSize(); i++) {
+		for (int i = 0; i < this.size(); i++) {
 			c.dimensions.add(this.dimensions.get(i));
 		}
 		return c;
@@ -102,12 +115,20 @@ public class Subspace {
 	 *            The other {@link Subspace}.
 	 * @return
 	 */
-	public boolean equals(Subspace s2) {
-		if (this.getSize() != s2.getSize()) {
+	@Override
+	public boolean equals(Object s2) {
+		if (!(s2 instanceof Subspace)) {
+			return false;
+		}
+		if (this == s2) {
+			return true;
+		}
+		Subspace subspaceToTest = (Subspace) s2;
+		if (this.size() != subspaceToTest.size()) {
 			return false;
 		}
 		for (int dimension : dimensions) {
-			if (!s2.dimensions.contains(dimension)) {
+			if (!subspaceToTest.dimensions.contains(dimension)) {
 				return false;
 			}
 		}
@@ -127,7 +148,7 @@ public class Subspace {
 	 *         {@link Subspace}s could be merged, null otherwise.
 	 */
 	public static Subspace merge(Subspace s1, Subspace s2) {
-		int k = s1.getSize();
+		int k = s1.size();
 		for (int i = 0; i < k - 1; i++) {
 			if (s1.getDimension(i) != s2.getDimension(i)) {
 				return null;

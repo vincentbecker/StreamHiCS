@@ -38,6 +38,11 @@ public class SelfOrganizingMapContainer extends DataStreamContainer {
 	public void add(Instance instance) {
 		trainingData.add(instance);
 	}
+	
+	@Override
+	public void clear(){
+		
+	}
 
 	@Override
 	public int getNumberOfInstances() {
@@ -54,14 +59,6 @@ public class SelfOrganizingMapContainer extends DataStreamContainer {
 
 	@Override
 	public double[] getProjectedData(int dimension) {
-		// Update som
-		trainSOM();
-		return null;
-	}
-
-	@Override
-	public double[] getSlicedData(Subspace subspace, int dimension,
-			double selectionAlpha) {
 		// Update som
 		trainSOM();
 		return null;
@@ -90,6 +87,12 @@ public class SelfOrganizingMapContainer extends DataStreamContainer {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public double[] getSlicedData(int[] dimensions, double selectionAlpha) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

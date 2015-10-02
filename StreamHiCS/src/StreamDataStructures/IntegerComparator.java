@@ -3,7 +3,7 @@ package streamDataStructures;
 import java.util.Comparator;
 
 /**
- * This calss represents a comparator for the type {@link Integer}.
+ * This class represents a comparator for the type {@link Integer}.
  * 
  * @author Vincent
  *

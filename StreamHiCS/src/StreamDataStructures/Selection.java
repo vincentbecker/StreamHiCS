@@ -85,8 +85,8 @@ public class Selection {
 			// Sort the data and arrange the indexes correspondingly
 			MathArrays.sortInPlace(data, indexes);
 			// Start at a random point and take the selectionSize
-			int rnd = generator.nextInt(l - selectionSize + 1);
-			selectRange(rnd, selectionSize);
+			int startingPoint = generator.nextInt(l - selectionSize + 1);
+			selectRange(data, startingPoint, selectionSize);
 		}
 	}
 
@@ -100,25 +100,38 @@ public class Selection {
 	 * @throws IllegalArgumentException
 	 *             if the range is out of the bounds of the ArrayList.
 	 */
-	private void selectRange(int startingPoint, int selectionSize) {
-		if (startingPoint < 0 || startingPoint + selectionSize > indexes.length) {
-			throw new IllegalArgumentException("Selection outside of range.");
+	private void selectRange(double[] data, int startingPoint, int selectionSize) {
+		int endPoint = startingPoint + selectionSize - 1;
+		if (startingPoint < 0 || endPoint > indexes.length - 1) {
+			throw new IllegalArgumentException("Selection outside of range: [" + startingPoint + endPoint + "]");
 		}
-		double[] newIndexes = new double[selectionSize];
-		// Keep all the indexes within the range
-		int j = 0;
-		for (int i = 0; i < indexes.length && j < selectionSize; i++) {
-			if (startingPoint <= i && i < startingPoint + selectionSize) {
-				newIndexes[j] = indexes[i];
-				j++;
+		if (data[startingPoint] == data[endPoint]) {
+			// The special case that all the data values selected are the
+			// same. This case needs special handling.
+			System.out.println("Selection.selectRange(): Special handling!");
+			// Broadening the range if possible, until data values on the
+			// outside of the range differ
+			while (data[startingPoint] == data[endPoint]
+					&& (endPoint - startingPoint) < indexes.length - 1) {
+				if (startingPoint > 0) {
+					startingPoint--;
+				}
+				if (endPoint < indexes.length - 1) {
+					endPoint++;
+				}
 			}
 		}
+		double[] newIndexes = new double[endPoint - startingPoint + 1];
+		for (int i = startingPoint; i <= endPoint; i++) {
+			newIndexes[i - startingPoint] = indexes[i];
+		}
+
 		// Set the indexes to the new range of indexes
 		indexes = newIndexes;
 	}
 
 	/**
-	 * Returns a String representation fo this object.
+	 * Returns a String representation of this object.
 	 * 
 	 * @return A String representation of this object.
 	 */
