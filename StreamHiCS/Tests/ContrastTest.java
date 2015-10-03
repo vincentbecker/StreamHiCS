@@ -39,7 +39,7 @@ public class ContrastTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		streamHiCS = new StreamHiCS(2, numInstances + 1, 20, 0.4, 0.8);
+		streamHiCS = new StreamHiCS(2, numInstances + 1, 20, 0.4, 0.1, 0.8, 10);
 		subspace = new Subspace(0, 1);
 	}
 

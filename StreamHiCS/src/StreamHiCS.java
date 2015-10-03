@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 import org.apache.commons.math3.util.MathArrays;
 import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
@@ -29,7 +31,8 @@ public class StreamHiCS {
 	 */
 	private DataStreamContainer dataStreamContainer;
 	/**
-	 * Number of Monte Carlo iterations in the contrast evaluation.
+	 * Number of Monte Carlo iterations in the contrast evaluation. m must be
+	 * positive.
 	 */
 	private int m;
 	/**
@@ -38,14 +41,26 @@ public class StreamHiCS {
 	private int numberOfDimensions;
 	/**
 	 * The relative size of the conditional (sliced) sample in relation to the
-	 * whole data set.
+	 * whole data set. The number must be positive.
 	 */
 	private double alpha;
 	/**
-	 * The contrast threshold. Every subspace of which the contrast exceeds the
-	 * threshold is considered as correlated.
+	 * Determines how much the contrast values of {@link Subspace]s are allowed
+	 * to deviate from the last evaluation. If the deviation exceeds epsilon the
+	 * correlated {Subspace}s are newly built. Epsilon must be positive.
+	 */
+	private double epsilon;
+	/**
+	 * The minimum contrast value a {@link Subspace} must have to be a candidate
+	 * for the correlated subspaces. Note that, even if a subspace's contrast
+	 * exceeds the threshold it might not be chosen due to the cutoff.
 	 */
 	private double threshold;
+	/**
+	 * The number of subspace candidates should be kept after each apriori step.
+	 * The cutoff value must be positive. The threshold must be positive.
+	 */
+	private int cutoff;
 	/**
 	 * The {@link StatisticalTest} used to calculate the deviation of the
 	 * marginal sample and the conditional (sliced) sample.
@@ -64,23 +79,33 @@ public class StreamHiCS {
 	 *            The number of Monte Carlo iterations for the estimation of the
 	 *            conditional density.
 	 * @param alpha
-	 *            THe fraction of data that should be selected in the estimation
+	 *            The fraction of data that should be selected in the estimation
 	 *            of the conditional density.
+	 * @param epsilon
+	 *            The deviation that is allowed for contrast values between two
+	 *            evaluation without starting a full new build of the correlated
+	 *            subspaces.
 	 * @param threshold
 	 *            The threshold for the contrast. {@link Subspace}s with a
-	 *            contrast above or equal to the threshold are considered as
+	 *            contrast above or equal to the threshold may be considered as
 	 *            correlated.
 	 */
-	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double threshold) {
+	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double epsilon, double threshold,
+			int cutoff) {
 		correlatedSubspaces = new SubspaceSet();
 		dataStreamContainer = new SlidingWindow(numberOfDimensions, 10000);
+		if (numberOfDimensions <= 0 || updateInterval <= 0 || m <= 0 || alpha <= 0 || epsilon <= 0 || cutoff <= 0) {
+			throw new IllegalArgumentException("Non-positive input value.");
+		}
 		this.numberOfDimensions = numberOfDimensions;
 		this.updateInterval = updateInterval;
 		this.m = m;
 		this.alpha = alpha;
+		this.epsilon = epsilon;
 		this.threshold = threshold;
+		this.cutoff = cutoff;
 		// Try out other tests
-		statisticalTest = new WelchTtest();
+		statisticalTest = new KolmogorovSmirnov();
 	}
 
 	/**
@@ -112,7 +137,7 @@ public class StreamHiCS {
 	}
 
 	/**
-	 * Clears all stored data.
+	 * Clears all stored {@link Instance}s.
 	 */
 	public void clear() {
 		dataStreamContainer.clear();
@@ -149,10 +174,13 @@ public class StreamHiCS {
 				contrast = evaluateSubspaceContrast(subspace);
 				// System.out.println(contrast);
 
-				// If contrast has decreased below threshold we start a new
+				// If contrast has changed more than epsilon or has fallen below
+				// the threshold we start a new
+				// complete
 				// evaluation.
-				if (contrast < threshold) {
+				if (Math.abs(contrast - subspace.getContrast()) <= epsilon || contrast < threshold) {
 					update = true;
+					break;
 					// l--;
 				}
 			}
@@ -179,6 +207,7 @@ public class StreamHiCS {
 	 */
 	private void buildCorrelatedSubspaces() {
 		SubspaceSet c_K = new SubspaceSet();
+		double contrast = 0;
 		// Create all 2-dimensional candidates
 		for (int i = 0; i < numberOfDimensions - 1; i++) {
 			for (int j = i + 1; j < numberOfDimensions; j++) {
@@ -187,15 +216,26 @@ public class StreamHiCS {
 				s.addDimension(j);
 				// Only use subspace for the further process which are
 				// correlated
-				if (checkCandidates(c_K, s)) {
-					correlatedSubspaces.addSubspace(s);
+				contrast = evaluateSubspaceContrast(s);
+				s.setContrast(contrast);
+				if (contrast >= threshold) {
 					c_K.addSubspace(s);
 				}
 			}
 		}
 
+		// Select cutoff subspaces
+		c_K.selectTopK(cutoff);
+
+		// Add the left over 2D subspaces to the correlated subspaces
+		correlatedSubspaces.addSubspaces(c_K);
+
 		// Carry out apriori algorithm
 		apriori(c_K);
+
+		// Carry out pruning as the last step. All those subspaces which are
+		// subspace to another subspace with higher contrast are discarded.
+		prune();
 	}
 
 	/**
@@ -207,10 +247,12 @@ public class StreamHiCS {
 	 */
 	private void apriori(SubspaceSet c_K) {
 		SubspaceSet c_Kplus1 = new SubspaceSet();
+		c_K.sort();
 		// The subspaces in the set are sorted. To speed up the process we can
 		// stop looking
 		// for a merge as soon as we have found the first "no merge" case
 		boolean continueMerging = true;
+		double contrast = 0;
 		for (int i = 0; i < c_K.size() - 1; i++) {
 			continueMerging = true;
 			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
@@ -218,8 +260,10 @@ public class StreamHiCS {
 				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i), c_K.getSubspace(j));
 
 				if (kPlus1Candidate != null) {
-					// Pruning
-					if (checkCandidates(c_K, kPlus1Candidate)) {
+					// Calculate the contrast of the subspace
+					contrast = evaluateSubspaceContrast(kPlus1Candidate);
+					kPlus1Candidate.setContrast(contrast);
+					if (contrast >= threshold) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
 					}
 				} else {
@@ -228,14 +272,49 @@ public class StreamHiCS {
 			}
 		}
 		if (!c_Kplus1.isEmpty()) {
-			// Add all the subspaces from c_Kplus1 with contrast higher or equal
-			// to the threshold to the correlated subspaces.
+			// Select the subspaces with highest contrast
+			c_Kplus1.selectTopK(cutoff);
 			correlatedSubspaces.addSubspaces(c_Kplus1);
 			// Recurse
 			apriori(c_Kplus1);
 		}
 
 		// TODO: Parallel excecution? At least checking procedure -> forEach()
+	}
+
+	/**
+	 * If a {@link Subspace} is a subspace of another subspace with a higher
+	 * contrast value, then it is discarded.
+	 */
+	private void prune() {
+		ArrayList<Integer> discard = new ArrayList<Integer>();
+		int l = correlatedSubspaces.size();
+		Subspace si;
+		Subspace sj;
+		boolean discarded;
+		for (int i = 0; i < l; i++) {
+			discarded = false;
+			si = correlatedSubspaces.getSubspace(i);
+			for (int j = 1; j < l && !discarded; j++) {
+				if (i != j) {
+					sj = correlatedSubspaces.getSubspace(j);
+					// If the correlated subspace contains a superset that has
+					// at least (nearly) the same contrast we discard the
+					// current subspace
+					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + 0.01)) {
+						discard.add(i);
+						discarded = true;
+					}
+				}
+			}
+		}
+		SubspaceSet prunedSet = new SubspaceSet();
+		for (int i = 0; i < l; i++) {
+			if (!discard.contains(i)) {
+				prunedSet.addSubspace(correlatedSubspaces.getSubspace(i));
+			}
+		}
+		correlatedSubspaces = prunedSet;
 	}
 
 	/**
@@ -264,9 +343,9 @@ public class StreamHiCS {
 		 */
 
 		// Is the contrast higher or equal to the threshold?
-		if (evaluateSubspaceContrast(s) < threshold) {
-			return false;
-		}
+		// if (evaluateSubspaceContrast(s) < threshold) {
+		// return false;
+		// }
 		return true;
 	}
 

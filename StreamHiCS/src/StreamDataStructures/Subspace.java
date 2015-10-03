@@ -14,6 +14,29 @@ public class Subspace {
 	 * The dimensions the {@link Subspace} consists of.
 	 */
 	private ArrayList<Integer> dimensions;
+	/**
+	 * The contrast of the subspace at the time it was last evaluated.
+	 */
+	private double contrast = 0;
+
+	/**
+	 * Returns the contrast value-
+	 * 
+	 * @return The contrast value:
+	 */
+	public double getContrast() {
+		return contrast;
+	}
+
+	/**
+	 * Sets the contrast attribute to the given value.
+	 * 
+	 * @param contrast
+	 *            The contrast value.
+	 */
+	public void setContrast(double contrast) {
+		this.contrast = contrast;
+	}
 
 	/**
 	 * Create a {@link Subspace} object.
@@ -136,9 +159,9 @@ public class Subspace {
 	}
 
 	/**
-	 * Merges the two given {@link Subspace}s of the same length k, if they have
-	 * the first k-1 elements in common. The dimensions in the merged subspace
-	 * are sorted in ascending order.
+	 * Merges the two given {@link Subspace}s of the same length k > 0, if they
+	 * have the first k-1 elements in common. The dimensions in the merged
+	 * subspace are sorted in ascending order.
 	 * 
 	 * @param s1
 	 *            The first {@link Subspace}.
@@ -149,6 +172,12 @@ public class Subspace {
 	 */
 	public static Subspace merge(Subspace s1, Subspace s2) {
 		int k = s1.size();
+		if (k == 0) {
+			return null;
+		}
+		if (s2.size() != k) {
+			return null;
+		}
 		for (int i = 0; i < k - 1; i++) {
 			if (s1.getDimension(i) != s2.getDimension(i)) {
 				return null;
@@ -165,6 +194,25 @@ public class Subspace {
 	 */
 	public void sort() {
 		dimensions.sort(new IntegerComparator());
+	}
+
+	/**
+	 * Checks whether this {@link Subspace} is a subspace of another subspace,
+	 * meaning that the other subspace contains every dimension, this subspace
+	 * contains.
+	 * 
+	 * @param s
+	 *            The other {@link Subspace}.
+	 * @return True, if this subspace is a subspace of the other subspace, false
+	 *         otherwise.
+	 */
+	public boolean isSubspaceOf(Subspace s) {
+		for(int i = 0; i < dimensions.size(); i++){
+			if(!s.dimensions.contains(this.dimensions.get(i))){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

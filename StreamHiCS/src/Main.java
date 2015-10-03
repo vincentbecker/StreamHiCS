@@ -1,5 +1,4 @@
 import weka.core.Instance;
-import moa.streams.generators.RandomRBFGenerator;
 import streams.CorrelatedStream;
 import streams.GaussianStream;
 
@@ -16,7 +15,7 @@ public class Main {
 		GaussianStream stream = new GaussianStream(covariances);
 		int numberOfDimensions = stream.getNumberOfDimensions();
 
-		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 10000, 20, 0.3, 1);
+		StreamHiCS streamHiCS = new StreamHiCS(numberOfDimensions, 10000, 20, 0.4, 0.1, 0.8, 10);
 
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {

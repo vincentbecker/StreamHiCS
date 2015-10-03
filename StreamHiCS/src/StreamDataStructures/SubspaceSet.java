@@ -1,6 +1,10 @@
 package streamDataStructures;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+import org.apache.commons.math3.util.MathArrays;
 
 /**
  * This class represents a set of {@link Subspace}s.
@@ -103,6 +107,27 @@ public class SubspaceSet {
 	}
 
 	/**
+	 * Keeps the {@link Subspace}s with the highest contrast values (cutoff
+	 * many) from this set and discards the others.
+	 */
+	public void selectTopK(int cutoff) {
+		int l = subspaces.size();
+		double[] contrasts = new double[l];
+		double[] indexes = new double[l];
+		for (int i = 0; i < l; i++) {
+			contrasts[i] = subspaces.get(i).getContrast();
+			indexes[i] = i;
+		}
+		// Sort the array and the indexes accordingly
+		MathArrays.sortInPlace(contrasts, MathArrays.OrderDirection.DECREASING, indexes);
+		ArrayList<Subspace> prunedSubspaces = new ArrayList<Subspace>();
+		for (int i = 0; i < l && i < cutoff; i++) {
+			prunedSubspaces.add(subspaces.get((int) indexes[i]));
+		}
+		subspaces = prunedSubspaces;
+	}
+
+	/**
 	 * Check if this set and another set are equal, meaning they contain the
 	 * same {@link Subspace}s.
 	 * 
@@ -139,6 +164,40 @@ public class SubspaceSet {
 	 */
 	public boolean contains(Subspace s) {
 		return subspaces.contains(s);
+	}
+
+	/**
+	 * Sorts the {@link Subspace}s contained in this set. Assumes that the
+	 * subspaces themselves are sorted.
+	 */
+	public void sort() {
+		Collections.sort(subspaces, new Comparator<Subspace>() {
+
+			@Override
+			public int compare(Subspace s1, Subspace s2) {
+				int s1Size = s1.size();
+				int s2Size = s2.size();
+				int l = Math.min(s1Size, s2Size);
+				int s1Dim = 0;
+				int s2Dim = 0;
+				for (int i = 0; i < l; i++) {
+					s1Dim = s1.getDimension(i);
+					s2Dim = s2.getDimension(i);
+					if (s1Dim < s2Dim) {
+						return -1;
+					} else if (s1Dim > s2Dim) {
+						return 1;
+					}
+				}
+				if (s1Size < s2Size) {
+					return -1;
+				} else if (s1Size > s2Size) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+		});
 	}
 
 	/**
