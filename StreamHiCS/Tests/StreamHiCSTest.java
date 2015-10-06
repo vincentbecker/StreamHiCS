@@ -11,10 +11,10 @@ public class StreamHiCSTest {
 	private GaussianStream stream;
 	private StreamHiCS streamHiCS;
 	private final int numInstances = 10000;
-	private final int m = 20;
-	private final double alpha = 0.2;
+	private final int m = 100;
+	private final double alpha = 0.05;
 	private final double epsilon = 0.1;
-	private final double threshold = 0.9;
+	private final double threshold = 0.2;
 	private final int cutoff = 5;
 
 	@Test

@@ -121,4 +121,16 @@ public class GaussianStream implements InstanceStream {
 	public int getNumberOfDimensions() {
 		return mean.length;
 	}
+
+	/**
+	 * Sets the covariance matrix to the given matrix.
+	 * 
+	 * @param covarianceMatrix
+	 *            The new covariance matrix.
+	 */
+	public void setCovarianceMatrix(double[][] covarianceMatrix) {
+		this.covariances = covarianceMatrix;
+		// Set the normal distribution with the new covariance matrix
+		normalDistribution = new MultivariateNormalDistribution(mean, covariances);
+	}
 }

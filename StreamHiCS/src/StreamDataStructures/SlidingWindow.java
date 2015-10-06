@@ -23,7 +23,7 @@ public class SlidingWindow extends DataStreamContainer {
 	 * The number of {@link Instance}s currently contained in the
 	 * {@link SlidingWindow}.
 	 */
-	private int numberOfInstances = 0;
+	//private int numberOfInstances = 0;
 	/**
 	 * An {@link ArrayList} containing one queue for {@link Double}s for each
 	 * dimension. An instance is stored by storing each attribute value in the
@@ -89,48 +89,7 @@ public class SlidingWindow extends DataStreamContainer {
 	}
 
 	@Override
-	public double[] getProjectedData(int dimension) {
-		Double[] temp = new Double[numberOfInstances];
-		temp = instanceQueue.get(dimension).toArray(temp);
-		double[] result = new double[numberOfInstances];
-		// Cast all elements to double
-		for (int i = 0; i < numberOfInstances; i++) {
-			result[i] = (double) temp[i];
-		}
-		return result;
-	}
-
-	@Override
-	public double[] getSlicedData(int[] dimensions, double selectionAlpha) {
-		double[] dimData;
-		Selection selectedIndexes = new Selection(numberOfInstances, selectionAlpha);
-		// Fill the list with all the indexes
-		selectedIndexes.fillRange();
-		
-		for(int i = 0; i < dimensions.length - 1; i++){
-			// Get all the data for the specific dimension that is selected
-			dimData = getSelectedData(dimensions[i], selectedIndexes);
-			// Reduce the number of indexes according to a new selection in
-			// the current dimension
-			selectedIndexes.select(dimData);
-		}
-		
-		// Get the selected data from the last dimension
-		return getSelectedData(dimensions[dimensions.length - 1], selectedIndexes);
-	}
-
-	/**
-	 * Returns the data stored in this {@link SlidingWindow} corresponding to
-	 * the given dimension and the specified indexes.
-	 * 
-	 * @param dimension
-	 *            The dimension the data is taken from
-	 * @param selectedIndexes
-	 *            The indexes of the data point which are selected.
-	 * @return The data stored in this {@link SlidingWindow} corresponding to
-	 *         the given dimension and the specified indexes.
-	 */
-	private double[] getSelectedData(int dimension, Selection selectedIndexes) {
+	public double[] getSelectedData(int dimension, Selection selectedIndexes) {
 		double[] data = new double[selectedIndexes.size()];
 		Double[] tempData = new Double[numberOfInstances];
 		tempData = instanceQueue.get(dimension).toArray(tempData);

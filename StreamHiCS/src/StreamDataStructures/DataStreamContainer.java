@@ -12,6 +12,12 @@ import weka.core.Instance;
 public abstract class DataStreamContainer {
 
 	/**
+	 * The number of instances currently contained in the
+	 * {@link DataStreamContainer}.
+	 */
+	public int numberOfInstances;
+
+	/**
 	 * Adds the given {@link Instance} to the container.
 	 * 
 	 * @param instance
@@ -40,19 +46,25 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing all the data held in the container
 	 *         corresponding to the given dimension.
 	 */
-	public abstract double[] getProjectedData(int dimension);
+	public double[] getProjectedData(int dimension) {
+		// Selection alpha does not matter here
+		Selection selectedIndexes = new Selection(numberOfInstances, 1);
+		// Fill the list with all the indexes to select all data
+		selectedIndexes.fillRange();
+		return getSelectedData(dimension, selectedIndexes);
+	}
 
 	/**
 	 * Returns the one dimensional data of a random conditional sample
-	 * corresponding to the last dimension in the int[] and the {@link Subspace} which
-	 * contains this dimension. On every dimension in the {@link Subspace}
+	 * corresponding to the last dimension in the int[] and the {@link Subspace}
+	 * which contains this dimension. On every dimension in the {@link Subspace}
 	 * except the specified one random range selections on instances (of the
 	 * specified selection size) are done, representing a conditional sample for
 	 * the given dimension.
 	 * 
 	 * @param dimensions
-	 *            The dimensions. The last one is the one for which a random conditional sample should be
-	 *            drawn.
+	 *            The dimensions. The last one is the one for which a random
+	 *            conditional sample should be drawn.
 	 * @param selectionAlpha
 	 *            The fraction of instances that should be selected per
 	 *            dimension (i.e. the number of selected instances becomes
@@ -60,5 +72,34 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
-	public abstract double[] getSlicedData(int[] dimensions, double selectionAlpha);
+	public double[] getSlicedData(int[] dimensions, double selectionAlpha) {
+		double[] dimData;
+		Selection selectedIndexes = new Selection(numberOfInstances, selectionAlpha);
+		// Fill the list with all the indexes
+		selectedIndexes.fillRange();
+
+		for (int i = 0; i < dimensions.length - 1; i++) {
+			// Get all the data for the specific dimension that is selected
+			dimData = getSelectedData(dimensions[i], selectedIndexes);
+			// Reduce the number of indexes according to a new selection in
+			// the current dimension
+			selectedIndexes.select(dimData);
+		}
+
+		// Get the selected data from the last dimension
+		return getSelectedData(dimensions[dimensions.length - 1], selectedIndexes);
+	}
+
+	/**
+	 * Returns the data stored in this {@link DataStreamContainer} corresponding
+	 * to the given dimension and the specified indexes.
+	 * 
+	 * @param dimension
+	 *            The dimension the data is taken from
+	 * @param selectedIndexes
+	 *            The indexes of the data point which are selected.
+	 * @return The data stored in this {@link DataStreamContainer} corresponding
+	 *         to the given dimension and the specified indexes.
+	 */
+	public abstract double[] getSelectedData(int dimension, Selection selectedIndexes);
 }

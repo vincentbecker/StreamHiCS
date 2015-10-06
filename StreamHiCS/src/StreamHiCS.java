@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import org.apache.commons.math3.util.MathArrays;
 import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
-import statisticalTests.WelchTtest;
 import streamDataStructures.DataStreamContainer;
 import streamDataStructures.SlidingWindow;
 import streamDataStructures.Subspace;
@@ -93,6 +92,7 @@ public class StreamHiCS {
 	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double epsilon, double threshold,
 			int cutoff) {
 		correlatedSubspaces = new SubspaceSet();
+		// dataStreamContainer = new SelfOrganizingMap(numberOfDimensions, 100);
 		dataStreamContainer = new SlidingWindow(numberOfDimensions, 10000);
 		if (numberOfDimensions <= 0 || updateInterval <= 0 || m <= 0 || alpha <= 0 || epsilon <= 0 || cutoff <= 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
@@ -232,6 +232,7 @@ public class StreamHiCS {
 
 		// Carry out apriori algorithm
 		apriori(c_K);
+		//aprioriParallel(c_K);
 
 		// Carry out pruning as the last step. All those subspaces which are
 		// subspace to another subspace with higher contrast are discarded.
@@ -283,6 +284,54 @@ public class StreamHiCS {
 	}
 
 	/**
+	 * Parallel version.
+	 * 
+	 * @param c_K
+	 */
+	private void aprioriParallel(SubspaceSet c_K) {
+		SubspaceSet c_Kplus1 = new SubspaceSet();
+		SubspaceSet temp = new SubspaceSet();
+		c_K.sort();
+		// The subspaces in the set are sorted. To speed up the process we can
+		// stop looking
+		// for a merge as soon as we have found the first "no merge" case
+		boolean continueMerging = true;
+		for (int i = 0; i < c_K.size() - 1; i++) {
+			continueMerging = true;
+			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
+				// Creating new candidates
+				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i), c_K.getSubspace(j));
+				if (kPlus1Candidate != null) {
+					temp.addSubspace(kPlus1Candidate);
+				} else {
+					continueMerging = false;
+				}
+			}
+		}
+
+		// Parallel execution of the contrast calculation
+		temp.getSubspaces().parallelStream().forEach(candidate -> {
+			candidate.setContrast(evaluateSubspaceContrast(candidate));
+
+		});
+
+		// Add the subspaces greater or equal to the threshold to c_Kplus1
+		for (Subspace candidate : temp.getSubspaces()) {
+			if (candidate.getContrast() >= threshold) {
+				c_Kplus1.addSubspace(candidate);
+			}
+		}
+
+		if (!c_Kplus1.isEmpty()) {
+			// Select the subspaces with highest contrast
+			c_Kplus1.selectTopK(cutoff);
+			correlatedSubspaces.addSubspaces(c_Kplus1);
+			// Recurse
+			aprioriParallel(c_Kplus1);
+		}
+	}
+
+	/**
 	 * If a {@link Subspace} is a subspace of another subspace with a higher
 	 * contrast value, then it is discarded.
 	 */
@@ -295,7 +344,7 @@ public class StreamHiCS {
 		for (int i = 0; i < l; i++) {
 			discarded = false;
 			si = correlatedSubspaces.getSubspace(i);
-			for (int j = 1; j < l && !discarded; j++) {
+			for (int j = 0; j < l && !discarded; j++) {
 				if (i != j) {
 					sj = correlatedSubspaces.getSubspace(j);
 					// If the correlated subspace contains a superset that has
@@ -359,7 +408,7 @@ public class StreamHiCS {
 	 * @return The contrast of the given {@link Subspace}.
 	 */
 	public double evaluateSubspaceContrast(Subspace subspace) {
-		// TODO: Parallel exceution? But in higher level
+		// TODO: Parallel execution? But in higher level
 
 		// Variable for collecting the intermediate results of the iterations
 		double sum = 0;
@@ -374,7 +423,7 @@ public class StreamHiCS {
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
 			// Calculate the number of instances selected per dimension
-			selectionAlpha = Math.pow(alpha, 1.0 / subspace.size());
+			selectionAlpha = Math.pow(alpha, 1.0 / (subspace.size() - 1));
 			// Get the projected data
 			double[] dimProjectedData = dataStreamContainer
 					.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
