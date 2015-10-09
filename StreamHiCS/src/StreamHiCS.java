@@ -415,7 +415,7 @@ public class StreamHiCS {
 		// A deviation could be NaN, so we wont count that calculation
 		int numberOfCorrectTests = 0;
 		int[] shuffledDimensions;
-		double selectionAlpha;
+		double selectionAlpha = Math.pow(alpha, 1.0 / (subspace.size() - 1));
 		double deviation;
 		// Do Monte Carlo iterations
 		for (int i = 0; i < m; i++) {
@@ -423,7 +423,7 @@ public class StreamHiCS {
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
 			// Calculate the number of instances selected per dimension
-			selectionAlpha = Math.pow(alpha, 1.0 / (subspace.size() - 1));
+			
 			// Get the projected data
 			double[] dimProjectedData = dataStreamContainer
 					.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
