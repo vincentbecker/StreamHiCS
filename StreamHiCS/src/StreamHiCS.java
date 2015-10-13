@@ -1,48 +1,21 @@
 import java.util.ArrayList;
 
-import org.apache.commons.math3.util.MathArrays;
-import statisticalTests.KolmogorovSmirnov;
-import statisticalTests.StatisticalTest;
-import streamDataStructures.DataStreamContainer;
-import streamDataStructures.SlidingWindow;
+import misc.Callback;
+import misc.Contrast;
+import streamDataStructures.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import streamDataStructures.SubspaceSet;
 import weka.core.Instance;
 
-public class StreamHiCS {
-
-	/**
-	 * The number of {@link Instance} that are observed before the
-	 * {@link Subspace} contrasts are checked again.
-	 */
-	private int updateInterval;
-	/**
-	 * To count the number of {@link Instance}s observed since the last
-	 * {@link Subspace} evaluation.
-	 */
-	private int currentCount = 0;
+public class StreamHiCS implements Callback {
 	/**
 	 * The set of the currently correlated {@link Subspace}s.
 	 */
 	private SubspaceSet correlatedSubspaces;
 	/**
-	 * Data structure holding the {@link Instance}s.
-	 */
-	private DataStreamContainer dataStreamContainer;
-	/**
-	 * Number of Monte Carlo iterations in the contrast evaluation. m must be
-	 * positive.
-	 */
-	private int m;
-	/**
 	 * The number of dimensions of the full space.
 	 */
 	private int numberOfDimensions;
-	/**
-	 * The relative size of the conditional (sliced) sample in relation to the
-	 * whole data set. The number must be positive.
-	 */
-	private double alpha;
 	/**
 	 * Determines how much the contrast values of {@link Subspace]s are allowed
 	 * to deviate from the last evaluation. If the deviation exceeds epsilon the
@@ -61,10 +34,9 @@ public class StreamHiCS {
 	 */
 	private int cutoff;
 	/**
-	 * The {@link StatisticalTest} used to calculate the deviation of the
-	 * marginal sample and the conditional (sliced) sample.
+	 * The @link{Contrast} evaluator.
 	 */
-	private StatisticalTest statisticalTest;
+	private Contrast contrastEvaluator;
 
 	/**
 	 * Creates a {@link StreamHiCS} object with the specified update interval.
@@ -92,20 +64,14 @@ public class StreamHiCS {
 	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double epsilon, double threshold,
 			int cutoff) {
 		correlatedSubspaces = new SubspaceSet();
-		// dataStreamContainer = new SelfOrganizingMap(numberOfDimensions, 100);
-		dataStreamContainer = new SlidingWindow(numberOfDimensions, 10000);
 		if (numberOfDimensions <= 0 || updateInterval <= 0 || m <= 0 || alpha <= 0 || epsilon <= 0 || cutoff <= 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
 		}
 		this.numberOfDimensions = numberOfDimensions;
-		this.updateInterval = updateInterval;
-		this.m = m;
-		this.alpha = alpha;
 		this.epsilon = epsilon;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
-		// Try out other tests
-		statisticalTest = new KolmogorovSmirnov();
+		this.contrastEvaluator = new SlidingWindowContrast(this, numberOfDimensions, updateInterval, m, alpha);
 	}
 
 	/**
@@ -119,40 +85,20 @@ public class StreamHiCS {
 	}
 
 	/**
-	 * Add a new {@link Instance}. If the number of observed {@link Instance}s
-	 * since the last evaluation of the correlated {@link Subspace}s exceeds the
-	 * update interval, the a new evaluation is carried out.
+	 * Add a new {@link Instance}.
 	 * 
 	 * @param instance
 	 *            The {@link Instance} to be added.
 	 */
 	public void add(Instance instance) {
-		dataStreamContainer.add(instance);
-		currentCount++;
-		if (currentCount >= updateInterval) {
-			evaluateCorrelatedSubspaces();
-			currentCount = 0;
-			System.out.println("Correlated: " + correlatedSubspaces.toString());
-		}
+		contrastEvaluator.add(instance);
 	}
 
 	/**
-	 * Clears all stored {@link Instance}s.
+	 * Clears all stored information learnt from the stream.
 	 */
 	public void clear() {
-		dataStreamContainer.clear();
-		currentCount = 0;
-	}
-
-	/**
-	 * Returns the number of {@link Instance}s currently contained in this
-	 * object.
-	 * 
-	 * @return The number of {@link Instance}s currently contained in this
-	 *         object.
-	 */
-	public int getNumberOfInstances() {
-		return dataStreamContainer.getNumberOfInstances();
+		contrastEvaluator.clear();
 	}
 
 	/**
@@ -171,7 +117,7 @@ public class StreamHiCS {
 			int l = correlatedSubspaces.size();
 			for (int i = 1; i < l && !update; i++) {
 				Subspace subspace = correlatedSubspaces.getSubspace(i);
-				contrast = evaluateSubspaceContrast(subspace);
+				contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 				// System.out.println(contrast);
 
 				// If contrast has changed more than epsilon or has fallen below
@@ -216,7 +162,7 @@ public class StreamHiCS {
 				s.addDimension(j);
 				// Only use subspace for the further process which are
 				// correlated
-				contrast = evaluateSubspaceContrast(s);
+				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
 				s.setContrast(contrast);
 				if (contrast >= threshold) {
 					c_K.addSubspace(s);
@@ -232,7 +178,7 @@ public class StreamHiCS {
 
 		// Carry out apriori algorithm
 		apriori(c_K);
-		//aprioriParallel(c_K);
+		// aprioriParallel(c_K);
 
 		// Carry out pruning as the last step. All those subspaces which are
 		// subspace to another subspace with higher contrast are discarded.
@@ -262,7 +208,7 @@ public class StreamHiCS {
 
 				if (kPlus1Candidate != null) {
 					// Calculate the contrast of the subspace
-					contrast = evaluateSubspaceContrast(kPlus1Candidate);
+					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
 					kPlus1Candidate.setContrast(contrast);
 					if (contrast >= threshold) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
@@ -311,7 +257,7 @@ public class StreamHiCS {
 
 		// Parallel execution of the contrast calculation
 		temp.getSubspaces().parallelStream().forEach(candidate -> {
-			candidate.setContrast(evaluateSubspaceContrast(candidate));
+			candidate.setContrast(contrastEvaluator.evaluateSubspaceContrast(candidate));
 
 		});
 
@@ -399,61 +345,17 @@ public class StreamHiCS {
 	}
 
 	/**
-	 * Calculate the contrast for a given {@link Subspace}. See the HiCS paper
-	 * for a description of the algorithm.
-	 * 
-	 * @param subspace
-	 *            The {@link Subspace} for which the contrast should be
-	 *            calculated.
-	 * @return The contrast of the given {@link Subspace}.
-	 */
-	public double evaluateSubspaceContrast(Subspace subspace) {
-		// TODO: Parallel execution? But in higher level
-
-		// Variable for collecting the intermediate results of the iterations
-		double sum = 0;
-		// A deviation could be NaN, so we wont count that calculation
-		int numberOfCorrectTests = 0;
-		int[] shuffledDimensions;
-		double selectionAlpha = Math.pow(alpha, 1.0 / (subspace.size() - 1));
-		double deviation;
-		// Do Monte Carlo iterations
-		for (int i = 0; i < m; i++) {
-			shuffledDimensions = subspace.getDimensions();
-			// Shuffle dimensions
-			MathArrays.shuffle(shuffledDimensions);
-			// Calculate the number of instances selected per dimension
-			
-			// Get the projected data
-			double[] dimProjectedData = dataStreamContainer
-					.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
-			// Get the randomly sliced data
-			// double[] slicedData = dataStreamContainer.getSlicedData(subspace,
-			// dim, selectionAlpha);
-			double[] slicedData = dataStreamContainer.getSlicedData(shuffledDimensions, selectionAlpha);
-			// Calculate the deviation and add it to the overall sum
-			deviation = statisticalTest.calculateDeviation(dimProjectedData, slicedData);
-			if (!Double.isNaN(deviation)) {
-				sum += deviation;
-				numberOfCorrectTests++;
-			}
-		}
-
-		// Return the mean of the intermediate results. If all results were NaN,
-		// 0 is returned.
-		double mean = 0;
-		if (numberOfCorrectTests > 0) {
-			mean = sum / numberOfCorrectTests;
-		}
-		return mean;
-	}
-
-	/**
 	 * Returns a string representation of this object.
 	 * 
 	 * @return A string representation of this object.
 	 */
 	public String toString() {
 		return correlatedSubspaces.toString();
+	}
+
+	@Override
+	public void onAlarm() {
+		evaluateCorrelatedSubspaces();
+		System.out.println("Correlated: " + correlatedSubspaces.toString());
 	}
 }

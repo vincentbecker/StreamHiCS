@@ -47,4 +47,10 @@ public class KolmogorovSmirnov extends StatisticalTest {
 		// sample2);
 		// return 1 - p;
 	}
+
+	@Override
+	public double calculateDeviation(StatisticsBundle sb1, StatisticsBundle sb2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

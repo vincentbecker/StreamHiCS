@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.apache.commons.math3.util.MathArrays;
 
+import misc.Callback;
 import statisticalTests.StatisticsBundle;
 import weka.core.Instance;
 
@@ -14,7 +15,6 @@ public class FixedCentroids extends CentroidsContainer {
 	private int numberOfDimensions;
 	private int centroidsPerDimension;
 	private double[] stepWidth;
-	private double selectionAlpha;
 	/**
 	 * A generator for random numbers.
 	 */
@@ -23,8 +23,9 @@ public class FixedCentroids extends CentroidsContainer {
 	private double[] kNNRank;
 	private double allowedChange;
 	private double checkCount;
+	Callback callback;
 
-	public FixedCentroids(int centroidsPerDimension, double[] lowerBounds, double[] upperBounds, double selectionAlpha,
+	public FixedCentroids(Callback callback, int centroidsPerDimension, double[] lowerBounds, double[] upperBounds,
 			int checkCount, int k, double allowedChange) {
 		// TODO: Argument checking
 		this.centroidsPerDimension = centroidsPerDimension;
@@ -36,11 +37,11 @@ public class FixedCentroids extends CentroidsContainer {
 		for (int i = 0; i < numberOfDimensions; i++) {
 			stepWidth[i] = (upperBounds[i] - lowerBounds[i]) / centroidsPerDimension;
 		}
-		this.selectionAlpha = selectionAlpha;
 		generator = new Random();
 		this.checkCount = checkCount;
 		this.k = k;
 		this.allowedChange = allowedChange;
+		this.callback = callback;
 	}
 
 	@Override
@@ -62,6 +63,12 @@ public class FixedCentroids extends CentroidsContainer {
 
 	// Simple, because centroids are static.
 	private int mapping(double[] vector) {
+		int[] indexes = mappingToIndexes(vector);
+		// Create internal index
+		return internalIndex(indexes);
+	}
+
+	private int[] mappingToIndexes(double[] vector) {
 		int step = 0;
 		int[] indexes = new int[numberOfDimensions];
 		for (int i = 0; i < numberOfDimensions; i++) {
@@ -73,8 +80,7 @@ public class FixedCentroids extends CentroidsContainer {
 			}
 			indexes[i] = step;
 		}
-		// Create internal index
-		return internalIndex(indexes);
+		return indexes;
 	}
 
 	public Centroid getCentroid(int[] indexes) {
@@ -88,6 +94,20 @@ public class FixedCentroids extends CentroidsContainer {
 			internalIndex += indexes[i] * Math.pow(centroidsPerDimension, numberOfDimensions - i - 1);
 		}
 		return internalIndex;
+	}
+
+	private int[] indexesRepresentation(int internalIndex) {
+		int[] indexes = new int[numberOfDimensions];
+		int a;
+		// Calculating the cell for each dimension
+		for (int i = 0; i < numberOfDimensions; i++) {
+			a = (int) Math.pow(centroidsPerDimension, numberOfDimensions - i - 1);
+			indexes[i] = internalIndex / a;
+			internalIndex = internalIndex % a;
+		}
+
+		return indexes;
+
 	}
 
 	private double[] createVectorFromIndex(int index) {
@@ -118,13 +138,13 @@ public class FixedCentroids extends CentroidsContainer {
 	}
 
 	@Override
-	public StatisticsBundle getProjectedDataStaistics(int referenceDimension) {
+	public StatisticsBundle getProjectedDataStatistics(int referenceDimension) {
 		return calculateStatistics(centroids, referenceDimension);
 	}
 
 	// Input is the array of shuffled dimensions
 	@Override
-	public StatisticsBundle getSlicedDataStaistics(int[] shuffledDimensions) {
+	public StatisticsBundle getSlicedDataStatistics(int[] shuffledDimensions, double selectionAlpha) {
 		// An array showing the bounds on centroids selected (lower bound on
 		// centroid number and upperBound (both inclusive)).
 		int[][] selection = new int[2][numberOfDimensions];
@@ -215,36 +235,7 @@ public class FixedCentroids extends CentroidsContainer {
 		return true;
 	}
 
-	private StatisticsBundle calculateStatistics(Centroid[] centroidSelection, int referenceDimension) {
-		int totalCount = 0;
-		double totalSum = 0;
-		int count = 0;
-		double mean = 0;
-		double variance = 0;
-
-		// Calculation of mean
-		for (Centroid centroid : centroidSelection) {
-			if (centroid != null) {
-				count = centroid.getCount();
-				totalSum += centroid.getVector()[referenceDimension] * count;
-				totalCount += count;
-			}
-		}
-		mean = totalSum / totalCount;
-
-		// Calculation of variance
-		totalSum = 0;
-		for (Centroid centroid : centroidSelection) {
-			if (centroid != null) {
-				totalSum += centroid.getCount() * Math.pow(centroid.getVector()[referenceDimension] - mean, 2);
-			}
-		}
-		variance = totalSum / (totalCount - 1);
-
-		return new StatisticsBundle(mean, variance);
-	}
-
-	private void densityCheck() {
+	public void densityCheck() {
 		// Calculate kNN-distances and sort them.
 		double[] kNNDistances = new double[numberOfCentroids];
 		double[] indexes = new double[numberOfCentroids];
@@ -271,15 +262,73 @@ public class FixedCentroids extends CentroidsContainer {
 		kNNRank = indexes;
 
 		if (change > allowedChange * numberOfCentroids) {
-			//TODO: Notify callback to build check contrast
+			// Notify callback to build check contrast
+			callback.onAlarm();
 		}
 
 	}
 
-	//TODO:
-	private double calculateKNNDistance(int i) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double calculateKNNDistance(int index) {
+
+		Centroid c = centroids[index];
+		/*
+		 * //Get the indexes representation int[] indexes =
+		 * indexesRepresentation(index); int[] distFactor = new
+		 * int[numberOfDimensions];
+		 * 
+		 * int total = 0; double maxDistance = 0; double min = Double.MAX_VALUE;
+		 * int minIndex = 0; Centroid c2; double d = 0;
+		 * 
+		 * while (total < k) { // Search for the minimum distance to a neighbour
+		 * min = Double.MAX_VALUE; for (int i = 0; i < numberOfDimensions; i++)
+		 * { d = distFactor[i]*stepWidth[i]; if (d < min) { min = d; minIndex =
+		 * i; } }
+		 * 
+		 * //Get the upper and lower neighbour and add their counts
+		 * distFactor[minIndex]++; indexes[minIndex] += distFactor[minIndex]; c2
+		 * = centroids[internalIndex(indexes)]; total += c2.getCount();
+		 * 
+		 * vector[minIndex] -= 2*min;
+		 * 
+		 * maxDistance = min; dist[minIndex] += stepWidth[minIndex]; }
+		 * 
+		 * return maxDistance;
+		 * 
+		 */
+
+		double[] kDistances = new double[k];
+		for (int i = 0; i < k; i++) {
+			kDistances[i] = Double.MAX_VALUE;
+		}
+		double max = -1;
+		int maxIndex = 0;
+
+		for (int i = 0; i < centroids.length; i++) {
+			if (i != index) {
+				max = -1;
+				// Search for the maximum distance
+				for (int j = 0; j < k; j++) {
+					if (kDistances[j] > max) {
+						max = kDistances[j];
+						maxIndex = j;
+					}
+				}
+				double currentDistance = euclideanCentroidDistance(c, centroids[i]);
+				// Replace the maximum distance if applicable
+				if (currentDistance < max) {
+					kDistances[maxIndex] = currentDistance;
+				}
+			}
+		}
+
+		max = -1;
+		// Search for the maximum distance
+		for (int j = 0; j < k; j++) {
+			if (kDistances[j] > max) {
+				max = kDistances[j];
+			}
+		}
+		return max;
 	}
 
 }

@@ -4,7 +4,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import misc.Contrast;
 import streamDataStructures.SlidingWindow;
+import streamDataStructures.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -12,7 +14,7 @@ import weka.core.Instance;
 /**
  * Testing the contrast measure in 2D space. It represents a static test, as
  * long as a {@link SlidingWindow} is used, since we fill it completely and then
- * carry out the test.
+ * carry out the test. BASED ON SLIDING WINDOW AND KOLMOGOROV-SMIRNOV-TEST.
  * 
  * @author Vincent
  *
@@ -23,7 +25,7 @@ public class ContrastTest {
 		double function(double x);
 	}
 
-	private static StreamHiCS streamHiCS;
+	private static Contrast contrastEvaluator;
 	/**
 	 * The number of instances used in the test.
 	 */
@@ -39,13 +41,13 @@ public class ContrastTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		streamHiCS = new StreamHiCS(2, numInstances + 1, 20, 0.4, 0.1, 0.8, 10);
+		contrastEvaluator = new SlidingWindowContrast(null, 2, numInstances + 1, 20, 0.4);
 		subspace = new Subspace(0, 1);
 	}
 
 	@Before
 	public void setUp() throws Exception {
-		streamHiCS.clear();
+		contrastEvaluator.clear();
 	}
 
 	@Test
@@ -193,7 +195,7 @@ public class ContrastTest {
 			y = Math.random();
 			addInstance(x, y);
 		}
-		double contrast = streamHiCS.evaluateSubspaceContrast(subspace);
+		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 		System.out.println("Test 16 : " + contrast);
 		assertTrue(Math.abs(0 - contrast) <= epsilon);
 	}
@@ -206,7 +208,7 @@ public class ContrastTest {
 		for (int i = 0; i < numInstances; i++) {
 			addInstance(x, y);
 		}
-		double contrast = streamHiCS.evaluateSubspaceContrast(subspace);
+		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 		System.out.println("Test 17 : " + contrast);
 		assertTrue(Math.abs(0 - contrast) <= epsilon);
 	}
@@ -221,7 +223,7 @@ public class ContrastTest {
 			y = x + Math.random();
 			addInstance(x, y);
 		}
-		double contrast = streamHiCS.evaluateSubspaceContrast(subspace);
+		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 		System.out.println("Test 18 : " + contrast);
 		assertTrue(Math.abs(0.5 - contrast) <= epsilon);
 	}
@@ -236,13 +238,13 @@ public class ContrastTest {
 			addInstance(x, y);
 		}
 
-		return streamHiCS.evaluateSubspaceContrast(subspace);
+		return contrastEvaluator.evaluateSubspaceContrast(subspace);
 	}
 
 	private void addInstance(double x, double y) {
 		Instance inst = new DenseInstance(2);
 		inst.setValue(0, x);
 		inst.setValue(1, y);
-		streamHiCS.add(inst);
+		contrastEvaluator.add(inst);
 	}
 }
