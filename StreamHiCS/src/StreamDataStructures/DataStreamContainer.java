@@ -62,7 +62,7 @@ public abstract class DataStreamContainer {
 	 * specified selection size) are done, representing a conditional sample for
 	 * the given dimension.
 	 * 
-	 * @param dimensions
+	 * @param shuffledDimensions
 	 *            The dimensions. The last one is the one for which a random
 	 *            conditional sample should be drawn.
 	 * @param selectionAlpha
@@ -72,22 +72,22 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
-	public double[] getSlicedData(int[] dimensions, double selectionAlpha) {
+	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		double[] dimData;
 		Selection selectedIndexes = new Selection(numberOfInstances, selectionAlpha);
 		// Fill the list with all the indexes
 		selectedIndexes.fillRange();
 
-		for (int i = 0; i < dimensions.length - 1; i++) {
+		for (int i = 0; i < shuffledDimensions.length - 1; i++) {
 			// Get all the data for the specific dimension that is selected
-			dimData = getSelectedData(dimensions[i], selectedIndexes);
+			dimData = getSelectedData(shuffledDimensions[i], selectedIndexes);
 			// Reduce the number of indexes according to a new selection in
 			// the current dimension
 			selectedIndexes.select(dimData);
 		}
 
 		// Get the selected data from the last dimension
-		return getSelectedData(dimensions[dimensions.length - 1], selectedIndexes);
+		return getSelectedData(shuffledDimensions[shuffledDimensions.length - 1], selectedIndexes);
 	}
 
 	/**

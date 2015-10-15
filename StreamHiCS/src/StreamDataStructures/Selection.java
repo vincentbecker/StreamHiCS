@@ -90,6 +90,20 @@ public class Selection {
 		}
 	}
 
+	public void selectWithWeights(double[] data, double[] weights) {
+		double totalWeight = 0;
+		for (int i = 0; i < data.length; i++) {
+			totalWeight += weights[i];
+		}
+		double selectionSize = totalWeight * selectionAlpha;
+
+		// Sort the data and arrange the indexes correspondingly
+		MathArrays.sortInPlace(data, indexes, weights);
+		// Start at a random point and take the selectionSize
+		int startingPoint = generator.nextInt(data.length);
+		selectRangeWithWeights(weights, startingPoint, selectionSize);
+	}
+
 	/**
 	 * Selects a given range from the given indexes.
 	 * 
@@ -111,8 +125,7 @@ public class Selection {
 			System.out.println("Selection.selectRange(): Special handling!");
 			// Broadening the range if possible, until data values on the
 			// outside of the range differ
-			while (data[startingPoint] == data[endPoint]
-					&& (endPoint - startingPoint) < indexes.length - 1) {
+			while (data[startingPoint] == data[endPoint] && (endPoint - startingPoint) < indexes.length - 1) {
 				if (startingPoint > 0) {
 					startingPoint--;
 				}
@@ -127,6 +140,36 @@ public class Selection {
 		}
 
 		// Set the indexes to the new range of indexes
+		indexes = newIndexes;
+	}
+
+	private void selectRangeWithWeights(double[] weights, int startingPoint, double selectionSize) {
+		// Select a block around the starting point
+		int lower = startingPoint;
+		int upper = startingPoint;
+		double lowerWeight = 0;
+		double upperWeight = 0;
+		double accumulatedWeight = weights[startingPoint];
+		double selectionPerSide = (selectionSize - weights[startingPoint]) / 2;
+		boolean searchOn = false;
+		while (accumulatedWeight < selectionSize) {
+			while ((lowerWeight < selectionPerSide || (searchOn && accumulatedWeight < selectionSize)) && lower > 0) {
+				lower--;
+				lowerWeight += weights[lower];
+				accumulatedWeight += weights[lower];
+			}
+			while ((upperWeight < selectionPerSide || (searchOn && accumulatedWeight < selectionSize))
+					&& upper < weights.length - 1) {
+				upper++;
+				upperWeight += weights[upper];
+				accumulatedWeight += weights[upper];
+			}
+			searchOn = true;
+		}
+		double[] newIndexes = new double[upper - lower + 1];
+		for (int i = lower; i <= upper; i++) {
+			newIndexes[i - lower] = indexes[i];
+		}
 		indexes = newIndexes;
 	}
 

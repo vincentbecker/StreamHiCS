@@ -19,9 +19,9 @@ public abstract class CentroidsContainer {
 	 */
 	public abstract int getNumberOfInstances();
 
-	public abstract StatisticsBundle getProjectedDataStatistics(int referenceDimension);
+	public abstract double[] getProjectedData(int referenceDimension);
 
-	public abstract StatisticsBundle getSlicedDataStatistics(int[] shuffledDimensions, double selectionAlpha);
+	public abstract double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha);
 
 	public StatisticsBundle calculateStatistics(Centroid[] centroidSelection, int referenceDimension) {
 		int totalCount = 0;
@@ -54,15 +54,13 @@ public abstract class CentroidsContainer {
 
 	public abstract void densityCheck();
 
-	public double euclideanCentroidDistance(Centroid c1, Centroid c2) {
-		double[] v1 = c1.getVector();
-		double[] v2 = c2.getVector();
+	public double euclideanDistance(double[] v1, double[] v2) {
 		if (v1.length != v2.length) {
 			throw new IllegalArgumentException("Centroid vectors are of different length.");
 		}
 		double distance = 0;
 		for (int i = 0; i < v1.length; i++) {
-			distance = Math.pow(v1[i] - v2[i], 2);
+			distance += Math.pow(v1[i] - v2[i], 2);
 		}
 
 		return Math.sqrt(distance);

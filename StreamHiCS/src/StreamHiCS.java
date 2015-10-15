@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 
-import misc.Callback;
-import misc.Contrast;
-import streamDataStructures.SlidingWindowContrast;
+import contrast.Callback;
+import contrast.Contrast;
+import contrast.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import streamDataStructures.SubspaceSet;
 import weka.core.Instance;

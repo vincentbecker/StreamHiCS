@@ -40,6 +40,25 @@ public class KolmogorovSmirnov extends StatisticalTest {
 
 	@Override
 	public double calculateDeviation(double[] sample1, double[] sample2) {
+		//Check if all values are the same, special case for KS test
+		boolean same1 = true;
+		for(int i = 0; i < sample1.length; i++){
+			if(sample1[i] != sample1[0]){
+				same1 = false;
+				break;
+			}
+		}
+		boolean same2 = true;
+		for(int i = 0; i < sample2.length; i++){
+			if(sample2[i] != sample2[0]){
+				same2 = false;
+				break;
+			}
+		}
+		if(same1 && same2 && sample1[0] == sample2[0]){
+			return 0;
+		}
+		
 		double d = kolmogorovSmirnovTest.kolmogorovSmirnovStatistic(sample1, sample2);
 		return d;
 		//return (d - dMin) / (dMax - dMin);

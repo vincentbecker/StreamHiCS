@@ -1,4 +1,4 @@
-package misc;
+package contrast;
 /**
  * This class represents a callback.
  * 
