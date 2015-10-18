@@ -1,10 +1,24 @@
+import weka.core.DenseInstance;
 import weka.core.Instance;
+
+import java.awt.EventQueue;
+import drawing.PointsEx;
 import moa.streams.generators.RandomRBFGenerator;
 import streamDataStructures.SelfOrganizingMap;
 
-public class Main {
-
+public class Main {	
+	
 	public static void main(String[] args) {
+			
+		EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+
+                PointsEx ex = new PointsEx();
+                ex.setVisible(true);
+            }
+        });
+		
 		/*
 		 * int numInstances = 100000; // RandomRBFGenerator stream = new
 		 * RandomRBFGenerator(); // stream.prepareForUse(); // int
@@ -24,6 +38,7 @@ public class Main {
 		 * System.out.println(streamHiCS.getNumberOfInstances()); }
 		 */
 
+		/*
 		int numInstances = 1000;
 		RandomRBFGenerator stream = new RandomRBFGenerator();
 		stream.prepareForUse();
@@ -38,5 +53,6 @@ public class Main {
 
 		som.trainSOM();
 		System.out.println("Number of clusters: " + som.getNumberOfInstances());
+		*/
 	}
 }

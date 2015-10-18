@@ -1,16 +1,22 @@
 package centroids;
 
 public class Centroid {
+	private final long id;
 	private double[] vector;
 	private int count = 0;
 	private double weight = 0;
 	private int lastUpdate;
 	private double fadingFactor;
 
-	public Centroid(double[] vector, double fadingFactor, int lastUpdate) {
+	public Centroid(long id, double[] vector, double fadingFactor, int lastUpdate) {
+		this.id = id;
 		this.vector = vector;
 		this.fadingFactor = fadingFactor;
 		this.lastUpdate = lastUpdate;
+	}
+
+	public long getId() {
+		return id;
 	}
 
 	public double[] getVector() {
@@ -45,11 +51,11 @@ public class Centroid {
 	 * @return A string representation of this object.
 	 */
 	public String toString() {
-		String s = "[";
+		String s = "ID: " + id + " [";
 		for (int i = 0; i < vector.length - 1; i++) {
 			s += vector[i] + ", ";
 		}
-		s += (vector[vector.length -1] + "]");
+		s += (vector[vector.length - 1] + "]");
 		return s + " Weight: " + weight;
 	}
 }

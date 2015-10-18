@@ -18,6 +18,8 @@ public abstract class CentroidsContainer {
 	 * @return The number of {@link Instance}s currently contained.
 	 */
 	public abstract int getNumberOfInstances();
+	
+	public abstract Centroid[] getCentroids();
 
 	public abstract double[] getProjectedData(int referenceDimension);
 

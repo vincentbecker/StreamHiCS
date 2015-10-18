@@ -37,10 +37,9 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 */
 	private double radius;
 	/**
-	 * A ranking of the indexes of the {@link Centroid} according to their kNN
-	 * distances.
+	 * A ranking of the {@link Centroid}s according to their kNN distances.
 	 */
-	private double[] kNNRank;
+	private Centroid[] kNNRank;
 	/**
 	 * The {@link Callback} to alarm on changes found out checking the kNN
 	 * distribution.
@@ -93,7 +92,7 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 *            The radius of a {@link Centroid} determining if a
 	 *            new @link{Instance} could belong to it.
 	 * @param k
-	 *            The total weight for the kNNN calculation.
+	 *            The total weight for the kNN calculation.
 	 * @param checkCount
 	 *            The amount of new {@link Instance}s after which the kNN rank
 	 *            is checkded.
@@ -103,9 +102,11 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * @param weigthThreshold
 	 *            The threshold which determines when a {@link Centroid} is
 	 *            removed.
+	 * @param learningRate
+	 *            The learning rate.
 	 */
 	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius, double k,
-			int checkCount, double allowedChange, double weigthThreshold) {
+			int checkCount, double allowedChange, double weigthThreshold, double learningRate) {
 		this.centroids = new ArrayList<Centroid>();
 		this.callback = callback;
 		this.numberOfDimensions = numberOfDimensions;
@@ -115,6 +116,14 @@ public class AdaptingCentroids extends CentroidsContainer {
 		this.checkCount = checkCount;
 		this.allowedChange = allowedChange;
 		this.weightThreshold = weigthThreshold;
+		this.learningRate = learningRate;
+	}
+
+	@Override
+	public Centroid[] getCentroids() {
+		Centroid[] cs = new Centroid[centroids.size()];
+		centroids.toArray(cs);
+		return cs;
 	}
 
 	@Override
@@ -128,7 +137,7 @@ public class AdaptingCentroids extends CentroidsContainer {
 		// Find the closest centroid
 		Centroid nearest = findNearestCentroid(vector);
 		if (nearest == null) {
-			nearest = new Centroid(vector, fadingFactor, time);
+			nearest = new Centroid(time, vector, fadingFactor, time);
 			centroids.add(nearest);
 		} else {
 			adaptCentroid(nearest, vector);
@@ -300,6 +309,29 @@ public class AdaptingCentroids extends CentroidsContainer {
 		}
 		return slicedData;
 	}
+	
+	//TODO: Remove
+	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha){
+		if (!updated) {
+			updateWeights();
+		}
+
+		double[] dimData;
+		double weights[];
+		Selection selectedIndexes = new Selection(centroids.size(), selectionAlpha);
+		// Fill the list with all the indexes
+		selectedIndexes.fillRange();
+
+		for (int i = 0; i < shuffledDimensions.length - 1; i++) {
+			// Get all the data for the specific dimension that is selected
+			dimData = getSelectedData(shuffledDimensions[i], selectedIndexes);
+			weights = getSelectedWeights(selectedIndexes);
+			// Reduce the number of indexes according to a new selection in
+			// the current dimension
+			selectedIndexes.selectWithWeights(dimData, weights);
+		}
+		return selectedIndexes;
+	}
 
 	/**
 	 * Gets the data contained in the selected {@link Centroid}s according to
@@ -345,40 +377,66 @@ public class AdaptingCentroids extends CentroidsContainer {
 		// Calculate kNN-distances and sort them.
 		double[] kNNDistances = new double[numberOfCentroids];
 		double[] indexes = new double[numberOfCentroids];
-
+		Centroid[] newKNNRank = new Centroid[numberOfCentroids];
 		for (int i = 0; i < numberOfCentroids; i++) {
 			kNNDistances[i] = calculateKNNDistance(i, k);
 			indexes[i] = i;
 		}
 
 		MathArrays.sortInPlace(kNNDistances, indexes);
+		for (int i = 0; i < numberOfCentroids; i++) {
+			newKNNRank[i] = centroids.get((int) indexes[i]);
+		}
 
 		// Calculate the change in the kNN rank
 		int change = 0;
+		boolean found = false;
+		ArrayList<Integer> checked = new ArrayList<Integer>();
 		if (kNNRank != null) {
-			for (int i = 0; i < numberOfCentroids; i++) {
-				for (int j = 0; j < numberOfCentroids; j++) {
-					if (kNNRank[i] == indexes[j]) {
+			for (int i = 0; i < kNNRank.length; i++) {
+				found = false;
+				for (int j = 0; j < numberOfCentroids && !found; j++) {
+					if (kNNRank[i].getId() == newKNNRank[j].getId()) {
 						change += Math.abs(i - j);
+						found = true;
+						checked.add(j);
 					}
 				}
+				if (!found) {
+					// Means the centroid which previously was at index i was
+					// removed.
+					change += kNNRank.length - i;
+				}
 			}
-		}
+			// Checking on all centroids which are new
+			for (int i = 0; i < numberOfCentroids; i++) {
+				if (!checked.contains(i)) {
+					change += numberOfCentroids - i;
+				}
+			}
 
-		kNNRank = indexes;
+		} else {
+			callback.onAlarm();
+		}
+		kNNRank = newKNNRank;
 
 		if (change > allowedChange * numberOfCentroids) {
 			// Notify callback to check contrast
 			callback.onAlarm();
 		}
 
+		System.out.println("Change: " + change);
+
+		for (Centroid c : kNNRank) {
+			System.out.println(c);
+		}
 	}
 
 	/**
 	 * Calculates the kNN distance for the {@linkCentroid} by the given index. k
 	 * does not indicates how many neighbouring {@linkCentroid}s have to be
 	 * taken into account, but how big the accumulated weight of the
-	 * neighbouring {@link Centroid}s has to be.
+	 * neighbouring {@link Centroid}s has to be including the own weight.
 	 * 
 	 * @param index
 	 *            The index of the {@link Centroid} for which the kNN distance
@@ -409,8 +467,8 @@ public class AdaptingCentroids extends CentroidsContainer {
 			}
 		}
 
-		double accumulatedWeight = 0;
-		Iterator<DistanceObject> it = distSet.descendingIterator();
+		double accumulatedWeight = centroids.get(index).getWeight();
+		Iterator<DistanceObject> it = distSet.iterator();
 		double kNNDistance = 0;
 		DistanceObject d;
 		while (it.hasNext() && accumulatedWeight < k) {

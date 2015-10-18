@@ -1,7 +1,9 @@
 package contrast;
 
 import centroids.AdaptingCentroids;
+import centroids.Centroid;
 import centroids.CentroidsContainer;
+import streamDataStructures.Selection;
 import weka.core.Instance;
 
 /**
@@ -20,7 +22,7 @@ public class CentroidContrast extends Contrast {
 
 	public CentroidContrast(Callback callback, int numberOfDimensions, int m, double alpha, int checkCount) {
 		super(callback, m, alpha);
-		centroids = new AdaptingCentroids(this, numberOfDimensions, 0.01, 0.01, 500, checkCount, 0.1, 0.8);
+		centroids = new AdaptingCentroids(this, numberOfDimensions, 0.01, 0.2, 25, checkCount, 0.1, 0.5, 0.2);
 	}
 
 	@Override
@@ -32,6 +34,10 @@ public class CentroidContrast extends Contrast {
 	public void clear() {
 		centroids.clear();
 	}
+	
+	public Centroid[] getCentroids(){
+		return centroids.getCentroids();
+	}
 
 	@Override
 	public double[] getProjectedData(int referenceDimension) {
@@ -41,5 +47,9 @@ public class CentroidContrast extends Contrast {
 	@Override
 	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		return centroids.getSlicedData(shuffledDimensions, selectionAlpha);
+	}
+	
+	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha){
+		return ((AdaptingCentroids) centroids).getSliceIndexes(shuffledDimensions, selectionAlpha);
 	}
 }

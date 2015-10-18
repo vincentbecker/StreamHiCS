@@ -25,6 +25,9 @@ public class ContrastTest {
 		double function(double x);
 	}
 
+	/**
+	 * The contrast measure. 
+	 */
 	private static Contrast contrastEvaluator;
 	/**
 	 * The number of instances used in the test.

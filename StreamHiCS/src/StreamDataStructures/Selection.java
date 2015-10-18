@@ -58,6 +58,15 @@ public class Selection {
 		return (int) indexes[i];
 	}
 
+	public boolean contains(int i) {
+		for (Double d : indexes) {
+			if (d == i) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Fills the index array with the range beginning at 0.
 	 */
@@ -99,8 +108,19 @@ public class Selection {
 
 		// Sort the data and arrange the indexes correspondingly
 		MathArrays.sortInPlace(data, indexes, weights);
+		/*
+		System.out.println("Data: ");
+		for(int i = 0; i < data.length; i++){
+			System.out.print(data[i] + ", ");	
+		}
+		System.out.println("Indexes: ");
+		for(int i = 0; i < data.length; i++){
+			System.out.print(indexes[i] + ", ");	
+		}
+		*/
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
+		//System.out.println("Starting point: " + startingPoint);
 		selectRangeWithWeights(weights, startingPoint, selectionSize);
 	}
 
@@ -166,6 +186,7 @@ public class Selection {
 			}
 			searchOn = true;
 		}
+		//System.out.println("Lower: " + lower + " Upper: " + upper);
 		double[] newIndexes = new double[upper - lower + 1];
 		for (int i = lower; i <= upper; i++) {
 			newIndexes[i - lower] = indexes[i];
