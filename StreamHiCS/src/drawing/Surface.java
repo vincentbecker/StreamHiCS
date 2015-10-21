@@ -13,6 +13,7 @@ import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
 
 import centroids.Centroid;
+import centroids.PHTChecker;
 import contrast.Callback;
 import contrast.CentroidContrast;
 import streamDataStructures.Selection;
@@ -21,7 +22,7 @@ import weka.core.Instance;
 
 class Surface extends JPanel implements ActionListener {
 
-	private final int DELAY = 100;
+	private final int DELAY = 10;
 	private Timer timer;
 	private CentroidContrast centroidContrast;
 	private Callback callback = new Callback() {
@@ -33,13 +34,15 @@ class Surface extends JPanel implements ActionListener {
 
 	};
 	private int count = 0;
+	private int conceptChange = 1100;
 	private double xRange = 10;
 	private double yRange = 10;
 	private Random r;
 	private int[] shuffledDimensions = { 0, 1 };
 
 	public Surface() {
-		this.centroidContrast = new CentroidContrast(callback, 2, 20, 0.4, 10000);
+		this.centroidContrast = new CentroidContrast(callback, 2, 20, 0.4, 0.01, 0.2, 500, 0.1, 0.2,
+				new PHTChecker(2, 1, 1));
 		r = new Random();
 		initTimer();
 	}
@@ -122,11 +125,16 @@ class Surface extends JPanel implements ActionListener {
 		double x = r.nextGaussian();
 		double y = r.nextGaussian();
 		double offset = 0;
-		if (count % 2 == 0) {
-			offset = 3;
+		if (count >= conceptChange) {
+			offset = 10;
 		} else {
-			offset = 7;
+			if (count % 2 == 0) {
+				offset = 3;
+			} else {
+				offset = 7;
+			}
 		}
+
 		x += offset;
 		y += offset;
 		addInstance(x, y);

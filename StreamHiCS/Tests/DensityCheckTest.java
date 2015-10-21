@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import centroids.DensityChecker;
 import contrast.Callback;
 import contrast.CentroidContrast;
 import contrast.Contrast;
@@ -40,7 +41,8 @@ public class DensityCheckTest {
 			}
 
 		};
-		contrastEvaluator = new CentroidContrast(callback, 2, 20, 0.4, numInstances);
+		contrastEvaluator = new CentroidContrast(callback, 2, 20, 0.4, 0.01, 0.2, numInstances, 0.1, 0.2,
+				new DensityChecker(25, 1));
 	}
 
 	@Before

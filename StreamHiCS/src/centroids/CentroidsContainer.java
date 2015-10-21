@@ -54,17 +54,5 @@ public abstract class CentroidsContainer {
 		return new StatisticsBundle(mean, variance);
 	}
 
-	public abstract void densityCheck();
-
-	public double euclideanDistance(double[] v1, double[] v2) {
-		if (v1.length != v2.length) {
-			throw new IllegalArgumentException("Centroid vectors are of different length.");
-		}
-		double distance = 0;
-		for (int i = 0; i < v1.length; i++) {
-			distance += Math.pow(v1[i] - v2[i], 2);
-		}
-
-		return Math.sqrt(distance);
-	}
+	public abstract void changeCheck();
 }

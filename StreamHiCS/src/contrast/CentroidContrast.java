@@ -3,6 +3,7 @@ package contrast;
 import centroids.AdaptingCentroids;
 import centroids.Centroid;
 import centroids.CentroidsContainer;
+import centroids.ChangeChecker;
 import streamDataStructures.Selection;
 import weka.core.Instance;
 
@@ -20,9 +21,10 @@ public class CentroidContrast extends Contrast {
 	 */
 	private CentroidsContainer centroids;
 
-	public CentroidContrast(Callback callback, int numberOfDimensions, int m, double alpha, int checkCount) {
+	public CentroidContrast(Callback callback, int numberOfDimensions, int m, double alpha, double fadingLambda,
+			double radius, int checkCount, double weightThreshold, double learningRate, ChangeChecker changeChecker) {
 		super(callback, m, alpha);
-		centroids = new AdaptingCentroids(this, numberOfDimensions, 0.01, 0.2, 25, checkCount, 0.1, 0.5, 0.2);
+		centroids = new AdaptingCentroids(this, numberOfDimensions, fadingLambda, radius, checkCount, weightThreshold, learningRate, changeChecker);
 	}
 
 	@Override
@@ -34,8 +36,8 @@ public class CentroidContrast extends Contrast {
 	public void clear() {
 		centroids.clear();
 	}
-	
-	public Centroid[] getCentroids(){
+
+	public Centroid[] getCentroids() {
 		return centroids.getCentroids();
 	}
 
@@ -48,8 +50,13 @@ public class CentroidContrast extends Contrast {
 	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		return centroids.getSlicedData(shuffledDimensions, selectionAlpha);
 	}
-	
-	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha){
+
+	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha) {
 		return ((AdaptingCentroids) centroids).getSliceIndexes(shuffledDimensions, selectionAlpha);
+	}
+
+	@Override
+	public int getNumberOfElements() {
+		return centroids.getNumberOfInstances();
 	}
 }

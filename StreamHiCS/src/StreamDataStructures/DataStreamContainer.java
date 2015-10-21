@@ -15,7 +15,7 @@ public abstract class DataStreamContainer {
 	 * The number of instances currently contained in the
 	 * {@link DataStreamContainer}.
 	 */
-	public int numberOfInstances;
+	protected int numberOfInstances;
 
 	/**
 	 * Adds the given {@link Instance} to the container.

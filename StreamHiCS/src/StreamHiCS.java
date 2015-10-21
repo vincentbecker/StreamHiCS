@@ -2,7 +2,6 @@ import java.util.ArrayList;
 
 import contrast.Callback;
 import contrast.Contrast;
-import contrast.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import streamDataStructures.SubspaceSet;
 import weka.core.Instance;
@@ -34,6 +33,10 @@ public class StreamHiCS implements Callback {
 	 */
 	private int cutoff;
 	/**
+	 * The difference in contrast allowed to prune a {@link Subspace}.
+	 */
+	private double pruningDifference;
+	/**
 	 * The @link{Contrast} evaluator.
 	 */
 	private Contrast contrastEvaluator;
@@ -43,15 +46,6 @@ public class StreamHiCS implements Callback {
 	 * 
 	 * @param numberOfDimensions
 	 *            The number of dimensions of the full space.
-	 * @param updateInterval
-	 *            The number how many {@link Instance}s are observed between
-	 *            evaluations of the correlated {@link Subspace}s.
-	 * @param m
-	 *            The number of Monte Carlo iterations for the estimation of the
-	 *            conditional density.
-	 * @param alpha
-	 *            The fraction of data that should be selected in the estimation
-	 *            of the conditional density.
 	 * @param epsilon
 	 *            The deviation that is allowed for contrast values between two
 	 *            evaluation without starting a full new build of the correlated
@@ -61,17 +55,18 @@ public class StreamHiCS implements Callback {
 	 *            contrast above or equal to the threshold may be considered as
 	 *            correlated.
 	 */
-	public StreamHiCS(int numberOfDimensions, int updateInterval, int m, double alpha, double epsilon, double threshold,
-			int cutoff) {
+	public StreamHiCS(int numberOfDimensions, double epsilon, double threshold, int cutoff, double pruningDifference,
+			Contrast contrastEvaluator) {
 		correlatedSubspaces = new SubspaceSet();
-		if (numberOfDimensions <= 0 || updateInterval <= 0 || m <= 0 || alpha <= 0 || epsilon <= 0 || cutoff <= 0) {
+		if (numberOfDimensions <= 0 || epsilon < 0 || cutoff <= 0 || pruningDifference < 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
 		}
 		this.numberOfDimensions = numberOfDimensions;
 		this.epsilon = epsilon;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
-		this.contrastEvaluator = new SlidingWindowContrast(this, numberOfDimensions, updateInterval, m, alpha);
+		this.pruningDifference = pruningDifference;
+		this.contrastEvaluator = contrastEvaluator;
 	}
 
 	/**
@@ -137,7 +132,15 @@ public class StreamHiCS implements Callback {
 				buildCorrelatedSubspaces();
 			}
 		}
-
+		
+		System.out.println("Correlated: " + correlatedSubspaces.toString());
+		if(!correlatedSubspaces.isEmpty()){
+			for(Subspace s : correlatedSubspaces.getSubspaces()){
+				System.out.print(s.getContrast() + ", ");
+			}
+			System.out.println();
+		}
+		
 		/*
 		 * // Parallel version List<Double> res =
 		 * correlatedSubspaces.parallelStream().map(s -> { return
@@ -225,8 +228,6 @@ public class StreamHiCS implements Callback {
 			// Recurse
 			apriori(c_Kplus1);
 		}
-
-		// TODO: Parallel excecution? At least checking procedure -> forEach()
 	}
 
 	/**
@@ -296,7 +297,7 @@ public class StreamHiCS implements Callback {
 					// If the correlated subspace contains a superset that has
 					// at least (nearly) the same contrast we discard the
 					// current subspace
-					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + 0.01)) {
+					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + pruningDifference)) {
 						discard.add(i);
 						discarded = true;
 					}
@@ -356,6 +357,5 @@ public class StreamHiCS implements Callback {
 	@Override
 	public void onAlarm() {
 		evaluateCorrelatedSubspaces();
-		System.out.println("Correlated: " + correlatedSubspaces.toString());
 	}
 }

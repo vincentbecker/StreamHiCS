@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
+import contrast.Contrast;
+import contrast.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import streamDataStructures.SubspaceSet;
 import streams.GaussianStream;
@@ -20,6 +22,7 @@ public class StreamTest {
 	private final double epsilon = 0.1;
 	private final double threshold = 0.3;
 	private final int cutoff = 5;
+	private final double pruningDifference = 0.05;
 	private double[][][] covarianceMatrices = {
 			{ { 1, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0, 1, 0, 0 }, { 0, 0, 0, 1, 0 }, { 0, 0, 0, 0, 1 } },
 			{ { 1, 0.2, 0.1, 0, 0 }, { 0.2, 1, 0.1, 0, 0 }, { 0.1, 0.1, 1, 0.1, 0.1 }, { 0, 0, 0.1, 1, 0.1 },
@@ -37,7 +40,10 @@ public class StreamTest {
 	@Before
 	public void setUp() throws Exception {
 		stream = new GaussianStream(covarianceMatrices[0]);
-		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, numInstances, m, alpha, epsilon, threshold, cutoff);
+		Contrast swc = new SlidingWindowContrast(null, covarianceMatrices[0].length, numInstances, m, alpha, numInstances);
+		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, epsilon, threshold, cutoff, pruningDifference, swc);
+		swc.setCallback(streamHiCS);
+		
 		correctResults = new ArrayList<SubspaceSet>();
 	}
 

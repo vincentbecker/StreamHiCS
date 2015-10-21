@@ -31,11 +31,11 @@ public class SlidingWindowContrast extends Contrast {
 	 *            The number how many {@link Instance}s are observed between
 	 *            evaluations of the correlated {@link Subspace}s.
 	 */
-	public SlidingWindowContrast(Callback callback, int numberOfDimensions, int updateInterval, int m, double alpha) {
+	public SlidingWindowContrast(Callback callback, int numberOfDimensions, int updateInterval, int m, double alpha, int windowLength) {
 		super(callback, m, alpha);
 		this.updateInterval = updateInterval;
 		// dataStreamContainer = new SelfOrganizingMap(numberOfDimensions, 100);
-		dataStreamContainer = new SlidingWindow(numberOfDimensions, 10000);
+		dataStreamContainer = new SlidingWindow(numberOfDimensions, windowLength);
 	}
 
 	@Override
@@ -75,5 +75,10 @@ public class SlidingWindowContrast extends Contrast {
 	@Override
 	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		return dataStreamContainer.getSlicedData(shuffledDimensions, selectionAlpha);
+	}
+
+	@Override
+	public int getNumberOfElements() {
+		return dataStreamContainer.getNumberOfInstances();
 	}
 }

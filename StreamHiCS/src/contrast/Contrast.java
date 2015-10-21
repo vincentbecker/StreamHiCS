@@ -37,6 +37,7 @@ public abstract class Contrast implements Callback {
 
 	/**
 	 * 
+	 * 
 	 * @param callback
 	 * @param m
 	 *            The number of Monte Carlo iterations for the estimation of the
@@ -52,6 +53,10 @@ public abstract class Contrast implements Callback {
 		this.alpha = alpha;
 		this.statisticalTest = new KolmogorovSmirnov();
 	}
+	
+	public void setCallback(Callback callback){
+		this.callback = callback;
+	}
 
 	/**
 	 * Add an @link{Instance}.
@@ -65,6 +70,8 @@ public abstract class Contrast implements Callback {
 	 * Clears all stored {@link Instance}s.
 	 */
 	public abstract void clear();
+	
+	public abstract int getNumberOfElements();
 
 	/**
 	 * Returns the data contained projected to the given reference dimension. 

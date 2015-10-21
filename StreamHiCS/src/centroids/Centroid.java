@@ -44,6 +44,21 @@ public class Centroid {
 		weight = weight * Math.pow(fadingFactor, currentTime - lastUpdate);
 		lastUpdate = currentTime;
 	}
+	
+	public double euclideanDistance(double[] vector) {
+		double[] v1 = this.vector;
+		double[] v2 = vector;
+		if (v1.length != v2.length) {
+			throw new IllegalArgumentException("Centroid vectors are of different length.");
+		}
+		double distance = 0;
+		for (int i = 0; i < v1.length; i++) {
+			distance += Math.pow(v1[i] - v2[i], 2);
+		}
+
+		return Math.sqrt(distance);
+	}
+
 
 	/**
 	 * Returns a string representation of this object.

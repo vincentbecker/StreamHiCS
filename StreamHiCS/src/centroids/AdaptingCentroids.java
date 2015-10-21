@@ -1,12 +1,7 @@
 package centroids;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.TreeSet;
-import org.apache.commons.math3.util.MathArrays;
 import contrast.Callback;
-import contrast.DistanceObject;
 import streamDataStructures.Selection;
 import weka.core.Instance;
 
@@ -37,22 +32,10 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 */
 	private double radius;
 	/**
-	 * A ranking of the {@link Centroid}s according to their kNN distances.
-	 */
-	private Centroid[] kNNRank;
-	/**
 	 * The {@link Callback} to alarm on changes found out checking the kNN
 	 * distribution.
 	 */
 	private Callback callback;
-	/**
-	 * The total weight for a kNN search.
-	 */
-	private double k;
-	/**
-	 * The allowed change in the kNNRank without alarming the callback.
-	 */
-	private double allowedChange;
 	/**
 	 * Keeps track of the current time.
 	 */
@@ -78,6 +61,10 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * The learning rate for the adaptation of the {@link Centroid}.
 	 */
 	private double learningRate = 0.1;
+	/**
+	 * The {@link ChangeChecker}
+	 */
+	private ChangeChecker changeChecker;
 
 	/**
 	 * Created an object of this class.
@@ -91,32 +78,26 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * @param radius
 	 *            The radius of a {@link Centroid} determining if a
 	 *            new @link{Instance} could belong to it.
-	 * @param k
-	 *            The total weight for the kNN calculation.
 	 * @param checkCount
-	 *            The amount of new {@link Instance}s after which the kNN rank
-	 *            is checkded.
-	 * @param allowedChange
-	 *            The allowed change in the kNN rank before an alarm to the
-	 *            {@link Callback} is signalled.
+	 *            The amount of new {@link Instance}s after which we check for
+	 *            change.
 	 * @param weigthThreshold
 	 *            The threshold which determines when a {@link Centroid} is
 	 *            removed.
 	 * @param learningRate
 	 *            The learning rate.
 	 */
-	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius, double k,
-			int checkCount, double allowedChange, double weigthThreshold, double learningRate) {
+	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius,
+			int checkCount, double weigthThreshold, double learningRate, ChangeChecker changeChecker) {
 		this.centroids = new ArrayList<Centroid>();
 		this.callback = callback;
 		this.numberOfDimensions = numberOfDimensions;
 		this.fadingFactor = Math.pow(2, -fadingLambda);
 		this.radius = radius;
-		this.k = k;
 		this.checkCount = checkCount;
-		this.allowedChange = allowedChange;
 		this.weightThreshold = weigthThreshold;
 		this.learningRate = learningRate;
+		this.changeChecker = changeChecker;
 	}
 
 	@Override
@@ -150,7 +131,7 @@ public class AdaptingCentroids extends CentroidsContainer {
 
 		count++;
 		if (count >= checkCount) {
-			densityCheck();
+			changeCheck();
 			count = 0;
 		}
 	}
@@ -173,7 +154,7 @@ public class AdaptingCentroids extends CentroidsContainer {
 		updateWeights();
 
 		for (Centroid c : centroids) {
-			distance = euclideanDistance(c.getVector(), vector);
+			distance = c.euclideanDistance(vector);
 			if (distance < radius && distance < minDistance) {
 				minDistance = distance;
 				nearestCentroid = c;
@@ -309,9 +290,9 @@ public class AdaptingCentroids extends CentroidsContainer {
 		}
 		return slicedData;
 	}
-	
-	//TODO: Remove
-	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha){
+
+	// TODO: Remove
+	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha) {
 		if (!updated) {
 			updateWeights();
 		}
@@ -369,114 +350,13 @@ public class AdaptingCentroids extends CentroidsContainer {
 	}
 
 	@Override
-	public void densityCheck() {
+	public void changeCheck() {
 		if (!updated) {
 			updateWeights();
 		}
-		int numberOfCentroids = centroids.size();
-		// Calculate kNN-distances and sort them.
-		double[] kNNDistances = new double[numberOfCentroids];
-		double[] indexes = new double[numberOfCentroids];
-		Centroid[] newKNNRank = new Centroid[numberOfCentroids];
-		for (int i = 0; i < numberOfCentroids; i++) {
-			kNNDistances[i] = calculateKNNDistance(i, k);
-			indexes[i] = i;
-		}
-
-		MathArrays.sortInPlace(kNNDistances, indexes);
-		for (int i = 0; i < numberOfCentroids; i++) {
-			newKNNRank[i] = centroids.get((int) indexes[i]);
-		}
-
-		// Calculate the change in the kNN rank
-		int change = 0;
-		boolean found = false;
-		ArrayList<Integer> checked = new ArrayList<Integer>();
-		if (kNNRank != null) {
-			for (int i = 0; i < kNNRank.length; i++) {
-				found = false;
-				for (int j = 0; j < numberOfCentroids && !found; j++) {
-					if (kNNRank[i].getId() == newKNNRank[j].getId()) {
-						change += Math.abs(i - j);
-						found = true;
-						checked.add(j);
-					}
-				}
-				if (!found) {
-					// Means the centroid which previously was at index i was
-					// removed.
-					change += kNNRank.length - i;
-				}
-			}
-			// Checking on all centroids which are new
-			for (int i = 0; i < numberOfCentroids; i++) {
-				if (!checked.contains(i)) {
-					change += numberOfCentroids - i;
-				}
-			}
-
-		} else {
+		// Check for change and inform the callback in case.
+		if (changeChecker.checkForChange(centroids)) {
 			callback.onAlarm();
 		}
-		kNNRank = newKNNRank;
-
-		if (change > allowedChange * numberOfCentroids) {
-			// Notify callback to check contrast
-			callback.onAlarm();
-		}
-
-		System.out.println("Change: " + change);
-
-		for (Centroid c : kNNRank) {
-			System.out.println(c);
-		}
-	}
-
-	/**
-	 * Calculates the kNN distance for the {@linkCentroid} by the given index. k
-	 * does not indicates how many neighbouring {@linkCentroid}s have to be
-	 * taken into account, but how big the accumulated weight of the
-	 * neighbouring {@link Centroid}s has to be including the own weight.
-	 * 
-	 * @param index
-	 *            The index of the {@link Centroid} for which the kNN distance
-	 *            should be calculated.
-	 * @param k
-	 *            The accumulated weight of the neighbours have to have.
-	 * @return The kNN distance, where k is the accumulated weight that has to
-	 *         be reached.
-	 */
-	private double calculateKNNDistance(int index, double k) {
-		Centroid c = centroids.get(index);
-		TreeSet<DistanceObject> distSet = new TreeSet<DistanceObject>(new Comparator<DistanceObject>() {
-			@Override
-			public int compare(DistanceObject o1, DistanceObject o2) {
-				if (o1.getDistance() < o2.getDistance()) {
-					return -1;
-				} else if (o1.getDistance() > o2.getDistance()) {
-					return 1;
-				}
-				return 0;
-			}
-		});
-
-		for (int i = 0; i < centroids.size(); i++) {
-			if (i != index) {
-				distSet.add(new DistanceObject(euclideanDistance(c.getVector(), centroids.get(i).getVector()),
-						centroids.get(i).getWeight()));
-			}
-		}
-
-		double accumulatedWeight = centroids.get(index).getWeight();
-		Iterator<DistanceObject> it = distSet.iterator();
-		double kNNDistance = 0;
-		DistanceObject d;
-		while (it.hasNext() && accumulatedWeight < k) {
-			d = it.next();
-			accumulatedWeight += d.getWeight();
-			kNNDistance = d.getDistance();
-		}
-
-		return kNNDistance;
 	}
 }

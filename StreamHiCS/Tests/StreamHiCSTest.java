@@ -1,6 +1,9 @@
 import static org.junit.Assert.*;
 import org.junit.Test;
-
+import centroids.TimeCountChecker;
+import contrast.CentroidContrast;
+import contrast.Contrast;
+import contrast.SlidingWindowContrast;
 import streamDataStructures.Subspace;
 import streamDataStructures.SubspaceSet;
 import streams.GaussianStream;
@@ -10,12 +13,15 @@ public class StreamHiCSTest {
 
 	private GaussianStream stream;
 	private StreamHiCS streamHiCS;
+	private Contrast contrastEvaluator;
 	private final int numInstances = 10000;
-	private final int m = 100;
-	private final double alpha = 0.05;
-	private final double epsilon = 0.1;
-	private final double threshold = 0.2;
-	private final int cutoff = 5;
+	private final int m = 20;
+	private double alpha;
+	private double epsilon;
+	private double threshold;
+	private int cutoff;
+	private double pruningDifference;
+	private final String method = "adaptiveCentroids";
 
 	@Test
 	public void subspaceTest1() {
@@ -153,7 +159,35 @@ public class StreamHiCSTest {
 
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
 		stream = new GaussianStream(covarianceMatrix);
-		streamHiCS = new StreamHiCS(covarianceMatrix.length, numInstances, m, alpha, epsilon, threshold, cutoff);
+		if (method.equals("slidingWindow")) {
+			alpha = 0.05;
+			epsilon = 0;
+			threshold = 0.1;
+			cutoff = 5;
+			pruningDifference = 0.05;
+			
+			contrastEvaluator = new SlidingWindowContrast(null, covarianceMatrix.length, numInstances, m, alpha,
+					numInstances);
+		} else if (method.equals("adaptiveCentroids")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.23;
+			cutoff = 8;
+			pruningDifference = 0.15;
+
+			double fadingLambda = 0.005;
+			double radius = 0.2;
+			double weightThreshold = 0.1;
+			double learningRate = 0.1;
+
+			contrastEvaluator = new CentroidContrast(null, covarianceMatrix.length, m, alpha, fadingLambda, radius,
+					numInstances, weightThreshold, learningRate, new TimeCountChecker());
+		} else {
+			contrastEvaluator = null;
+		}
+
+		streamHiCS = new StreamHiCS(covarianceMatrix.length, epsilon, threshold, cutoff, pruningDifference, contrastEvaluator);
+		contrastEvaluator.setCallback(streamHiCS);
 
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
@@ -161,6 +195,8 @@ public class StreamHiCSTest {
 			streamHiCS.add(inst);
 			numberSamples++;
 		}
+		
+		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		// Evaluation
 		int l = correctResult.size();
@@ -176,9 +212,14 @@ public class StreamHiCSTest {
 		if (l > 0) {
 			recall = ((double) tp) / correctResult.size();
 			fpRatio = ((double) fp) / correctResult.size();
+		} else {
+			if (fp > 0) {
+				fpRatio = 1;
+			}
 		}
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
-
+		System.out.println();
+		
 		// return
 		// streamHiCS.getCurrentlyCorrelatedSubspaces().equals(correctResult);
 		return ((recall - fpRatio) >= 0.75);
