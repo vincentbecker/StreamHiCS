@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
+import centroids.TimeCountChecker;
+import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.SlidingWindowContrast;
 import streamDataStructures.Subspace;
@@ -16,13 +18,14 @@ public class StreamTest {
 
 	private GaussianStream stream;
 	private StreamHiCS streamHiCS;
+	private Contrast contrastEvaluator;
 	private final int numInstances = 10000;
-	private final int m = 100;
-	private final double alpha = 0.2;
-	private final double epsilon = 0.1;
-	private final double threshold = 0.3;
-	private final int cutoff = 5;
-	private final double pruningDifference = 0.05;
+	private final int m = 50;
+	private double alpha;
+	private double epsilon;
+	private double threshold;
+	private int cutoff;
+	private double pruningDifference;
 	private double[][][] covarianceMatrices = {
 			{ { 1, 0, 0, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0, 0, 1, 0, 0 }, { 0, 0, 0, 1, 0 }, { 0, 0, 0, 0, 1 } },
 			{ { 1, 0.2, 0.1, 0, 0 }, { 0.2, 1, 0.1, 0, 0 }, { 0.1, 0.1, 1, 0.1, 0.1 }, { 0, 0, 0.1, 1, 0.1 },
@@ -36,13 +39,40 @@ public class StreamTest {
 			{ { 1, 0.9, 0.8, 0.2, 0.2 }, { 0.9, 1, 0.8, 0.2, 0.2 }, { 0.8, 0.8, 1, 0.8, 0.8 },
 					{ 0.2, 0.2, 0.8, 1, 0.8 }, { 0.2, 0.2, 0.2, 0.8, 1 } } };
 	private ArrayList<SubspaceSet> correctResults;
+	private final String method = "adaptiveCentroids";
 
 	@Before
 	public void setUp() throws Exception {
 		stream = new GaussianStream(covarianceMatrices[0]);
-		Contrast swc = new SlidingWindowContrast(null, covarianceMatrices[0].length, numInstances, m, alpha, numInstances);
-		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, epsilon, threshold, cutoff, pruningDifference, swc);
-		swc.setCallback(streamHiCS);
+		
+		if (method.equals("slidingWindow")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.2;
+			cutoff = 6;
+			pruningDifference = 0.1;
+
+			contrastEvaluator = new SlidingWindowContrast(null, covarianceMatrices[0].length, numInstances, m, alpha,
+					numInstances);
+		} else if (method.equals("adaptiveCentroids")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.23;
+			cutoff = 8;
+			pruningDifference = 0.15;
+
+			double fadingLambda = 0.005;
+			double radius = 0.2;
+			double weightThreshold = 0.1;
+			double learningRate = 0.1;
+
+			contrastEvaluator = new CentroidContrast(null, covarianceMatrices[0].length, m, alpha, fadingLambda, radius,
+					numInstances, weightThreshold, learningRate, new TimeCountChecker());
+		} else {
+			contrastEvaluator = null;
+		}
+		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, epsilon, threshold, cutoff, pruningDifference, contrastEvaluator);
+		contrastEvaluator.setCallback(streamHiCS);
 		
 		correctResults = new ArrayList<SubspaceSet>();
 	}
@@ -114,7 +144,7 @@ public class StreamTest {
 			fpRatio = ((double) fp) / correctResult.size();
 		}
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
-
+		System.out.println();
 		return recall - fpRatio;
 	}
 

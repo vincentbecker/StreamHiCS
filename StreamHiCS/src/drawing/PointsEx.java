@@ -8,6 +8,11 @@ import javax.swing.Timer;
 
 public class PointsEx extends JFrame {
 
+	/**
+	 * Default serial version id.
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public PointsEx() {
 
 		initUI();

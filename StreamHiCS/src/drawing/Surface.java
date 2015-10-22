@@ -22,6 +22,10 @@ import weka.core.Instance;
 
 class Surface extends JPanel implements ActionListener {
 
+	/**
+	 * Default serial version id.
+	 */
+	private static final long serialVersionUID = 1L;
 	private final int DELAY = 10;
 	private Timer timer;
 	private CentroidContrast centroidContrast;
@@ -83,7 +87,7 @@ class Surface extends JPanel implements ActionListener {
 			// System.out.println("[" + shuffledDimensions[0] + ", " +
 			// shuffledDimensions[1] + "]");
 			// System.out.println("Number of centroids: " + cs.length);
-			s = centroidContrast.getSliceIndexes(shuffledDimensions, 0.4);
+			s = centroidContrast.getSliceIndexes(shuffledDimensions, 0.2);
 			// System.out.println("Selected Indexes: " + s.toString());
 			// System.out.println("Selected IDs: ");
 			// for(int i = 0; i < s.size(); i++){

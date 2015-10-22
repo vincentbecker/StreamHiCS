@@ -21,7 +21,7 @@ public class StreamHiCSTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private final String method = "adaptiveCentroids";
+	private final String method = "slidingWindow";
 
 	@Test
 	public void subspaceTest1() {
@@ -157,15 +157,44 @@ public class StreamHiCSTest {
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
 
+	@Test
+	public void subspaceTest14() {
+		double[][] covarianceMatrix = { { 1, 0.1, 0.1, 0.1, 0.1 }, { 0.1, 1, 0.1, 0.1, 0.1 }, { 0.1, 0.1, 1, 0.1, 0.1 },
+				{ 0.1, 0.1, 0.1, 1, 0.1 }, { 0.1, 0.1, 0.1, 0.1, 1 } };
+		SubspaceSet correctResult = new SubspaceSet();
+		System.out.println("Test 14");
+		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
+	}
+
+	@Test
+	public void subspaceTest15() {
+		double[][] covarianceMatrix = { { 1, 0, 0.7, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0.7, 0, 1, 0, 0 },
+				{ 0, 0, 0, 1, 0 }, { 0, 0, 0, 0, 1 } };
+		SubspaceSet correctResult = new SubspaceSet();
+		correctResult.addSubspace(new Subspace(0, 2));
+		System.out.println("Test 15");
+		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
+	}
+
+	@Test
+	public void subspaceTest16() {
+		double[][] covarianceMatrix = { { 1, 0.6, 0, 0.6, 0 }, { 0.6, 1, 0, 0.6, 0 }, { 0, 0, 1, 0, 0 },
+				{ 0.6, 0.6, 0, 1, 0 }, { 0, 0, 0, 0, 1 } };
+		SubspaceSet correctResult = new SubspaceSet();
+		correctResult.addSubspace(new Subspace(0, 1, 3));
+		System.out.println("Test 16");
+		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
+	}
+
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
 		stream = new GaussianStream(covarianceMatrix);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;
 			threshold = 0.1;
-			cutoff = 5;
-			pruningDifference = 0.05;
-			
+			cutoff = 6;
+			pruningDifference = 0.1;
+
 			contrastEvaluator = new SlidingWindowContrast(null, covarianceMatrix.length, numInstances, m, alpha,
 					numInstances);
 		} else if (method.equals("adaptiveCentroids")) {
@@ -186,7 +215,8 @@ public class StreamHiCSTest {
 			contrastEvaluator = null;
 		}
 
-		streamHiCS = new StreamHiCS(covarianceMatrix.length, epsilon, threshold, cutoff, pruningDifference, contrastEvaluator);
+		streamHiCS = new StreamHiCS(covarianceMatrix.length, epsilon, threshold, cutoff, pruningDifference,
+				contrastEvaluator);
 		contrastEvaluator.setCallback(streamHiCS);
 
 		int numberSamples = 0;
@@ -195,7 +225,7 @@ public class StreamHiCSTest {
 			streamHiCS.add(inst);
 			numberSamples++;
 		}
-		
+
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		// Evaluation
@@ -219,7 +249,7 @@ public class StreamHiCSTest {
 		}
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
 		System.out.println();
-		
+
 		// return
 		// streamHiCS.getCurrentlyCorrelatedSubspaces().equals(correctResult);
 		return ((recall - fpRatio) >= 0.75);

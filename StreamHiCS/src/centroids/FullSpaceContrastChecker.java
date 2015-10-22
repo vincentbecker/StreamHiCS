@@ -10,7 +10,10 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	private Contrast contrastEvaluator;
 	private Subspace fullSpace;
 	private double lastContrast = 0;
+	private double minContrast = Double.MIN_VALUE;
+	private double maxContrast = Double.MIN_VALUE;
 	private double threshold;
+	private boolean init = false;
 
 	public FullSpaceContrastChecker(int numberOfDimensions, Contrast contrastEvaluator, double threshold) {
 		int[] dimensions = new int[numberOfDimensions];
@@ -29,10 +32,32 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	@Override
 	public boolean checkForChange(ArrayList<Centroid> centroids) {
 		double contrast = contrastEvaluator.evaluateSubspaceContrast(fullSpace);
-		double difference = Math.abs(lastContrast - contrast);
-		lastContrast = contrast;
-		System.out.println("Difference: " + difference);
-		if (difference > threshold) {
+
+		System.out.println("Contrast: " + contrast);
+
+		if(!init){
+			minContrast = contrast;
+			maxContrast = contrast;
+			init = true;
+		}
+		
+		double minDifference = minContrast - contrast;
+		double maxDifference = contrast - maxContrast;
+
+		if (contrast < minContrast) {
+			minContrast = contrast;
+		}
+		if (contrast > maxContrast) {
+			maxContrast = contrast;
+		}
+
+		// double difference = Math.abs(lastContrast - contrast);
+		// lastContrast = contrast;
+		System.out.println("MinDifference: " + minDifference + ", MaxDifference: " + maxDifference);
+		if (Math.abs(minDifference) > threshold || Math.abs(maxDifference) > threshold) {
+			minContrast = 0;
+			maxContrast = 0;
+			init = false;
 			return true;
 		}
 		return false;

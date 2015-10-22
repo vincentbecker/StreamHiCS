@@ -47,7 +47,7 @@ public class BasicChangeDetectorTest {
 	@Test
 	public void test1() {
 		System.out.println("DensityChecker: ");
-		centroidContrast = new CentroidContrast(callback, 5, 20, 0.2, 0.01, 0.2, 1000, 0.1, 0.2,
+		centroidContrast = new CentroidContrast(callback, 5, 20, 0.1, 0.005, 0.2, 1000, 0.1, 0.2,
 				new DensityChecker(25, 1));
 
 		assertTrue(carryOutTest());
@@ -56,7 +56,7 @@ public class BasicChangeDetectorTest {
 	@Test
 	public void test2() {
 		System.out.println("PHTChecker: ");
-		centroidContrast = new CentroidContrast(callback, 5, 20, 0.2, 0.01, 0.2, 1000, 0.1, 0.2,
+		centroidContrast = new CentroidContrast(callback, 5, 20, 0.1, 0.05, 0.2, 1000, 0.1, 0.2,
 				new PHTChecker(5, 0.5, 1));
 
 		assertTrue(carryOutTest());
@@ -65,8 +65,8 @@ public class BasicChangeDetectorTest {
 	@Test
 	public void test3() {
 		System.out.println("FullSpaceContrastChecker: ");
-		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(5, null, 0.1);
-		centroidContrast = new CentroidContrast(callback, 5, 20, 0.2, 0.01, 0.2, 1000, 0.1, 0.2, fscc);
+		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(5, null, 0.09);
+		centroidContrast = new CentroidContrast(callback, 5, 50, 0.1, 0.005, 0.2, 1000, 0.1, 0.2, fscc);
 		fscc.setContrastEvaluator(centroidContrast);
 
 		assertTrue(carryOutTest());
@@ -88,6 +88,7 @@ public class BasicChangeDetectorTest {
 			if (counter != 1) {
 				correct = false;
 			}
+			System.out.println();
 		}
 		return correct;
 	}
