@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Queue;
 
+import contrast.Selection;
 import weka.core.Instance;
 
 /**
@@ -97,5 +98,11 @@ public class SlidingWindow extends DataStreamContainer {
 			data[i] = tempData[selectedIndexes.getIndex(i)];
 		}
 		return data;
+	}
+
+	@Override
+	public double[][] getUnderlyingPoints() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

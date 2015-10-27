@@ -1,4 +1,4 @@
-package streamDataStructures;
+package subspace;
 
 import java.util.Comparator;
 

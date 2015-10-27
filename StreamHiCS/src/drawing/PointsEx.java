@@ -20,7 +20,8 @@ public class PointsEx extends JFrame {
 
 	private void initUI() {
 
-		final Surface surface = new Surface();
+		//final CentroidSurface surface = new CentroidSurface();
+		final MicroclusterSurface surface = new MicroclusterSurface();
 		add(surface);
 
 		addWindowListener(new WindowAdapter() {
@@ -31,7 +32,7 @@ public class PointsEx extends JFrame {
 			}
 		});
 
-		setTitle("Adapting Centroids");
+		setTitle("Micro-Clusters");
 		setSize(700, 700);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

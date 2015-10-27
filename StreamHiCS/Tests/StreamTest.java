@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 
-import centroids.TimeCountChecker;
+import changechecker.TimeCountChecker;
 import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.SlidingWindowContrast;
-import streamDataStructures.Subspace;
-import streamDataStructures.SubspaceSet;
 import streams.GaussianStream;
+import subspace.Subspace;
+import subspace.SubspaceSet;
 import weka.core.Instance;
 
 public class StreamTest {
@@ -44,7 +44,7 @@ public class StreamTest {
 	@Before
 	public void setUp() throws Exception {
 		stream = new GaussianStream(covarianceMatrices[0]);
-		
+
 		if (method.equals("slidingWindow")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -67,13 +67,14 @@ public class StreamTest {
 			double learningRate = 0.1;
 
 			contrastEvaluator = new CentroidContrast(null, covarianceMatrices[0].length, m, alpha, fadingLambda, radius,
-					numInstances, weightThreshold, learningRate, new TimeCountChecker());
+					weightThreshold, learningRate, new TimeCountChecker(numInstances));
 		} else {
 			contrastEvaluator = null;
 		}
-		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, epsilon, threshold, cutoff, pruningDifference, contrastEvaluator);
+		streamHiCS = new StreamHiCS(covarianceMatrices[0].length, epsilon, threshold, cutoff, pruningDifference,
+				contrastEvaluator);
 		contrastEvaluator.setCallback(streamHiCS);
-		
+
 		correctResults = new ArrayList<SubspaceSet>();
 	}
 

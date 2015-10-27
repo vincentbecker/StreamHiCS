@@ -7,7 +7,7 @@ import org.junit.Test;
 import contrast.CentroidContrast;
 import contrast.Contrast;
 import streamDataStructures.SlidingWindow;
-import streamDataStructures.Subspace;
+import subspace.Subspace;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
@@ -45,7 +45,7 @@ public class ContrastTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		//contrastEvaluator = new SlidingWindowContrast(null, 2, numInstances + 1, 20, 0.4);
-		contrastEvaluator  = new CentroidContrast(null, 2, 20, 0.2, 0.01, 0.2, numInstances + 1, 0.1, 0.2, null);
+		contrastEvaluator  = new CentroidContrast(null, 2, 20, 0.2, 0.01, 0.2, 0.1, 0.2, null);
 		subspace = new Subspace(0, 1);
 	}
 

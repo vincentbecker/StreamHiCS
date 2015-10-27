@@ -3,8 +3,8 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import centroids.ChangeChecker;
-import centroids.TimeCountChecker;
+import changechecker.ChangeChecker;
+import changechecker.TimeCountChecker;
 import contrast.CentroidContrast;
 import contrast.Contrast;
 import moa.streams.generators.RandomRBFGenerator;
@@ -22,8 +22,8 @@ public class RBFDriftTest {
 	public void setUp() throws Exception {
 		stream = new RandomRBFGenerator();
 		stream.prepareForUse();
-		ChangeChecker changeChecker = new TimeCountChecker();
-		Contrast contrastEvaluator = new CentroidContrast(null, 10, 50, 0.1, 0.005, 0.2, 1000, 0.1, 0.1, changeChecker);
+		ChangeChecker changeChecker = new TimeCountChecker(1000);
+		Contrast contrastEvaluator = new CentroidContrast(null, 10, 50, 0.1, 0.005, 0.2, 0.1, 0.1, changeChecker);
 		streamHiCS = new StreamHiCS(10, 0.05, 0.2, 8, 0.1, contrastEvaluator);
 		contrastEvaluator.setCallback(streamHiCS);
 	}

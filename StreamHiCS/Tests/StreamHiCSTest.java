@@ -1,13 +1,17 @@
 import static org.junit.Assert.*;
 import org.junit.Test;
-import centroids.TimeCountChecker;
+
+import changechecker.TimeCountChecker;
 import contrast.CentroidContrast;
 import contrast.Contrast;
+import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
-import streamDataStructures.Subspace;
-import streamDataStructures.SubspaceSet;
+import streamDataStructures.WithDBSCAN;
 import streams.GaussianStream;
+import subspace.Subspace;
+import subspace.SubspaceSet;
 import weka.core.Instance;
+import moa.clusterers.clustree.ClusTree;
 
 public class StreamHiCSTest {
 
@@ -21,7 +25,7 @@ public class StreamHiCSTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private final String method = "slidingWindow";
+	private final String method = "ClusTreeMC";
 
 	@Test
 	public void subspaceTest1() {
@@ -168,8 +172,8 @@ public class StreamHiCSTest {
 
 	@Test
 	public void subspaceTest15() {
-		double[][] covarianceMatrix = { { 1, 0, 0.7, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0.7, 0, 1, 0, 0 },
-				{ 0, 0, 0, 1, 0 }, { 0, 0, 0, 0, 1 } };
+		double[][] covarianceMatrix = { { 1, 0, 0.7, 0, 0 }, { 0, 1, 0, 0, 0 }, { 0.7, 0, 1, 0, 0 }, { 0, 0, 0, 1, 0 },
+				{ 0, 0, 0, 0, 1 } };
 		SubspaceSet correctResult = new SubspaceSet();
 		correctResult.addSubspace(new Subspace(0, 2));
 		System.out.println("Test 15");
@@ -210,7 +214,32 @@ public class StreamHiCSTest {
 			double learningRate = 0.1;
 
 			contrastEvaluator = new CentroidContrast(null, covarianceMatrix.length, m, alpha, fadingLambda, radius,
-					numInstances, weightThreshold, learningRate, new TimeCountChecker());
+					weightThreshold, learningRate, new TimeCountChecker(numInstances));
+		} else if (method.equals("DenStreamMC")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.3;
+			cutoff = 8;
+			pruningDifference = 0.15;
+
+			WithDBSCAN mcs = new WithDBSCAN();
+			mcs.speedOption.setValue(100);
+			mcs.epsilonOption.setValue(0.5);
+			mcs.betaOption.setValue(0.005);
+			mcs.lambdaOption.setValue(0.005);
+			mcs.resetLearningImpl();
+			contrastEvaluator = new MicroclusterContrast(null, m, alpha, mcs, new TimeCountChecker(numInstances));
+
+		} else if (method.equals("ClusTreeMC")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.25;
+			cutoff = 8;
+			pruningDifference = 0.15;
+
+			ClusTree mcs = new ClusTree();
+			contrastEvaluator = new MicroclusterContrast(null, m, alpha, mcs, new TimeCountChecker(numInstances));
+
 		} else {
 			contrastEvaluator = null;
 		}

@@ -1,9 +1,8 @@
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import centroids.DensityChecker;
-import centroids.FullSpaceContrastChecker;
-import centroids.PHTChecker;
+
+import changechecker.FullSpaceContrastChecker;
 import contrast.Callback;
 import contrast.CentroidContrast;
 import streams.GaussianStream;
@@ -44,6 +43,7 @@ public class BasicChangeDetectorTest {
 		stream = new GaussianStream(covarianceMatrices[0]);
 	}
 
+	/*
 	@Test
 	public void test1() {
 		System.out.println("DensityChecker: ");
@@ -62,11 +62,12 @@ public class BasicChangeDetectorTest {
 		assertTrue(carryOutTest());
 	}
 
+*/
 	@Test
 	public void test3() {
 		System.out.println("FullSpaceContrastChecker: ");
-		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(5, null, 0.09);
-		centroidContrast = new CentroidContrast(callback, 5, 50, 0.1, 0.005, 0.2, 1000, 0.1, 0.2, fscc);
+		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(1000, 5, null, 0.09);
+		centroidContrast = new CentroidContrast(callback, 5, 50, 0.1, 0.005, 0.2, 0.1, 0.2, fscc);
 		fscc.setContrastEvaluator(centroidContrast);
 
 		assertTrue(carryOutTest());

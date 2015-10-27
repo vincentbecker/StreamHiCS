@@ -4,7 +4,7 @@ import org.apache.commons.math3.util.MathArrays;
 
 import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
-import streamDataStructures.Subspace;
+import subspace.Subspace;
 import weka.core.Instance;
 
 /**
@@ -72,6 +72,8 @@ public abstract class Contrast implements Callback {
 	public abstract void clear();
 	
 	public abstract int getNumberOfElements();
+	
+	public abstract double[][] getUnderlyingPoints();
 
 	/**
 	 * Returns the data contained projected to the given reference dimension. 

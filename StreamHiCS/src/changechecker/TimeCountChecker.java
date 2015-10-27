@@ -1,6 +1,4 @@
-package centroids;
-
-import java.util.ArrayList;
+package changechecker;
 
 /**
  * A default checking mechanism which returns true every time it is called and
@@ -10,9 +8,13 @@ import java.util.ArrayList;
  *
  */
 public class TimeCountChecker extends ChangeChecker {
+	
+	public TimeCountChecker(int checkInterval) {
+		super(checkInterval);
+	}
 
 	@Override
-	public boolean checkForChange(ArrayList<Centroid> centroids) {
+	public boolean checkForChange() {
 		return true;
 	}
 

@@ -1,4 +1,4 @@
-package streamDataStructures;
+package contrast;
 
 import java.util.Random;
 import org.apache.commons.math3.util.MathArrays;

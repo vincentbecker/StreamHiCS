@@ -1,8 +1,10 @@
 package centroids;
 
 import java.util.ArrayList;
+
+import changechecker.ChangeChecker;
 import contrast.Callback;
-import streamDataStructures.Selection;
+import contrast.Selection;
 import weka.core.Instance;
 
 /**
@@ -41,15 +43,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 */
 	private int time = 0;
 	/**
-	 * Keeps track of how many {@link Instance}s arrived since the last check of
-	 * the kNN rank.
-	 */
-	private double count = 0;
-	/**
-	 * Determines after how many new {@link Instance}s the kNNRank is checked.
-	 */
-	private double checkCount;
-	/**
 	 * The threshold determining when a {@link Centroid} is removed.
 	 */
 	private double weightThreshold;
@@ -87,14 +80,12 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * @param learningRate
 	 *            The learning rate.
 	 */
-	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius,
-			int checkCount, double weigthThreshold, double learningRate, ChangeChecker changeChecker) {
+	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius, double weigthThreshold, double learningRate, ChangeChecker changeChecker) {
 		this.centroids = new ArrayList<Centroid>();
 		this.callback = callback;
 		this.numberOfDimensions = numberOfDimensions;
 		this.fadingFactor = Math.pow(2, -fadingLambda);
 		this.radius = radius;
-		this.checkCount = checkCount;
 		this.weightThreshold = weigthThreshold;
 		this.learningRate = learningRate;
 		this.changeChecker = changeChecker;
@@ -129,10 +120,8 @@ public class AdaptingCentroids extends CentroidsContainer {
 		time++;
 		updated = false;
 
-		count++;
-		if (count >= checkCount) {
+		if (changeChecker.poll()) {
 			changeCheck();
-			count = 0;
 		}
 	}
 
@@ -220,7 +209,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 	public void clear() {
 		centroids.clear();
 		time = 0;
-		count = 0;
 	}
 
 	@Override
@@ -355,7 +343,7 @@ public class AdaptingCentroids extends CentroidsContainer {
 			updateWeights();
 		}
 		// Check for change and inform the callback in case.
-		if (changeChecker.checkForChange(centroids)) {
+		if (changeChecker.poll()) {
 			callback.onAlarm();
 		}
 	}

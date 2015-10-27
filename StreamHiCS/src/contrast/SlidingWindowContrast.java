@@ -2,7 +2,7 @@ package contrast;
 
 import streamDataStructures.DataStreamContainer;
 import streamDataStructures.SlidingWindow;
-import streamDataStructures.Subspace;
+import subspace.Subspace;
 import weka.core.Instance;
 
 public class SlidingWindowContrast extends Contrast {
@@ -80,5 +80,10 @@ public class SlidingWindowContrast extends Contrast {
 	@Override
 	public int getNumberOfElements() {
 		return dataStreamContainer.getNumberOfInstances();
+	}
+
+	@Override
+	public double[][] getUnderlyingPoints() {
+		return dataStreamContainer.getUnderlyingPoints();
 	}
 }

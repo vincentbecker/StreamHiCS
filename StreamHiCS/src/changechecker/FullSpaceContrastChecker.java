@@ -1,9 +1,7 @@
-package centroids;
-
-import java.util.ArrayList;
+package changechecker;
 
 import contrast.Contrast;
-import streamDataStructures.Subspace;
+import subspace.Subspace;
 
 public class FullSpaceContrastChecker extends ChangeChecker {
 
@@ -15,7 +13,8 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	private double threshold;
 	private boolean init = false;
 
-	public FullSpaceContrastChecker(int numberOfDimensions, Contrast contrastEvaluator, double threshold) {
+	public FullSpaceContrastChecker(int checkInterval, int numberOfDimensions, Contrast contrastEvaluator, double threshold) {
+		super(checkInterval);
 		int[] dimensions = new int[numberOfDimensions];
 		for (int i = 0; i < numberOfDimensions; i++) {
 			dimensions[i] = i;
@@ -30,7 +29,7 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	}
 
 	@Override
-	public boolean checkForChange(ArrayList<Centroid> centroids) {
+	public boolean checkForChange() {
 		double contrast = contrastEvaluator.evaluateSubspaceContrast(fullSpace);
 
 		System.out.println("Contrast: " + contrast);

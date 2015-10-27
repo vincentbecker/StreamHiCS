@@ -1,5 +1,7 @@
 package streamDataStructures;
 
+import contrast.Selection;
+import subspace.Subspace;
 import weka.core.Instance;
 
 /**
@@ -102,4 +104,6 @@ public abstract class DataStreamContainer {
 	 *         to the given dimension and the specified indexes.
 	 */
 	public abstract double[] getSelectedData(int dimension, Selection selectedIndexes);
+	
+	public abstract double[][] getUnderlyingPoints();
 }

@@ -1,7 +1,7 @@
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import streamDataStructures.Subspace;
+import subspace.Subspace;
 
 public class SubspaceTest {
 

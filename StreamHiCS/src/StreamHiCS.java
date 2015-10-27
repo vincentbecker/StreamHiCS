@@ -2,8 +2,8 @@ import java.util.ArrayList;
 
 import contrast.Callback;
 import contrast.Contrast;
-import streamDataStructures.Subspace;
-import streamDataStructures.SubspaceSet;
+import subspace.Subspace;
+import subspace.SubspaceSet;
 import weka.core.Instance;
 
 public class StreamHiCS implements Callback {
