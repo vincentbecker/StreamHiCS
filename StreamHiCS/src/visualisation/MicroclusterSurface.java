@@ -1,24 +1,37 @@
 package visualisation;
 
+import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Random;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
+
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
 
 import changechecker.TimeCountChecker;
 import contrast.Callback;
+import contrast.DataBundle;
 import contrast.MicroclusterContrast;
 import contrast.Selection;
 import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.clustree.ClusTree;
-import streamDataStructures.WithDBSCAN;
+import moa.streams.ConceptDriftStream;
+import statisticalTests.KolmogorovSmirnov;
+import statisticalTests.StatisticalTest;
 import streams.GaussianStream;
+import streams.UncorrelatedStream;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
@@ -31,6 +44,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private final int DELAY = 10;
 	private Timer timer;
 	private MicroclusterContrast contrast;
+	private StatisticalTest statTest;
 	private Callback callback = new Callback() {
 
 		@Override
@@ -40,23 +54,48 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 
 	};
 	private int count = 0;
-	private int conceptChange = 5000;
+	private int imageCount = 0;
+	private boolean captureScreen = true;
 	private double xRange = 10;
 	private double yRange = 10;
-	private Random r;
 	private int[] shuffledDimensions = { 0, 1 };
-	private double[][] covarianceMatrix = {{1, 0.9}, {0.9, 1}};
-	private GaussianStream stream;
+	private double[][] covarianceMatrix1 = { { 1, 0.9 }, { 0.9, 1 } };
+	private double[][] covarianceMatrix2 = { { 1, 0 }, { 0, 1 } };
+	// private GaussianStream stream;
+	private ConceptDriftStream conceptDriftStream;
+	private boolean drawSlice = false;
+	private DecimalFormat df = new DecimalFormat("#.##");
 
 	public MicroclusterSurface() {
-		
-		stream = new GaussianStream(covarianceMatrix);
-		
+
+		UncorrelatedStream s1 = new UncorrelatedStream();
+		s1.dimensionsOption.setValue(2);
+		s1.scaleOption.setValue(10);
+		s1.prepareForUse();
+		GaussianStream s2 = new GaussianStream(covarianceMatrix1);
+		GaussianStream s3 = new GaussianStream(covarianceMatrix2);
+
+		ConceptDriftStream cds1 = new ConceptDriftStream();
+		cds1.streamOption.setCurrentObject(s1);
+		cds1.driftstreamOption.setCurrentObject(s2);
+		cds1.positionOption.setValue(1000);
+		cds1.widthOption.setValue(500);
+		cds1.prepareForUse();
+
+		conceptDriftStream = new ConceptDriftStream();
+		conceptDriftStream.streamOption.setCurrentObject(cds1);
+		conceptDriftStream.driftstreamOption.setCurrentObject(s3);
+		conceptDriftStream.positionOption.setValue(3000);
+		conceptDriftStream.widthOption.setValue(500);
+		conceptDriftStream.prepareForUse();
+
+		// stream = new GaussianStream(covarianceMatrix);
+
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		
-		this.contrast = new MicroclusterContrast(callback, 20, 0.2, mcs, new TimeCountChecker(10000));
-		r = new Random();
+
+		this.contrast = new MicroclusterContrast(callback, 20, 0.2, mcs, new TimeCountChecker(15000));
+		this.statTest = new KolmogorovSmirnov();
 		initTimer();
 	}
 
@@ -71,38 +110,46 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	}
 
 	private void doDrawing(Graphics g) {
-		// Add a new instance
-		createAndAddInstance();
 
 		Graphics2D g2d = (Graphics2D) g;
 
-		g2d.setPaint(Color.blue);
-
+		int xPixel = 0;
+		int yPixel = 0;
+		double[] vector;
 		int w = getWidth();
 		int h = getHeight();
 
+		// Add a new instance
+		vector = createAndAddInstance();
+		xPixel = (int) (w * (vector[0] / xRange));
+		yPixel = (int) (h * (vector[1] / yRange));
+		g2d.setColor(Color.GREEN);
+		g2d.fillOval(xPixel, yPixel, 10, 10);
+
+		g2d.setColor(Color.BLUE);
+
 		// Draw each centroid
-		double[] vector;
-		int xPixel = 0;
-		int yPixel = 0;
 		int weight = 0;
 		Clustering microclusters = contrast.getMicroclusters();
 		Cluster c;
-		boolean drawSlice = (count % 100 == 0);
+		drawSlice = (count % 500 == 0);
 		Selection s = null;
 		if (drawSlice) {
 			System.out.println(count);
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
-			// System.out.println("[" + shuffledDimensions[0] + ", " +
-			// shuffledDimensions[1] + "]");
-			// System.out.println("Number of centroids: " + cs.length);
 			s = contrast.getSliceIndexes(shuffledDimensions, 0.2);
-			// System.out.println("Selected Indexes: " + s.toString());
-			// System.out.println("Selected IDs: ");
-			// for(int i = 0; i < s.size(); i++){
-			// System.out.print(cs[i].getId() + ", ");
-			// }
+			// Calculate contrast
+			DataBundle projectedData = contrast.getProjectedData(shuffledDimensions[1]);
+			double[] slice = contrast.getSelectedData(shuffledDimensions[1], s);
+			double[] sliceWeights = contrast.getSelectedWeights(s);
+			DataBundle sliceData = new DataBundle(slice, sliceWeights);
+			double contrast = statTest.calculateWeightedDeviation(projectedData, sliceData);
+			System.out.println(contrast);
+			g2d.setColor(Color.RED);
+			g2d.setFont(new Font("Calibri", Font.ITALIC, 28));
+			g2d.drawString("Contrast: " + df.format(contrast), 10, h - 10);
+			g2d.setColor(Color.BLUE);
 		}
 		for (int i = 0; i < microclusters.size(); i++) {
 			c = microclusters.get(i);
@@ -112,7 +159,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 			vector = c.getCenter();
 			xPixel = (int) (w * (vector[0] / xRange));
 			yPixel = (int) (h * (vector[1] / yRange));
-			weight = (int) (c.getWeight() * 10);
+			weight = Math.max((int) (c.getWeight() * 5), 4);
 			g2d.drawOval(xPixel, yPixel, weight, weight);
 			// g2d.drawString(c.getId() + "", xPixel, yPixel);
 			if (drawSlice) {
@@ -133,34 +180,48 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		revalidate();
 		repaint();
+		if (captureScreen) {
+			if (drawSlice) {
+				for (int i = 0; i < 100; i++) {
+					captureApplicationImage();
+				}
+			} else {
+				captureApplicationImage();
+			}
+		} else {
+			if (drawSlice) {
+
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		}
 	}
 
 	private double[] createAndAddInstance() {
-		//double x = r.nextGaussian();
-		//double y = r.nextGaussian();
-		Instance inst = stream.nextInstance();
+		// Instance inst = stream.nextInstance();
+		Instance inst = conceptDriftStream.nextInstance();
 		double x = inst.value(0);
 		double y = inst.value(1);
-		double offset = 0;
-		if (count >= conceptChange) {
-			offset = 5;
-		} else {
-			if (count % 2 == 0) {
-				offset = 3;
-			} else {
-				offset = 7;
-			}
-		}
+		double offset = 5;
+
+		/*
+		 * if (count >= conceptChange) { offset = 5; } else { if (count % 2 ==
+		 * 0) { offset = 3; } else { offset = 7; } }
+		 */
 
 		x += offset;
 		y += offset;
 		addInstance(x, y);
 		count++;
-		
+
 		double[] point = new double[2];
 		point[0] = x;
 		point[1] = y;
-		
+
 		return point;
 	}
 
@@ -169,5 +230,25 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		inst.setValue(0, x);
 		inst.setValue(1, y);
 		contrast.add(inst);
+	}
+
+	private void captureApplicationImage() {
+		Rectangle screenRect = new Rectangle(this.getLocationOnScreen());
+		screenRect.width = getWidth();
+		screenRect.height = getHeight();
+		BufferedImage capture = null;
+		try {
+			capture = new Robot().createScreenCapture(screenRect);
+		} catch (AWTException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		try {
+			ImageIO.write(capture, "jpeg", new File("C:/Users/Vincent/Desktop/Video/image" + imageCount + ".jpeg"));
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		imageCount++;
 	}
 }

@@ -2,6 +2,7 @@ package visualisation;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 
 import javax.swing.JFrame;
 import javax.swing.Timer;
@@ -20,6 +21,7 @@ public class PointsEx extends JFrame {
 
 	private void initUI() {
 
+		Locale.setDefault(Locale.ENGLISH);
 		//final CentroidSurface surface = new CentroidSurface();
 		final MicroclusterSurface surface = new MicroclusterSurface();
 		add(surface);

@@ -115,7 +115,7 @@ public class MicroclusterContrast extends Contrast {
 		return selectedIndexes;
 	}
 
-	private double[] getSelectedData(int dimension, Selection selectedIndexes) {
+	public double[] getSelectedData(int dimension, Selection selectedIndexes) {
 		int l = selectedIndexes.size();
 		double[] data = new double[l];
 		for (int i = 0; i < l; i++) {
@@ -125,7 +125,7 @@ public class MicroclusterContrast extends Contrast {
 		return data;
 	}
 
-	private double[] getSelectedWeights(Selection selectedIndexes) {
+	public double[] getSelectedWeights(Selection selectedIndexes) {
 		int l = selectedIndexes.size();
 		double[] weights = new double[l];
 		for (int i = 0; i < l; i++) {

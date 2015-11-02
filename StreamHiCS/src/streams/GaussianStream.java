@@ -18,10 +18,6 @@ public class GaussianStream implements InstanceStream {
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = 1L;
-
-	// private double[] mean = { 1, 2, 3, 4, 5 };
-	// private double[][] covariances = { { 1, 0.9, 0, 0, 0 }, { 0.9, 1, 0, 0, 0
-	// }, { 0, 0, 1, 0.5, 0.5 }, { 0, 0, 0.5, 1, 0.5 }, {0, 0, 0.5, 0.5, 1} };
 	/**
 	 * The mean of the multivariate distributoin.
 	 */
