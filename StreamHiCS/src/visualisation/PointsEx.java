@@ -1,4 +1,4 @@
-package drawing;
+package visualisation;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

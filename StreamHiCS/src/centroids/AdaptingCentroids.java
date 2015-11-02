@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import changechecker.ChangeChecker;
 import contrast.Callback;
+import contrast.DataBundle;
 import contrast.Selection;
 import weka.core.Instance;
 
@@ -80,7 +81,8 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * @param learningRate
 	 *            The learning rate.
 	 */
-	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius, double weigthThreshold, double learningRate, ChangeChecker changeChecker) {
+	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius,
+			double weigthThreshold, double learningRate) {
 		this.centroids = new ArrayList<Centroid>();
 		this.callback = callback;
 		this.numberOfDimensions = numberOfDimensions;
@@ -88,7 +90,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 		this.radius = radius;
 		this.weightThreshold = weigthThreshold;
 		this.learningRate = learningRate;
-		this.changeChecker = changeChecker;
 	}
 
 	@Override
@@ -217,34 +218,32 @@ public class AdaptingCentroids extends CentroidsContainer {
 	}
 
 	@Override
-	public double[] getProjectedData(int referenceDimension) {
+	public DataBundle getProjectedData(int referenceDimension) {
 		if (!updated) {
 			updateWeights();
 		}
-		int totalWeight = 0;
-		for (Centroid c : centroids) {
-			totalWeight += Math.round(c.getWeight());
-		}
 
-		double[] projectedData = new double[totalWeight];
-		int index = 0;
-		for (Centroid c : centroids) {
-			for (int j = 0; j < Math.round(c.getWeight()); j++) {
-				projectedData[index] = c.getVector()[referenceDimension];
-				index++;
-			}
+		int l = centroids.size();
+
+		double[] data = new double[l];
+		double[] weights = new double[l];
+		Centroid c;
+		for (int i = 0; i < l; i++) {
+			c = centroids.get(i);
+			data[i] = c.getVector()[referenceDimension];
+			weights[i] = c.getWeight();
 		}
-		return projectedData;
+		return new DataBundle(data, weights);
 	}
 
 	@Override
-	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
+	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		if (!updated) {
 			updateWeights();
 		}
 
 		double[] dimData;
-		double weights[];
+		double[] weights;
 		Selection selectedIndexes = new Selection(centroids.size(), selectionAlpha);
 		// Fill the list with all the indexes
 		selectedIndexes.fillRange();
@@ -259,24 +258,10 @@ public class AdaptingCentroids extends CentroidsContainer {
 		}
 
 		// Get the selected data from the last dimension and apply weights
+		dimData = getSelectedData(shuffledDimensions[shuffledDimensions.length - 1], selectedIndexes);
 		weights = getSelectedWeights(selectedIndexes);
-		int totalWeight = 0;
-		for (int i = 0; i < weights.length; i++) {
-			weights[i] = Math.round(weights[i]);
-			totalWeight += weights[i];
-		}
-		double[] slicedData = new double[totalWeight];
-		int index = 0;
-		Centroid c;
-		int referenceDimension = shuffledDimensions[shuffledDimensions.length - 1];
-		for (int i = 0; i < selectedIndexes.size(); i++) {
-			c = centroids.get(selectedIndexes.getIndex(i));
-			for (int j = 0; j < weights[i]; j++) {
-				slicedData[index] = c.getVector()[referenceDimension];
-				index++;
-			}
-		}
-		return slicedData;
+
+		return new DataBundle(dimData, weights);
 	}
 
 	// TODO: Remove

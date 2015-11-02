@@ -2,6 +2,7 @@ package contrast;
 
 import org.apache.commons.math3.util.MathArrays;
 
+import changechecker.ChangeChecker;
 import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
 import subspace.Subspace;
@@ -35,6 +36,8 @@ public abstract class Contrast implements Callback {
 	 */
 	private StatisticalTest statisticalTest;
 
+	private ChangeChecker changeChecker;
+
 	/**
 	 * 
 	 * 
@@ -47,15 +50,23 @@ public abstract class Contrast implements Callback {
 	 *            of the conditional density.
 	 * @param statisticalTest
 	 */
-	public Contrast(Callback callback, int m, double alpha) {
+	public Contrast(Callback callback, int m, double alpha, ChangeChecker changeChecker) {
 		this.callback = callback;
 		this.m = m;
 		this.alpha = alpha;
 		this.statisticalTest = new KolmogorovSmirnov();
+		this.changeChecker = changeChecker;
 	}
-	
-	public void setCallback(Callback callback){
+
+	public void setCallback(Callback callback) {
 		this.callback = callback;
+	}
+
+	public void add(Instance instance) {
+		addImpl(instance);
+		if (changeChecker.poll() && changeChecker.checkForChange()) {
+			onAlarm();
+		}
 	}
 
 	/**
@@ -64,24 +75,25 @@ public abstract class Contrast implements Callback {
 	 * @param instance
 	 *            The @link{Instance} to be added.
 	 */
-	public abstract void add(Instance instance);
+	public abstract void addImpl(Instance instance);
 
 	/**
 	 * Clears all stored {@link Instance}s.
 	 */
 	public abstract void clear();
-	
+
 	public abstract int getNumberOfElements();
-	
+
 	public abstract double[][] getUnderlyingPoints();
 
 	/**
-	 * Returns the data contained projected to the given reference dimension. 
+	 * Returns the data contained projected to the given reference dimension.
 	 * 
-	 * @param referenceDimension The dimension the data is projected to. 
-	 * @return The data projected to teh reference dimension. 
+	 * @param referenceDimension
+	 *            The dimension the data is projected to.
+	 * @return The data projected to teh reference dimension.
 	 */
-	public abstract double[] getProjectedData(int referenceDimension);
+	public abstract DataBundle getProjectedData(int referenceDimension);
 
 	/**
 	 * Returns the one dimensional data of a random conditional sample
@@ -101,7 +113,7 @@ public abstract class Contrast implements Callback {
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
-	public abstract double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha);
+	public abstract DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha);
 
 	/**
 	 * Calculates the contrast of the given @link{Subspace}.
@@ -118,18 +130,20 @@ public abstract class Contrast implements Callback {
 		// Calculate the fraction of instances selected per dimension
 		double selectionAlpha = Math.pow(alpha, 1.0 / (subspace.size() - 1));
 		int[] shuffledDimensions;
+		DataBundle projectedData;
+		DataBundle slicedData;
 		double deviation;
 		// Do Monte Carlo iterations
 		for (int i = 0; i < m; i++) {
 			shuffledDimensions = subspace.getDimensions();
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
-			// Get the projected data statistics
-			double[] projectedData = getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
-			// Get the randomly sliced data statistics
-			double[] slicedData = getSlicedData(shuffledDimensions, selectionAlpha);
+			// Get the projected data
+			projectedData = getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
+			// Get the randomly sliced data
+			slicedData = getSlicedData(shuffledDimensions, selectionAlpha);
 			// Calculate the deviation and add it to the overall sum
-			deviation = statisticalTest.calculateDeviation(projectedData, slicedData);
+			deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
 			if (!Double.isNaN(deviation)) {
 				sum += deviation;
 				numberOfCorrectTests++;
@@ -149,5 +163,4 @@ public abstract class Contrast implements Callback {
 	public void onAlarm() {
 		callback.onAlarm();
 	}
-
 }

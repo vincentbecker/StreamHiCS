@@ -16,7 +16,7 @@ public class Selection {
 	 */
 	private double[] indexes;
 	/**
-	 * THe selection alpha.
+	 * The selection alpha.
 	 */
 	private double selectionAlpha;
 	/**
@@ -109,6 +109,7 @@ public class Selection {
 		// Sort the data and arrange the indexes correspondingly
 		MathArrays.sortInPlace(data, indexes, weights);
 		/*
+		TODO: Remove
 		System.out.println("Data: ");
 		for(int i = 0; i < data.length; i++){
 			System.out.print(data[i] + ", ");	
@@ -121,7 +122,7 @@ public class Selection {
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
 		//System.out.println("Starting point: " + startingPoint);
-		selectRangeWithWeights(weights, startingPoint, selectionSize);
+		selectRangeWithWeights(data, weights, startingPoint, selectionSize);
 	}
 
 	/**
@@ -163,7 +164,7 @@ public class Selection {
 		indexes = newIndexes;
 	}
 
-	private void selectRangeWithWeights(double[] weights, int startingPoint, double selectionSize) {
+	private void selectRangeWithWeights(double[] data, double[] weights, int startingPoint, double selectionSize) {
 		// Select a block around the starting point
 		int lower = startingPoint;
 		int upper = startingPoint;
@@ -186,6 +187,23 @@ public class Selection {
 			}
 			searchOn = true;
 		}
+		
+		if (data[lower] == data[upper]) {
+			// The special case that all the data values selected are the
+			// same. This case needs special handling.
+			System.out.println("Selection.selectRangeWithWeights(): Special handling!");
+			// Broadening the range if possible, until data values on the
+			// outside of the range differ
+			while (data[lower] == data[upper] && (upper - lower) < data.length - 1) {
+				if (lower > 0) {
+					lower--;
+				}
+				if (upper < data.length - 1) {
+					upper++;
+				}
+			}
+		}
+		
 		//System.out.println("Lower: " + lower + " Upper: " + upper);
 		double[] newIndexes = new double[upper - lower + 1];
 		for (int i = lower; i <= upper; i++) {

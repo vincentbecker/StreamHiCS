@@ -2,8 +2,9 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 
 import java.awt.EventQueue;
-import drawing.PointsEx;
+
 import moa.streams.generators.RandomRBFGenerator;
+import visualisation.PointsEx;
 
 public class Main {
 

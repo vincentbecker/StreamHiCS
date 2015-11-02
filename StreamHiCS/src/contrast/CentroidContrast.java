@@ -23,13 +23,13 @@ public class CentroidContrast extends Contrast {
 
 	public CentroidContrast(Callback callback, int numberOfDimensions, int m, double alpha, double fadingLambda,
 			double radius, double weightThreshold, double learningRate, ChangeChecker changeChecker) {
-		super(callback, m, alpha);
-		centroids = new AdaptingCentroids(this, numberOfDimensions, fadingLambda, radius, weightThreshold, learningRate, changeChecker);
+		super(callback, m, alpha, changeChecker);
+		centroids = new AdaptingCentroids(this, numberOfDimensions, fadingLambda, radius, weightThreshold, learningRate);
 		this.numberOfDimensions = numberOfDimensions;
 	}
 
 	@Override
-	public void add(Instance instance) {
+	public void addImpl(Instance instance) {
 		centroids.add(instance);
 	}
 
@@ -43,12 +43,12 @@ public class CentroidContrast extends Contrast {
 	}
 
 	@Override
-	public double[] getProjectedData(int referenceDimension) {
+	public DataBundle getProjectedData(int referenceDimension) {
 		return centroids.getProjectedData(referenceDimension);
 	}
 
 	@Override
-	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
+	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		return centroids.getSlicedData(shuffledDimensions, selectionAlpha);
 	}
 

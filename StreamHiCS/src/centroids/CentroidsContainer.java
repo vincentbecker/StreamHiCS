@@ -1,5 +1,6 @@
 package centroids;
 
+import contrast.DataBundle;
 import statisticalTests.StatisticsBundle;
 import weka.core.Instance;
 
@@ -21,9 +22,9 @@ public abstract class CentroidsContainer {
 	
 	public abstract Centroid[] getCentroids();
 
-	public abstract double[] getProjectedData(int referenceDimension);
+	public abstract DataBundle getProjectedData(int referenceDimension);
 
-	public abstract double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha);
+	public abstract DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha);
 
 	public StatisticsBundle calculateStatistics(Centroid[] centroidSelection, int referenceDimension) {
 		int totalCount = 0;
@@ -51,7 +52,7 @@ public abstract class CentroidsContainer {
 		}
 		variance = totalSum / (totalCount - 1);
 
-		return new StatisticsBundle(mean, variance);
+		return new StatisticsBundle(mean, variance, totalCount);
 	}
 
 	public abstract void changeCheck();

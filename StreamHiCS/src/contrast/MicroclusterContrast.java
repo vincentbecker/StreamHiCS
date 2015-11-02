@@ -9,21 +9,18 @@ public class MicroclusterContrast extends Contrast {
 
 	private AbstractClusterer microclusterImplementation;
 	private Clustering microclusters;
-	private ChangeChecker changeChecker;
+	
 
-	public MicroclusterContrast(Callback callback, int m, double alpha, AbstractClusterer microclusterImplementation, ChangeChecker changeChecker) {
-		super(callback, m, alpha);
+	public MicroclusterContrast(Callback callback, int m, double alpha, AbstractClusterer microclusterImplementation,
+			ChangeChecker changeChecker) {
+		super(callback, m, alpha, changeChecker);
 		this.microclusterImplementation = microclusterImplementation;
-		this.changeChecker = changeChecker;
 	}
 
 	@Override
-	public void add(Instance instance) {
+	public void addImpl(Instance instance) {
 		microclusterImplementation.trainOnInstanceImpl(instance);
 		microclusters = null;
-		if(changeChecker.poll() && changeChecker.checkForChange()){
-			onAlarm();
-		}
 	}
 
 	@Override
@@ -41,31 +38,37 @@ public class MicroclusterContrast extends Contrast {
 	}
 
 	@Override
-	public double[] getProjectedData(int referenceDimension) {
+	public DataBundle getProjectedData(int referenceDimension) {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
 		}
-
+		
 		int l = microclusters.size();
+		
 		double[] data = new double[l];
 		for (int i = 0; i < l; i++) {
 			data[i] = microclusters.get(i).getCenter()[referenceDimension];
 		}
-
-		return data;
+		
+		double[] weights = new double[l];
+		for (int i = 0; i < l; i++) {
+			weights[i] = microclusters.get(i).getWeight();
+		}
+		
+		return new DataBundle(data, weights);
 	}
 
 	@Override
-	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
+	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
 		}
-		if(microclusters.size() == 0){
-			return new double[0];
+		if (microclusters.size() == 0) {
+			return new DataBundle(new double[0], new double[0]);
 		}
 
 		double[] dimData;
-		double weights[];
+		double[] weights;
 		Selection selectedIndexes = new Selection(microclusters.size(), selectionAlpha);
 		// Fill the list with all the indexes
 		selectedIndexes.fillRange();
@@ -80,31 +83,17 @@ public class MicroclusterContrast extends Contrast {
 		}
 
 		// Get the selected data from the last dimension and apply weights
+		dimData = getSelectedData(shuffledDimensions[shuffledDimensions.length - 1], selectedIndexes);
 		weights = getSelectedWeights(selectedIndexes);
-		int totalWeight = 0;
-		for (int i = 0; i < weights.length; i++) {
-			weights[i] = Math.round(weights[i]);
-			totalWeight += weights[i];
-		}
-		double[] slicedData = new double[totalWeight];
-		int index = 0;
-		double c;
-		int referenceDimension = shuffledDimensions[shuffledDimensions.length - 1];
-		for (int i = 0; i < selectedIndexes.size(); i++) {
-			c = microclusters.get(selectedIndexes.getIndex(i)).getCenter()[referenceDimension];
-			for (int j = 0; j < weights[i]; j++) {
-				slicedData[index] = c;
-				index++;
-			}
-		}
-		return slicedData;
+		
+		return new DataBundle(dimData, weights);
 	}
-	
+
 	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha) {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
 		}
-		if(microclusters.size() == 0){
+		if (microclusters.size() == 0) {
 			return new Selection(0, selectionAlpha);
 		}
 
@@ -122,10 +111,9 @@ public class MicroclusterContrast extends Contrast {
 			// the current dimension
 			selectedIndexes.selectWithWeights(dimData, weights);
 		}
-		
+
 		return selectedIndexes;
 	}
-
 
 	private double[] getSelectedData(int dimension, Selection selectedIndexes) {
 		int l = selectedIndexes.size();
@@ -152,15 +140,15 @@ public class MicroclusterContrast extends Contrast {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
 		}
-		
+
 		double[][] points = new double[microclusters.size()][];
-		for(int i = 0; i < microclusters.size(); i++){
+		for (int i = 0; i < microclusters.size(); i++) {
 			points[i] = microclusters.get(i).getCenter();
 		}
 		return points;
 	}
-	
-	public Clustering getMicroclusters(){
+
+	public Clustering getMicroclusters() {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
 		}

@@ -81,6 +81,17 @@ public class Subspace {
 	}
 
 	/**
+	 * Checks whether this {@link Subspace} contains the given dimension.
+	 * 
+	 * @param dimension
+	 *            The dimension
+	 * @return True, if the dimension is contained, false otherwise.
+	 */
+	public boolean contains(int dimension) {
+		return dimensions.contains(dimension);
+	}
+
+	/**
 	 * Returns the dimension at the specified index.
 	 * 
 	 * @param index
@@ -163,12 +174,7 @@ public class Subspace {
 	 * have the first k-1 elements in common. The dimensions in the merged
 	 * subspace are sorted in ascending order.
 	 * 
-	 * @param s1
-	 *            The first {@link Subspace}.
-	 * @param s2
-	 *            The second {@link Subspace}.
-	 * @return The reference to a new subspace object, if the two
-	 *         {@link Subspace}s could be merged, null otherwise.
+	 * 
 	 */
 	public static Subspace merge(Subspace s1, Subspace s2) {
 		int k = s1.size();
@@ -185,6 +191,45 @@ public class Subspace {
 		}
 		Subspace s = s1.copy();
 		s.addDimension(s2.getDimension(k - 1));
+		s.sort();
+		return s;
+	}
+
+	/**
+	 * Merges the two given {@link Subspace}s of the same length k > 0 and if
+	 * they have any k - 1 elements in common, no matter in which order.
+	 * 
+	 * @param s1
+	 *            The first {@link Subspace}.
+	 * @param s2
+	 *            The second {@link Subspace}.
+	 * @return The reference to a new subspace object, if the two
+	 *         {@link Subspace}s could be merged, null otherwise.
+	 */
+	public static Subspace mergeFull(Subspace s1, Subspace s2) {
+		int k = s1.size();
+		if (k == 0) {
+			return null;
+		}
+		if (s2.size() != k) {
+			return null;
+		}
+		int counter = 0;
+		Subspace s = s2.copy();
+		int dimension;
+		for (int i = 0; i < k; i++) {
+			dimension = s1.getDimension(i);
+			if (s2.contains(dimension)) {
+				counter++;
+			} else {
+				s.addDimension(dimension);
+			}
+		}
+
+		if (counter != k - 1) {
+			return null;
+		}
+
 		s.sort();
 		return s;
 	}
@@ -207,8 +252,8 @@ public class Subspace {
 	 *         otherwise.
 	 */
 	public boolean isSubspaceOf(Subspace s) {
-		for(int i = 0; i < dimensions.size(); i++){
-			if(!s.dimensions.contains(this.dimensions.get(i))){
+		for (int i = 0; i < dimensions.size(); i++) {
+			if (!s.dimensions.contains(this.dimensions.get(i))) {
 				return false;
 			}
 		}

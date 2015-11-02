@@ -1,5 +1,6 @@
 package streamDataStructures;
 
+import contrast.DataBundle;
 import contrast.Selection;
 import subspace.Subspace;
 import weka.core.Instance;
@@ -48,12 +49,17 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing all the data held in the container
 	 *         corresponding to the given dimension.
 	 */
-	public double[] getProjectedData(int dimension) {
+	public DataBundle getProjectedData(int dimension) {
 		// Selection alpha does not matter here
 		Selection selectedIndexes = new Selection(numberOfInstances, 1);
 		// Fill the list with all the indexes to select all data
 		selectedIndexes.fillRange();
-		return getSelectedData(dimension, selectedIndexes);
+		double[] data = getSelectedData(dimension, selectedIndexes);
+		double[] weights = new double[data.length];
+		for (int i = 0; i < weights.length; i++) {
+			weights[i] = 1;
+		}
+		return new DataBundle(data, weights);
 	}
 
 	/**
@@ -74,7 +80,7 @@ public abstract class DataStreamContainer {
 	 * @return A double[] containing a random conditional sample corresponding
 	 *         to the given dimension.
 	 */
-	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
+	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		double[] dimData;
 		Selection selectedIndexes = new Selection(numberOfInstances, selectionAlpha);
 		// Fill the list with all the indexes
@@ -89,7 +95,12 @@ public abstract class DataStreamContainer {
 		}
 
 		// Get the selected data from the last dimension
-		return getSelectedData(shuffledDimensions[shuffledDimensions.length - 1], selectedIndexes);
+		dimData = getSelectedData(shuffledDimensions[shuffledDimensions.length - 1], selectedIndexes);
+		double[] weights = new double[dimData.length];
+		for (int i = 0; i < weights.length; i++) {
+			weights[i] = 1;
+		}
+		return new DataBundle(dimData, weights);
 	}
 
 	/**
@@ -104,6 +115,6 @@ public abstract class DataStreamContainer {
 	 *         to the given dimension and the specified indexes.
 	 */
 	public abstract double[] getSelectedData(int dimension, Selection selectedIndexes);
-	
+
 	public abstract double[][] getUnderlyingPoints();
 }

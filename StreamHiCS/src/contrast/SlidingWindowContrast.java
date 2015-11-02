@@ -1,15 +1,12 @@
 package contrast;
 
+import changechecker.ChangeChecker;
 import streamDataStructures.DataStreamContainer;
 import streamDataStructures.SlidingWindow;
 import subspace.Subspace;
 import weka.core.Instance;
 
 public class SlidingWindowContrast extends Contrast {
-	/**
-	 * The number of {@link Instance} that are observed before the
-	 * {@link Subspace} contrasts are checked again.
-	 */
 	private int updateInterval;
 	/**
 	 * To count the number of {@link Instance}s observed since the last
@@ -31,15 +28,14 @@ public class SlidingWindowContrast extends Contrast {
 	 *            The number how many {@link Instance}s are observed between
 	 *            evaluations of the correlated {@link Subspace}s.
 	 */
-	public SlidingWindowContrast(Callback callback, int numberOfDimensions, int updateInterval, int m, double alpha, int windowLength) {
-		super(callback, m, alpha);
+	public SlidingWindowContrast(Callback callback, int numberOfDimensions, int updateInterval, int m, double alpha, int windowLength, ChangeChecker changeChecker) {
+		super(callback, m, alpha, changeChecker);
 		this.updateInterval = updateInterval;
-		// dataStreamContainer = new SelfOrganizingMap(numberOfDimensions, 100);
 		dataStreamContainer = new SlidingWindow(numberOfDimensions, windowLength);
 	}
 
 	@Override
-	public void add(Instance instance) {
+	public void addImpl(Instance instance) {
 		dataStreamContainer.add(instance);
 		currentCount++;
 		if (currentCount >= updateInterval) {
@@ -68,12 +64,12 @@ public class SlidingWindowContrast extends Contrast {
 	}
 
 	@Override
-	public double[] getProjectedData(int referenceDimension) {
+	public DataBundle getProjectedData(int referenceDimension) {
 		return dataStreamContainer.getProjectedData(referenceDimension);
 	}
 
 	@Override
-	public double[] getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
+	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		return dataStreamContainer.getSlicedData(shuffledDimensions, selectionAlpha);
 	}
 

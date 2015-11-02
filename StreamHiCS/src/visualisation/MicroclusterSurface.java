@@ -1,4 +1,4 @@
-package drawing;
+package visualisation;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -6,20 +6,23 @@ import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
-
 import javax.swing.JPanel;
 import javax.swing.Timer;
-
 import org.apache.commons.math3.util.MathArrays;
 
-import centroids.Centroid;
+import changechecker.TimeCountChecker;
 import contrast.Callback;
-import contrast.CentroidContrast;
+import contrast.MicroclusterContrast;
 import contrast.Selection;
+import moa.cluster.Cluster;
+import moa.cluster.Clustering;
+import moa.clusterers.clustree.ClusTree;
+import streamDataStructures.WithDBSCAN;
+import streams.GaussianStream;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
-class CentroidSurface extends JPanel implements ActionListener {
+class MicroclusterSurface extends JPanel implements ActionListener {
 
 	/**
 	 * Default serial version id.
@@ -27,7 +30,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final int DELAY = 10;
 	private Timer timer;
-	private CentroidContrast contrast;
+	private MicroclusterContrast contrast;
 	private Callback callback = new Callback() {
 
 		@Override
@@ -37,14 +40,22 @@ class CentroidSurface extends JPanel implements ActionListener {
 
 	};
 	private int count = 0;
-	private int conceptChange = 1100;
+	private int conceptChange = 5000;
 	private double xRange = 10;
 	private double yRange = 10;
 	private Random r;
 	private int[] shuffledDimensions = { 0, 1 };
+	private double[][] covarianceMatrix = {{1, 0.9}, {0.9, 1}};
+	private GaussianStream stream;
 
-	public CentroidSurface() {
-		this.contrast = new CentroidContrast(callback, 2, 20, 0.4, 0.01, 0.2, 0.1, 0.2, null);
+	public MicroclusterSurface() {
+		
+		stream = new GaussianStream(covarianceMatrix);
+		
+		ClusTree mcs = new ClusTree();
+		mcs.resetLearningImpl();
+		
+		this.contrast = new MicroclusterContrast(callback, 20, 0.2, mcs, new TimeCountChecker(10000));
 		r = new Random();
 		initTimer();
 	}
@@ -75,11 +86,12 @@ class CentroidSurface extends JPanel implements ActionListener {
 		int xPixel = 0;
 		int yPixel = 0;
 		int weight = 0;
-		Centroid[] cs = contrast.getCentroids();
-		Centroid c;
+		Clustering microclusters = contrast.getMicroclusters();
+		Cluster c;
 		boolean drawSlice = (count % 100 == 0);
 		Selection s = null;
 		if (drawSlice) {
+			System.out.println(count);
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
 			// System.out.println("[" + shuffledDimensions[0] + ", " +
@@ -92,12 +104,12 @@ class CentroidSurface extends JPanel implements ActionListener {
 			// System.out.print(cs[i].getId() + ", ");
 			// }
 		}
-		for (int i = 0; i < cs.length; i++) {
-			c = cs[i];
+		for (int i = 0; i < microclusters.size(); i++) {
+			c = microclusters.get(i);
 			if (drawSlice && s.contains(i)) {
 				g2d.setColor(Color.RED);
 			}
-			vector = c.getVector();
+			vector = c.getCenter();
 			xPixel = (int) (w * (vector[0] / xRange));
 			yPixel = (int) (h * (vector[1] / yRange));
 			weight = (int) (c.getWeight() * 10);
@@ -123,12 +135,15 @@ class CentroidSurface extends JPanel implements ActionListener {
 		repaint();
 	}
 
-	private void createAndAddInstance() {
-		double x = r.nextGaussian();
-		double y = r.nextGaussian();
+	private double[] createAndAddInstance() {
+		//double x = r.nextGaussian();
+		//double y = r.nextGaussian();
+		Instance inst = stream.nextInstance();
+		double x = inst.value(0);
+		double y = inst.value(1);
 		double offset = 0;
 		if (count >= conceptChange) {
-			offset = 10;
+			offset = 5;
 		} else {
 			if (count % 2 == 0) {
 				offset = 3;
@@ -141,6 +156,12 @@ class CentroidSurface extends JPanel implements ActionListener {
 		y += offset;
 		addInstance(x, y);
 		count++;
+		
+		double[] point = new double[2];
+		point[0] = x;
+		point[1] = y;
+		
+		return point;
 	}
 
 	private void addInstance(double x, double y) {

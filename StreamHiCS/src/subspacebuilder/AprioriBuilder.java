@@ -1,26 +1,16 @@
-import java.util.ArrayList;
+package subspacebuilder;
 
-import contrast.Callback;
+import java.util.ArrayList;
 import contrast.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
-import weka.core.Instance;
 
-public class StreamHiCS implements Callback {
-	/**
-	 * The set of the currently correlated {@link Subspace}s.
-	 */
-	private SubspaceSet correlatedSubspaces;
+public class AprioriBuilder extends SubspaceBuilder {
+	SubspaceSet correlatedSubspaces;
 	/**
 	 * The number of dimensions of the full space.
 	 */
 	private int numberOfDimensions;
-	/**
-	 * Determines how much the contrast values of {@link Subspace]s are allowed
-	 * to deviate from the last evaluation. If the deviation exceeds epsilon the
-	 * correlated {Subspace}s are newly built. Epsilon must be positive.
-	 */
-	private double epsilon;
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
 	 * for the correlated subspaces. Note that, even if a subspace's contrast
@@ -41,120 +31,18 @@ public class StreamHiCS implements Callback {
 	 */
 	private Contrast contrastEvaluator;
 
-	/**
-	 * Creates a {@link StreamHiCS} object with the specified update interval.
-	 * 
-	 * @param numberOfDimensions
-	 *            The number of dimensions of the full space.
-	 * @param epsilon
-	 *            The deviation that is allowed for contrast values between two
-	 *            evaluation without starting a full new build of the correlated
-	 *            subspaces.
-	 * @param threshold
-	 *            The threshold for the contrast. {@link Subspace}s with a
-	 *            contrast above or equal to the threshold may be considered as
-	 *            correlated.
-	 */
-	public StreamHiCS(int numberOfDimensions, double epsilon, double threshold, int cutoff, double pruningDifference,
+	public AprioriBuilder(int numberOfDimensions, double threshold, int cutoff, double pruningDifference,
 			Contrast contrastEvaluator) {
-		correlatedSubspaces = new SubspaceSet();
-		if (numberOfDimensions <= 0 || epsilon < 0 || cutoff <= 0 || pruningDifference < 0) {
-			throw new IllegalArgumentException("Non-positive input value.");
-		}
+		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
-		this.epsilon = epsilon;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
 		this.pruningDifference = pruningDifference;
 		this.contrastEvaluator = contrastEvaluator;
 	}
 
-	/**
-	 * Returns the correlated {@link Subspace}s.
-	 * 
-	 * @return The {@link SubspaceSet} containing the currently correlated
-	 *         {@link Subspace}s.
-	 */
-	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
-		return correlatedSubspaces;
-	}
-
-	/**
-	 * Add a new {@link Instance}.
-	 * 
-	 * @param instance
-	 *            The {@link Instance} to be added.
-	 */
-	public void add(Instance instance) {
-		contrastEvaluator.add(instance);
-	}
-
-	/**
-	 * Clears all stored information learnt from the stream.
-	 */
-	public void clear() {
-		contrastEvaluator.clear();
-	}
-
-	/**
-	 * Carries out an evaluation of the stored correlated {@link Subspace}s and
-	 * searches for new ones.
-	 */
-	private void evaluateCorrelatedSubspaces() {
-		if (correlatedSubspaces.isEmpty()) {
-			// Find new correlated subspaces
-			buildCorrelatedSubspaces();
-		} else {
-			double contrast = 0;
-			boolean update = false;
-			// This variable is needed to build a workaround of problems with
-			// the iterator when removing elements at the same time
-			int l = correlatedSubspaces.size();
-			for (int i = 1; i < l && !update; i++) {
-				Subspace subspace = correlatedSubspaces.getSubspace(i);
-				contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
-				// System.out.println(contrast);
-
-				// If contrast has changed more than epsilon or has fallen below
-				// the threshold we start a new
-				// complete
-				// evaluation.
-				if (Math.abs(contrast - subspace.getContrast()) <= epsilon || contrast < threshold) {
-					update = true;
-					break;
-					// l--;
-				}
-			}
-			// If a subspace has changed we should update the correlated
-			// subspaces.
-			if (update) {
-				correlatedSubspaces.clear();
-				buildCorrelatedSubspaces();
-			}
-		}
-		
-		System.out.println("Correlated: " + correlatedSubspaces.toString());
-		if(!correlatedSubspaces.isEmpty()){
-			for(Subspace s : correlatedSubspaces.getSubspaces()){
-				System.out.print(s.getContrast() + ", ");
-			}
-			System.out.println();
-		}
-		
-		/*
-		 * // Parallel version List<Double> res =
-		 * correlatedSubspaces.parallelStream().map(s -> { return
-		 * evaluateSubspaceContrast(s); }).collect(Collectors.toList());
-		 * 
-		 * for (Double d : res) { if (d < threshold) { update = true; } }
-		 */
-	}
-
-	/**
-	 * Builds a new set of correlated subspaces. The old ones are kept if they
-	 * still are correlated.
-	 */
-	private void buildCorrelatedSubspaces() {
+	@Override
+	public SubspaceSet buildCorrelatedSubspaces() {
 		SubspaceSet c_K = new SubspaceSet();
 		double contrast = 0;
 		// Create all 2-dimensional candidates
@@ -180,12 +68,14 @@ public class StreamHiCS implements Callback {
 		correlatedSubspaces.addSubspaces(c_K);
 
 		// Carry out apriori algorithm
-		apriori(c_K);
+		aprioriFull(c_K);
 		// aprioriParallel(c_K);
 
 		// Carry out pruning as the last step. All those subspaces which are
 		// subspace to another subspace with higher contrast are discarded.
 		prune();
+
+		return correlatedSubspaces;
 	}
 
 	/**
@@ -231,6 +121,40 @@ public class StreamHiCS implements Callback {
 	}
 
 	/**
+	 * Does not only check from the beginning of a set for overlap.
+	 * 
+	 * @param c_K
+	 */
+	private void aprioriFull(SubspaceSet c_K) {
+		SubspaceSet c_Kplus1 = new SubspaceSet();
+		c_K.sort();
+		double contrast = 0;
+		double meanBaseContrasts = 0;
+		for (int i = 0; i < c_K.size() - 1; i++) {
+			for (int j = i + 1; j < c_K.size(); j++) {
+				// Creating new candidates
+				meanBaseContrasts = (c_K.getSubspace(i).getContrast() + c_K.getSubspace(j).getContrast())/2;
+				Subspace kPlus1Candidate = Subspace.mergeFull(c_K.getSubspace(i), c_K.getSubspace(j));
+				if (kPlus1Candidate != null && !c_Kplus1.contains(kPlus1Candidate)) {
+					// Calculate the contrast of the subspace
+					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
+					kPlus1Candidate.setContrast(contrast);
+					if (contrast > meanBaseContrasts - 0.5*pruningDifference && contrast >= threshold) {
+						c_Kplus1.addSubspace(kPlus1Candidate);
+					}
+				}
+			}
+		}
+		if (!c_Kplus1.isEmpty()) {
+			// Select the subspaces with highest contrast
+			c_Kplus1.selectTopK(cutoff);
+			correlatedSubspaces.addSubspaces(c_Kplus1);
+			// Recurse
+			aprioriFull(c_Kplus1);
+		}
+	}
+
+	/**
 	 * Parallel version.
 	 * 
 	 * @param c_K
@@ -247,7 +171,7 @@ public class StreamHiCS implements Callback {
 			continueMerging = true;
 			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
 				// Creating new candidates
-				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i), c_K.getSubspace(j));
+				Subspace kPlus1Candidate = Subspace.mergeFull(c_K.getSubspace(i), c_K.getSubspace(j));
 				if (kPlus1Candidate != null) {
 					temp.addSubspace(kPlus1Candidate);
 				} else {
@@ -311,51 +235,5 @@ public class StreamHiCS implements Callback {
 			}
 		}
 		correlatedSubspaces = prunedSet;
-	}
-
-	/**
-	 * Checks if a candidate for a correlated subspace is a correlated subspace.
-	 * 
-	 * @param c_K
-	 *            The candidate set.
-	 * @param s
-	 *            the {@link Subspace}.
-	 * @return True is the subspace is correlated, false otherwise.
-	 */
-	private boolean checkCandidates(SubspaceSet c_K, Subspace s) {
-		/*
-		 * Formally, we are not allowed to apply apriori monocity principles.
-		 * 
-		 * 
-		 * // If a candidate is a subset of a subspace which is correlated //
-		 * (contrast above or equal to threshold), then the candidate is //
-		 * correlated, too.
-		 * 
-		 * 
-		 * // Does the candidate contain a subset, which is not correlated?
-		 * Subspace sKminus1 = s.copy(); for (int i = 0; i < s.getSize(); i++) {
-		 * sKminus1.discardDimension(i); if (!c_K.contains(sKminus1)) { return
-		 * false; } sKminus1.addDimension(i); }
-		 */
-
-		// Is the contrast higher or equal to the threshold?
-		// if (evaluateSubspaceContrast(s) < threshold) {
-		// return false;
-		// }
-		return true;
-	}
-
-	/**
-	 * Returns a string representation of this object.
-	 * 
-	 * @return A string representation of this object.
-	 */
-	public String toString() {
-		return correlatedSubspaces.toString();
-	}
-
-	@Override
-	public void onAlarm() {
-		evaluateCorrelatedSubspaces();
 	}
 }
