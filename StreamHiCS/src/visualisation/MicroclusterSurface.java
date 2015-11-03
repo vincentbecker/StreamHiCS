@@ -46,12 +46,10 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private MicroclusterContrast contrast;
 	private StatisticalTest statTest;
 	private Callback callback = new Callback() {
-
 		@Override
 		public void onAlarm() {
 			System.out.println("Alarm.");
 		}
-
 	};
 	private int count = 0;
 	private int imageCount = 0;

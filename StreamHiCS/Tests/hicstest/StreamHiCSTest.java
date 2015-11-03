@@ -1,3 +1,5 @@
+package hicstest;
+
 import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
@@ -9,13 +11,14 @@ import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
+import environment.CSVReader;
+import environment.Evaluator;
 import fullsystem.StreamHiCS;
 import streamDataStructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
-import subspacebuilder.FastBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustree.ClusTree;
@@ -35,14 +38,11 @@ public class StreamHiCSTest {
 	private final String method = "ClusTreeMC";
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
-	private Callback callback = new Callback(){
-
+	private Callback callback = new Callback() {
 		@Override
 		public void onAlarm() {
 			System.out.println("StreamHiCS: onAlarm()");
-			
 		}
-		
 	};
 
 	@BeforeClass
@@ -415,6 +415,7 @@ public class StreamHiCSTest {
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
 		// contrastEvaluator);
+
 		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, callback);
 		contrastEvaluator.setCallback(streamHiCS);
 
@@ -428,28 +429,6 @@ public class StreamHiCSTest {
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		// Evaluation
-		System.out.println("Expected: " + correctResult.toString());
-		int l = correctResult.size();
-		int tp = 0;
-		for (Subspace s : correctResult.getSubspaces()) {
-			if (streamHiCS.getCurrentlyCorrelatedSubspaces().contains(s)) {
-				tp++;
-			}
-		}
-		int fp = streamHiCS.getCurrentlyCorrelatedSubspaces().size() - tp;
-		double recall = 1;
-		double fpRatio = 0;
-		if (l > 0) {
-			recall = ((double) tp) / correctResult.size();
-			fpRatio = ((double) fp) / correctResult.size();
-		} else {
-			if (fp > 0) {
-				fpRatio = 1;
-			}
-		}
-		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
-		System.out.println();
-
-		return ((recall - fpRatio) >= 0.75);
+		return Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75;
 	}
 }

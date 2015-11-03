@@ -16,13 +16,13 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
-public class UncorrelatedStream extends AbstractOptionHandler implements InstanceStream{
+public class UncorrelatedStream extends AbstractOptionHandler implements InstanceStream {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -97884374978899603L;
-	
+
 	private int numberOfDimensions;
 	private Random random;
 	private double scale;
@@ -31,13 +31,15 @@ public class UncorrelatedStream extends AbstractOptionHandler implements Instanc
 	 * The header of the stream.
 	 */
 	private InstancesHeader streamHeader;
-	
-	public IntOption randomSeedOption = new IntOption("randomSeed", 'r', "Seed for random generator.", 1, 1, Integer.MAX_VALUE);
-	
-	public IntOption dimensionsOption = new IntOption("numberOfDimensions", 'd', "Number of Dimensions.", 1, 1, Integer.MAX_VALUE);
-	
+
+	public IntOption randomSeedOption = new IntOption("randomSeed", 'r', "Seed for random generator.", 1, 1,
+			Integer.MAX_VALUE);
+
+	public IntOption dimensionsOption = new IntOption("numberOfDimensions", 'd', "Number of Dimensions.", 1, 1,
+			Integer.MAX_VALUE);
+
 	public FloatOption scaleOption = new FloatOption("scale", 's', "Scale.", 1, 0, Double.MAX_VALUE);
-	
+
 	@Override
 	public OptionHandler copy() {
 		// TODO Auto-generated method stub
@@ -47,7 +49,7 @@ public class UncorrelatedStream extends AbstractOptionHandler implements Instanc
 	@Override
 	public void getDescription(StringBuilder arg0, int arg1) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -83,7 +85,7 @@ public class UncorrelatedStream extends AbstractOptionHandler implements Instanc
 		InstancesHeader header = getHeader();
 		Instance inst = new DenseInstance(header.numAttributes());
 		for (int i = 0; i < numberOfDimensions; i++) {
-			inst.setValue(i, (random.nextDouble() - 0.5)*scale);
+			inst.setValue(i, (random.nextDouble() - 0.5) * scale);
 		}
 		inst.setDataset(header);
 

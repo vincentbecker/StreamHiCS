@@ -1,3 +1,4 @@
+package changechecker;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class BasicChangeDetectorTest {
 		};
 
 		stream = new GaussianStream(covarianceMatrices[0]);
-
+		
 		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(1000, 5, null, 0.2, 0.03);
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();

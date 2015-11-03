@@ -65,7 +65,6 @@ public class WithDBSCAN extends AbstractClusterer {
 	 public IntOption speedOption = new IntOption("processingSpeed", 's',
 				"Number of incoming points per time unit.", 100, 1, 1000);
 
-	private double weightThreshold = 0.01;
 	double lambda;
 	double epsilon;
 	int minPoints;

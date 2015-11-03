@@ -19,13 +19,9 @@ public class GaussianStream implements InstanceStream {
 	 */
 	private static final long serialVersionUID = 1L;
 	/**
-	 * The mean of the multivariate distributoin.
+	 * The mean of the multivariate distribution.
 	 */
 	private double[] mean;
-	/**
-	 * The covariance matrix of the multivariate distribution.
-	 */
-	private double[][] covariances;
 	/**
 	 * The underlying stream generator.
 	 */
@@ -35,28 +31,23 @@ public class GaussianStream implements InstanceStream {
 	 */
 	private InstancesHeader streamHeader;
 
-	/**
-	 * Constructs an object of this class.
-	 * 
-	 * @param covarianceMatrix
-	 *            The covariance matrix.
-	 */
 	public GaussianStream(double[][] covarianceMatrix) {
+		init(covarianceMatrix);
+	}
+
+	public void setCovarianceMatrix(double[][] covarianceMatrix) {
+		init(covarianceMatrix);
+	}
+
+	private void init(double[][] covarianceMatrix) {
 		// Mean will be initialised to be n x 0.0
 		mean = new double[covarianceMatrix.length];
-		this.covariances = covarianceMatrix;
-		normalDistribution = new MultivariateNormalDistribution(mean, covariances);
+		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		for (int i = 0; i < mean.length; i++) {
 			attributes.add(new Attribute("normalAttribute" + i));
 		}
 		streamHeader = new InstancesHeader(new Instances("GaussianStream", attributes, 0));
-	}
-
-	@Override
-	public MOAObject copy() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -118,15 +109,9 @@ public class GaussianStream implements InstanceStream {
 		return mean.length;
 	}
 
-	/**
-	 * Sets the covariance matrix to the given matrix.
-	 * 
-	 * @param covarianceMatrix
-	 *            The new covariance matrix.
-	 */
-	public void setCovarianceMatrix(double[][] covarianceMatrix) {
-		this.covariances = covarianceMatrix;
-		// Set the normal distribution with the new covariance matrix
-		normalDistribution = new MultivariateNormalDistribution(mean, covariances);
+	@Override
+	public MOAObject copy() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

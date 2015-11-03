@@ -1,3 +1,4 @@
+package contrast;
 import static org.junit.Assert.*;
 
 import org.apache.commons.math3.util.MathArrays;

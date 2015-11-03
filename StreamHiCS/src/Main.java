@@ -1,9 +1,4 @@
-import weka.core.DenseInstance;
-import weka.core.Instance;
-
 import java.awt.EventQueue;
-
-import moa.streams.generators.RandomRBFGenerator;
 import visualisation.PointsEx;
 
 public class Main {
@@ -15,7 +10,6 @@ public class Main {
 		 @Override public void run() {
 		  
 		 PointsEx ex = new PointsEx(); ex.setVisible(true); } });
-		 
 
 		/*
 		int numInstances = 10000;

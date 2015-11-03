@@ -1,3 +1,5 @@
+package streamtests;
+
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -10,6 +12,7 @@ import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
+import environment.Evaluator;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import streamDataStructures.WithDBSCAN;
@@ -46,14 +49,14 @@ public class StreamTest {
 					{ 0.2, 0.2, 0.8, 1, 0.8 }, { 0.2, 0.2, 0.2, 0.8, 1 } } };
 	private static SubspaceSet correctResult;
 	private static final String method = "ClusTreeMC";
-	private static Callback callback = new Callback(){
+	private static Callback callback = new Callback() {
 
 		@Override
 		public void onAlarm() {
 			System.out.println("StreamHiCS: onAlarm()");
-			
+
 		}
-		
+
 	};
 
 	@BeforeClass
@@ -184,27 +187,6 @@ public class StreamTest {
 
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
-		assertTrue(evaluate() >= 0.75);
+		assertTrue(Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75);
 	}
-
-	private double evaluate() {
-		int l = correctResult.size();
-		int tp = 0;
-		for (Subspace s : correctResult.getSubspaces()) {
-			if (streamHiCS.getCurrentlyCorrelatedSubspaces().contains(s)) {
-				tp++;
-			}
-		}
-		int fp = streamHiCS.getCurrentlyCorrelatedSubspaces().size() - tp;
-		double recall = 1;
-		double fpRatio = 0;
-		if (l > 0) {
-			recall = ((double) tp) / correctResult.size();
-			fpRatio = ((double) fp) / correctResult.size();
-		}
-		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
-		System.out.println();
-		return recall - fpRatio;
-	}
-
 }

@@ -54,6 +54,7 @@ public class StreamHiCS implements Callback {
 		this.threshold = threshold;
 		this.contrastEvaluator = contrastEvaluator;
 		this.subspaceBuilder = subspaceBuilder;
+		this.callback = callback;
 	}
 
 	/**
