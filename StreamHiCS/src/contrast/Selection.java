@@ -109,19 +109,14 @@ public class Selection {
 		// Sort the data and arrange the indexes correspondingly
 		MathArrays.sortInPlace(data, indexes, weights);
 		/*
-		TODO: Remove
-		System.out.println("Data: ");
-		for(int i = 0; i < data.length; i++){
-			System.out.print(data[i] + ", ");	
-		}
-		System.out.println("Indexes: ");
-		for(int i = 0; i < data.length; i++){
-			System.out.print(indexes[i] + ", ");	
-		}
-		*/
+		 * TODO: Remove System.out.println("Data: "); for(int i = 0; i <
+		 * data.length; i++){ System.out.print(data[i] + ", "); }
+		 * System.out.println("Indexes: "); for(int i = 0; i < data.length;
+		 * i++){ System.out.print(indexes[i] + ", "); }
+		 */
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
-		//System.out.println("Starting point: " + startingPoint);
+		// System.out.println("Starting point: " + startingPoint);
 		selectRangeWithWeights(data, weights, startingPoint, selectionSize);
 	}
 
@@ -187,24 +182,44 @@ public class Selection {
 			}
 			searchOn = true;
 		}
-		
-		if (data[lower] == data[upper]) {
-			// The special case that all the data values selected are the
-			// same. This case needs special handling.
-			System.out.println("Selection.selectRangeWithWeights(): Special handling!");
-			// Broadening the range if possible, until data values on the
-			// outside of the range differ
-			while (data[lower] == data[upper] && (upper - lower) < data.length - 1) {
-				if (lower > 0) {
-					lower--;
-				}
-				if (upper < data.length - 1) {
-					upper++;
-				}
+
+		// Since the Kolmogorov-Smirnov-Test needs at least two samples we take
+		// at least one other another if there is one a single one selected
+		if (upper - lower == 0) {
+			System.out.println("Only one sample.");
+			if (lower > 0) {
+				lower--;
+			}
+			if (upper < data.length - 1) {
+				upper++;
 			}
 		}
-		
-		//System.out.println("Lower: " + lower + " Upper: " + upper);
+
+		// Broadening the range until the values on the edges differ from the
+		// next value outside. This is done to from a correct slice.
+		while (lower > 0 && data[lower - 1] == data[lower]) {
+			lower--;
+			// System.out.println("Selection.selectRangeWithWeights(): Special
+			// handling!");
+		}
+		while (upper < data.length - 1 && data[upper] == data[upper + 1]) {
+			upper++;
+			// System.out.println("Selection.selectRangeWithWeights(): Special
+			// handling!");
+		}
+
+		/*
+		 * if (data[lower] == data[upper]) { // The special case that all the
+		 * data values selected are the // same. This case needs special
+		 * handling. System.out.println(
+		 * "Selection.selectRangeWithWeights(): Special handling!"); //
+		 * Broadening the range if possible, until data values on the // outside
+		 * of the range differ while (data[lower] == data[upper] && (upper -
+		 * lower) < data.length - 1) { if (lower > 0) { lower--; } if (upper <
+		 * data.length - 1) { upper++; } } }
+		 */
+
+		// System.out.println("Lower: " + lower + " Upper: " + upper);
 		double[] newIndexes = new double[upper - lower + 1];
 		for (int i = lower; i <= upper; i++) {
 			newIndexes[i - lower] = indexes[i];

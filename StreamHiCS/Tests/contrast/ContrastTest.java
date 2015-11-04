@@ -1,4 +1,5 @@
 package contrast;
+
 import static org.junit.Assert.*;
 
 import org.apache.commons.math3.util.MathArrays;
@@ -6,8 +7,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import changechecker.TimeCountChecker;
-import contrast.Callback;
 import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
@@ -55,12 +54,6 @@ public class ContrastTest {
 	 * The allowed error to the correct contrast value.
 	 */
 	private static final double epsilon = 0.1;
-	private static Callback callback = new Callback() {
-
-		@Override
-		public void onAlarm() {
-		}
-	};
 	private static double targetLowContrast;
 	private static double targetMiddleContrast;
 	private static double targetHighContrast;
@@ -69,7 +62,7 @@ public class ContrastTest {
 	public static void setUpBeforeClass() throws Exception {
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
-			contrastEvaluator = new SlidingWindowContrast(callback, 2, numInstances, m, alpha, numInstances, new TimeCountChecker(numInstances + 1));
+			contrastEvaluator = new SlidingWindowContrast(2, m, alpha, numInstances);
 
 			targetLowContrast = 0;
 			targetMiddleContrast = 0.2;
@@ -81,8 +74,7 @@ public class ContrastTest {
 			double radius = 0.2;
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
-			contrastEvaluator = new CentroidContrast(callback, 2, m, alpha, fadingLambda, radius, weightThreshold,
-					learningRate, new TimeCountChecker(numInstances + 1));
+			contrastEvaluator = new CentroidContrast(2, m, alpha, fadingLambda, radius, weightThreshold, learningRate);
 
 			targetLowContrast = 0.1;
 			targetMiddleContrast = 0.3;
@@ -96,8 +88,7 @@ public class ContrastTest {
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(callback, m, alpha, mcs,
-					new TimeCountChecker(numInstances + 1));
+			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
 			targetLowContrast = 0.2;
 			targetMiddleContrast = 0.4;
@@ -107,8 +98,7 @@ public class ContrastTest {
 			alpha = 0.1;
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(callback, m, alpha, mcs,
-					new TimeCountChecker(numInstances + 1));
+			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
 			targetLowContrast = 0.15;
 			targetMiddleContrast = 0.35;

@@ -25,6 +25,14 @@ public class Evaluator {
 				fpRatio = 1;
 			}
 		}
+		
+		System.out.println("Correlated: " + result.toString());
+		if (!result.isEmpty()) {
+			for (Subspace s : result.getSubspaces()) {
+				System.out.print(s.getContrast() + ", ");
+			}
+			System.out.println();
+		}
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
 		System.out.println();
 		return recall - fpRatio;

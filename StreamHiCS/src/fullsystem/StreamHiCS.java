@@ -1,6 +1,6 @@
 package fullsystem;
 
-import contrast.Callback;
+import changechecker.ChangeChecker;
 import contrast.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -28,6 +28,10 @@ public class StreamHiCS implements Callback {
 	 */
 	private Contrast contrastEvaluator;
 	private SubspaceBuilder subspaceBuilder;
+	private ChangeChecker changeChecker;
+	/**
+	 * The @link{Callback} to notify on changes.
+	 */
 	private Callback callback;
 
 	/**
@@ -44,7 +48,7 @@ public class StreamHiCS implements Callback {
 	 *            contrast above or equal to the threshold may be considered as
 	 *            correlated.
 	 */
-	public StreamHiCS(double epsilon, double threshold, Contrast contrastEvaluator, SubspaceBuilder subspaceBuilder,
+	public StreamHiCS(double epsilon, double threshold, Contrast contrastEvaluator, SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker,
 			Callback callback) {
 		correlatedSubspaces = new SubspaceSet();
 		if (epsilon < 0) {
@@ -54,6 +58,7 @@ public class StreamHiCS implements Callback {
 		this.threshold = threshold;
 		this.contrastEvaluator = contrastEvaluator;
 		this.subspaceBuilder = subspaceBuilder;
+		this.changeChecker = changeChecker;
 		this.callback = callback;
 	}
 
@@ -75,6 +80,7 @@ public class StreamHiCS implements Callback {
 	 */
 	public void add(Instance instance) {
 		contrastEvaluator.add(instance);
+		changeChecker.poll();
 	}
 
 	/**
@@ -94,24 +100,26 @@ public class StreamHiCS implements Callback {
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			correlatedSubspaces = subspaceBuilder.buildCorrelatedSubspaces();
-			update = true;
+			if (!correlatedSubspaces.isEmpty()) {
+				update = true;
+			}
 		} else {
 			double contrast = 0;
 			update = false;
 			// This variable is needed to build a workaround of problems with
 			// the iterator when removing elements at the same time
 			int l = correlatedSubspaces.size();
-			for (int i = 1; i < l && !update; i++) {
+			for (int i = 0; i < l && !update; i++) {
 				Subspace subspace = correlatedSubspaces.getSubspace(i);
 				contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 				// System.out.println(contrast);
 
 				// If contrast has changed more than epsilon or has fallen below
 				// the threshold we start a new complete evaluation.
-				if (Math.abs(contrast - subspace.getContrast()) <= epsilon || contrast < threshold) {
+				if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
 					update = true;
-					break;
 				}
+				subspace.setContrast(contrast);
 			}
 			// If a subspace has changed we update the correlated
 			// subspaces.
@@ -119,14 +127,6 @@ public class StreamHiCS implements Callback {
 				correlatedSubspaces.clear();
 				correlatedSubspaces = subspaceBuilder.buildCorrelatedSubspaces();
 			}
-		}
-
-		System.out.println("Correlated: " + correlatedSubspaces.toString());
-		if (!correlatedSubspaces.isEmpty()) {
-			for (Subspace s : correlatedSubspaces.getSubspaces()) {
-				System.out.print(s.getContrast() + ", ");
-			}
-			System.out.println();
 		}
 
 		return update;

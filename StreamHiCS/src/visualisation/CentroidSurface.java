@@ -13,7 +13,6 @@ import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
 
 import centroids.Centroid;
-import contrast.Callback;
 import contrast.CentroidContrast;
 import contrast.Selection;
 import weka.core.DenseInstance;
@@ -28,14 +27,6 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private final int DELAY = 10;
 	private Timer timer;
 	private CentroidContrast contrast;
-	private Callback callback = new Callback() {
-
-		@Override
-		public void onAlarm() {
-			System.out.println("Alarm.");
-		}
-
-	};
 	private int count = 0;
 	private int conceptChange = 1100;
 	private double xRange = 10;
@@ -44,7 +35,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private int[] shuffledDimensions = { 0, 1 };
 
 	public CentroidSurface() {
-		this.contrast = new CentroidContrast(callback, 2, 20, 0.4, 0.01, 0.2, 0.1, 0.2, null);
+		this.contrast = new CentroidContrast(2, 20, 0.4, 0.01, 0.2, 0.1, 0.2);
 		r = new Random();
 		initTimer();
 	}

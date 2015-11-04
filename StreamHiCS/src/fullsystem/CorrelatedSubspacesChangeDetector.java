@@ -2,8 +2,8 @@ package fullsystem;
 
 import java.util.ArrayList;
 
+import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Callback;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import moa.clusterers.clustree.ClusTree;
@@ -14,6 +14,7 @@ import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
+import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
 public class CorrelatedSubspacesChangeDetector implements Callback {
@@ -104,10 +105,11 @@ public class CorrelatedSubspacesChangeDetector implements Callback {
 
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		Contrast contrastEvaluator = new MicroclusterContrast(null, m, alpha, mcs, new TimeCountChecker(1000));
-		this.streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator,
-				new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference, contrastEvaluator), this);
-		contrastEvaluator.setCallback(streamHiCS);
+		ChangeChecker changeChecker = new TimeCountChecker(1000);
+		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference, contrastEvaluator);
+		this.streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, this);
+		changeChecker.setCallback(streamHiCS);
 		this.fullSpaceChangeDetector = new FullSpaceChangeDetector();
 		fullSpaceChangeDetector.prepareForUse();
 		// No correlated subspaces yet.

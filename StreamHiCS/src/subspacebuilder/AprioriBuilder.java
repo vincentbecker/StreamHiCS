@@ -139,6 +139,7 @@ public class AprioriBuilder extends SubspaceBuilder {
 					// Calculate the contrast of the subspace
 					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
 					kPlus1Candidate.setContrast(contrast);
+					//
 					if (contrast > meanBaseContrasts - 0.5*pruningDifference && contrast >= threshold) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
 					}

@@ -6,11 +6,11 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Callback;
 import contrast.CentroidContrast;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
+import fullsystem.Callback;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.generators.RandomRBFGeneratorDrift;
@@ -57,8 +57,8 @@ public class RBFDriftTest {
 			cutoff = 6;
 			pruningDifference = 0.1;
 
-			contrastEvaluator = new SlidingWindowContrast(null, numberOfDimensions, numInstances, m, alpha,
-					numInstances, changeChecker);
+			contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha,
+					numInstances);
 		} else if (method.equals("adaptiveCentroids")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -71,8 +71,8 @@ public class RBFDriftTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			contrastEvaluator = new CentroidContrast(null, numberOfDimensions, m, alpha, fadingLambda, radius,
-					weightThreshold, learningRate, changeChecker);
+			contrastEvaluator = new CentroidContrast(numberOfDimensions, m, alpha, fadingLambda, radius,
+					weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -86,7 +86,7 @@ public class RBFDriftTest {
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(null, m, alpha, mcs, changeChecker);
+			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
@@ -97,7 +97,7 @@ public class RBFDriftTest {
 
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(null, m, alpha, mcs, changeChecker);
+			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
 		} else {
 			contrastEvaluator = null;
@@ -105,8 +105,8 @@ public class RBFDriftTest {
 
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
-		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, callback);
-		contrastEvaluator.setCallback(streamHiCS);
+		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		changeChecker.setCallback(streamHiCS);
 	}
 
 	@Test

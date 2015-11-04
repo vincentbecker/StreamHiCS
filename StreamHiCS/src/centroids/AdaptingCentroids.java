@@ -2,10 +2,9 @@ package centroids;
 
 import java.util.ArrayList;
 
-import changechecker.ChangeChecker;
-import contrast.Callback;
 import contrast.DataBundle;
 import contrast.Selection;
+import fullsystem.Callback;
 import weka.core.Instance;
 
 /**
@@ -35,11 +34,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 */
 	private double radius;
 	/**
-	 * The {@link Callback} to alarm on changes found out checking the kNN
-	 * distribution.
-	 */
-	private Callback callback;
-	/**
 	 * Keeps track of the current time.
 	 */
 	private int time = 0;
@@ -55,10 +49,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * The learning rate for the adaptation of the {@link Centroid}.
 	 */
 	private double learningRate = 0.1;
-	/**
-	 * The {@link ChangeChecker}
-	 */
-	private ChangeChecker changeChecker;
 
 	/**
 	 * Created an object of this class.
@@ -81,10 +71,9 @@ public class AdaptingCentroids extends CentroidsContainer {
 	 * @param learningRate
 	 *            The learning rate.
 	 */
-	public AdaptingCentroids(Callback callback, int numberOfDimensions, double fadingLambda, double radius,
+	public AdaptingCentroids(int numberOfDimensions, double fadingLambda, double radius,
 			double weigthThreshold, double learningRate) {
 		this.centroids = new ArrayList<Centroid>();
-		this.callback = callback;
 		this.numberOfDimensions = numberOfDimensions;
 		this.fadingFactor = Math.pow(2, -fadingLambda);
 		this.radius = radius;
@@ -120,10 +109,6 @@ public class AdaptingCentroids extends CentroidsContainer {
 
 		time++;
 		updated = false;
-
-		if (changeChecker.poll()) {
-			changeCheck();
-		}
 	}
 
 	/**
@@ -320,16 +305,5 @@ public class AdaptingCentroids extends CentroidsContainer {
 			weights[i] = centroids.get(selectedIndexes.getIndex(i)).getWeight();
 		}
 		return weights;
-	}
-
-	@Override
-	public void changeCheck() {
-		if (!updated) {
-			updateWeights();
-		}
-		// Check for change and inform the callback in case.
-		if (changeChecker.poll()) {
-			callback.onAlarm();
-		}
 	}
 }

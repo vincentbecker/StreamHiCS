@@ -1,18 +1,11 @@
 package contrast;
 
-import changechecker.ChangeChecker;
 import streamDataStructures.DataStreamContainer;
 import streamDataStructures.SlidingWindow;
 import subspace.Subspace;
 import weka.core.Instance;
 
 public class SlidingWindowContrast extends Contrast {
-	private int updateInterval;
-	/**
-	 * To count the number of {@link Instance}s observed since the last
-	 * {@link Subspace} evaluation.
-	 */
-	private int currentCount = 0;
 	/**
 	 * Data structure holding the {@link Instance}s.
 	 */
@@ -28,20 +21,14 @@ public class SlidingWindowContrast extends Contrast {
 	 *            The number how many {@link Instance}s are observed between
 	 *            evaluations of the correlated {@link Subspace}s.
 	 */
-	public SlidingWindowContrast(Callback callback, int numberOfDimensions, int updateInterval, int m, double alpha, int windowLength, ChangeChecker changeChecker) {
-		super(callback, m, alpha, changeChecker);
-		this.updateInterval = updateInterval;
+	public SlidingWindowContrast(int numberOfDimensions, int m, double alpha, int windowLength) {
+		super(m, alpha);
 		dataStreamContainer = new SlidingWindow(numberOfDimensions, windowLength);
 	}
 
 	@Override
-	public void addImpl(Instance instance) {
+	public void add(Instance instance) {
 		dataStreamContainer.add(instance);
-		currentCount++;
-		if (currentCount >= updateInterval) {
-			onAlarm();
-			currentCount = 0;
-		}
 	}
 
 	/**
@@ -49,7 +36,6 @@ public class SlidingWindowContrast extends Contrast {
 	 */
 	public void clear() {
 		dataStreamContainer.clear();
-		currentCount = 0;
 	}
 
 	/**

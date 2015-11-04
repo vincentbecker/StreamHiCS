@@ -54,6 +54,4 @@ public abstract class CentroidsContainer {
 
 		return new StatisticsBundle(mean, variance, totalCount);
 	}
-
-	public abstract void changeCheck();
 }

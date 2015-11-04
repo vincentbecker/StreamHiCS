@@ -1,6 +1,5 @@
 package contrast;
 
-import changechecker.ChangeChecker;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import weka.core.Instance;
@@ -11,14 +10,13 @@ public class MicroclusterContrast extends Contrast {
 	private Clustering microclusters;
 	
 
-	public MicroclusterContrast(Callback callback, int m, double alpha, AbstractClusterer microclusterImplementation,
-			ChangeChecker changeChecker) {
-		super(callback, m, alpha, changeChecker);
+	public MicroclusterContrast(int m, double alpha, AbstractClusterer microclusterImplementation) {
+		super(m, alpha);
 		this.microclusterImplementation = microclusterImplementation;
 	}
 
 	@Override
-	public void addImpl(Instance instance) {
+	public void add(Instance instance) {
 		microclusterImplementation.trainOnInstanceImpl(instance);
 		microclusters = null;
 	}

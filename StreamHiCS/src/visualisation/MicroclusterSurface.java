@@ -19,8 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
 
-import changechecker.TimeCountChecker;
-import contrast.Callback;
 import contrast.DataBundle;
 import contrast.MicroclusterContrast;
 import contrast.Selection;
@@ -45,12 +43,6 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private Timer timer;
 	private MicroclusterContrast contrast;
 	private StatisticalTest statTest;
-	private Callback callback = new Callback() {
-		@Override
-		public void onAlarm() {
-			System.out.println("Alarm.");
-		}
-	};
 	private int count = 0;
 	private int imageCount = 0;
 	private boolean captureScreen = true;
@@ -92,7 +84,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
-		this.contrast = new MicroclusterContrast(callback, 20, 0.2, mcs, new TimeCountChecker(15000));
+		this.contrast = new MicroclusterContrast(20, 0.2, mcs);
 		this.statTest = new KolmogorovSmirnov();
 		initTimer();
 	}

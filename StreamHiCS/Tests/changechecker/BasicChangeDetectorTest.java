@@ -3,8 +3,8 @@ import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import changechecker.FullSpaceContrastChecker;
-import contrast.Callback;
 import contrast.MicroclusterContrast;
+import fullsystem.Callback;
 import moa.clusterers.clustree.ClusTree;
 import streams.GaussianStream;
 import weka.core.Instance;
@@ -46,8 +46,9 @@ public class BasicChangeDetectorTest {
 		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(1000, 5, null, 0.2, 0.03);
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		microclusterContrast = new MicroclusterContrast(callback, 100, 0.1, mcs, fscc);
+		microclusterContrast = new MicroclusterContrast(100, 0.1, mcs);
 		fscc.setContrastEvaluator(microclusterContrast);
+		fscc.setCallback(callback);
 
 	}
 

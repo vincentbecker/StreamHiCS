@@ -2,7 +2,6 @@ package contrast;
 
 import org.apache.commons.math3.util.MathArrays;
 
-import changechecker.ChangeChecker;
 import statisticalTests.KolmogorovSmirnov;
 import statisticalTests.StatisticalTest;
 import subspace.Subspace;
@@ -14,12 +13,7 @@ import weka.core.Instance;
  * @author Vincent
  *
  */
-public abstract class Contrast implements Callback {
-
-	/**
-	 * The @link{Callback} to notify on changes.
-	 */
-	private Callback callback;
+public abstract class Contrast {
 	/**
 	 * Number of Monte Carlo iterations in the contrast evaluation. m must be
 	 * positive.
@@ -36,8 +30,6 @@ public abstract class Contrast implements Callback {
 	 */
 	private StatisticalTest statisticalTest;
 
-	private ChangeChecker changeChecker;
-
 	/**
 	 * 
 	 * 
@@ -50,23 +42,10 @@ public abstract class Contrast implements Callback {
 	 *            of the conditional density.
 	 * @param statisticalTest
 	 */
-	public Contrast(Callback callback, int m, double alpha, ChangeChecker changeChecker) {
-		this.callback = callback;
+	public Contrast(int m, double alpha) {
 		this.m = m;
 		this.alpha = alpha;
 		this.statisticalTest = new KolmogorovSmirnov();
-		this.changeChecker = changeChecker;
-	}
-
-	public void setCallback(Callback callback) {
-		this.callback = callback;
-	}
-
-	public void add(Instance instance) {
-		addImpl(instance);
-		if (changeChecker.poll() && changeChecker.checkForChange()) {
-			onAlarm();
-		}
 	}
 
 	/**
@@ -75,7 +54,7 @@ public abstract class Contrast implements Callback {
 	 * @param instance
 	 *            The @link{Instance} to be added.
 	 */
-	public abstract void addImpl(Instance instance);
+	public abstract void add(Instance instance);
 
 	/**
 	 * Clears all stored {@link Instance}s.
@@ -157,10 +136,5 @@ public abstract class Contrast implements Callback {
 			mean = sum / numberOfCorrectTests;
 		}
 		return mean;
-	}
-
-	@Override
-	public void onAlarm() {
-		callback.onAlarm();
 	}
 }

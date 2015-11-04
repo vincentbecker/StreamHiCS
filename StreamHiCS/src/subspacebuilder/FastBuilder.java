@@ -93,6 +93,7 @@ public class FastBuilder extends SubspaceBuilder {
 							lastContrast = contrast;
 						}else{
 							s.discardDimension(s.size() - 1);
+							k--;
 						}
 					}
 				}
