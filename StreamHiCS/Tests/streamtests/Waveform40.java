@@ -39,7 +39,7 @@ public class Waveform40 {
 		stream = new WaveformGenerator();
 		stream.addNoiseOption.set();
 		stream.prepareForUse();
-		
+
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
@@ -51,10 +51,9 @@ public class Waveform40 {
 
 		Contrast contrastEvaluator = new MicroclusterContrast(20, alpha, mcs);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		//SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference, contrastEvaluator);
+		//SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 		//		contrastEvaluator);
-		 SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions, threshold,
-		 pruningDifference, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker,
 				callback);
 		changeChecker.setCallback(streamHiCS);
@@ -77,7 +76,7 @@ public class Waveform40 {
 				}
 			}
 		}
-		
+
 		fail("Not implemented yet. ");
 	}
 

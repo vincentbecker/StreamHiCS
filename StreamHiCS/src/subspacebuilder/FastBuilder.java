@@ -21,6 +21,7 @@ public class FastBuilder extends SubspaceBuilder {
 	 * exceeds the threshold it might not be chosen due to the cutoff.
 	 */
 	private double threshold;
+	private int cutoff;
 	/**
 	 * The difference in contrast allowed to prune a {@link Subspace}.
 	 */
@@ -30,10 +31,12 @@ public class FastBuilder extends SubspaceBuilder {
 	 */
 	private Contrast contrastEvaluator;
 
-	public FastBuilder(int numberOfDimensions, double threshold, double pruningDifference, Contrast contrastEvaluator) {
+	public FastBuilder(int numberOfDimensions, double threshold, int cutoff, double pruningDifference,
+			Contrast contrastEvaluator) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
+		this.cutoff = cutoff;
 		this.pruningDifference = pruningDifference;
 		this.contrastEvaluator = contrastEvaluator;
 	}
@@ -83,7 +86,7 @@ public class FastBuilder extends SubspaceBuilder {
 				// contrast grows
 				s = cs.copy();
 				k = 2;
-				for (int i = 0; i < dimensions.length && occurenceCounts[i] > 0; i++) {
+				for (int i = 0; i < dimensions.length && occurenceCounts[i] > 0 && i < cutoff; i++) {
 					s.addDimension((int) dimensions[i]);
 					// Check if a new dimension was added
 					if (s.size() == k + 1) {
@@ -91,13 +94,13 @@ public class FastBuilder extends SubspaceBuilder {
 						contrast = contrastEvaluator.evaluateSubspaceContrast(s);
 						if (contrast > lastContrast) {
 							lastContrast = contrast;
-						}else{
+							s.setContrast(contrast);
+						} else {
 							s.discardDimension(s.size() - 1);
 							k--;
 						}
 					}
 				}
-				s.setContrast(contrast);
 				s.sort();
 				set.addSubspace(s);
 			}
@@ -125,8 +128,8 @@ public class FastBuilder extends SubspaceBuilder {
 				correlatedSubspaces.removeSubspace(s);
 			}
 		}
-		
-		//Second pruning step checks fo rcontained subspaces
+
+		// Second pruning step checks fo rcontained subspaces
 		ArrayList<Integer> discard = new ArrayList<Integer>();
 		int l = correlatedSubspaces.size();
 		Subspace si;
