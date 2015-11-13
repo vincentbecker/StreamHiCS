@@ -90,8 +90,11 @@ public class Waveform40 {
 			}
 		}
 
+<<<<<<< HEAD
 		System.out.println("Number of subspaces found: " + numberOfSubspaces + ", total dimensions: " + totalDimensions
 				+ ", noise dimensions: " + noiseDimensions + ", noise ratio: " + ((double) noiseDimensions) / totalDimensions);
+=======
+>>>>>>> origin/master
 		fail("Not implemented yet. ");
 	}
 
