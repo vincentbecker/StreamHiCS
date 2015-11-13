@@ -1,6 +1,5 @@
 package subspacebuilder;
 
-import java.util.ArrayList;
 import contrast.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -43,6 +42,7 @@ public class AprioriBuilder extends SubspaceBuilder {
 
 	@Override
 	public SubspaceSet buildCorrelatedSubspaces() {
+		correlatedSubspaces.clear();
 		SubspaceSet c_K = new SubspaceSet();
 		double contrast = 0;
 		// Create all 2-dimensional candidates
@@ -70,10 +70,6 @@ public class AprioriBuilder extends SubspaceBuilder {
 		// Carry out apriori algorithm
 		aprioriFull(c_K);
 		// aprioriParallel(c_K);
-
-		// Carry out pruning as the last step. All those subspaces which are
-		// subspace to another subspace with higher contrast are discarded.
-		prune();
 
 		return correlatedSubspaces;
 	}
@@ -139,8 +135,8 @@ public class AprioriBuilder extends SubspaceBuilder {
 					// Calculate the contrast of the subspace
 					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
 					kPlus1Candidate.setContrast(contrast);
-					//
-					if (contrast > meanBaseContrasts - 0.5*pruningDifference && contrast >= threshold) {
+					//contrast > meanBaseContrasts - 0.5*pruningDifference && 
+					if (contrast >= threshold) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
 					}
 				}
@@ -201,40 +197,5 @@ public class AprioriBuilder extends SubspaceBuilder {
 			// Recurse
 			aprioriParallel(c_Kplus1);
 		}
-	}
-
-	/**
-	 * If a {@link Subspace} is a subspace of another subspace with a higher
-	 * contrast value, then it is discarded.
-	 */
-	private void prune() {
-		ArrayList<Integer> discard = new ArrayList<Integer>();
-		int l = correlatedSubspaces.size();
-		Subspace si;
-		Subspace sj;
-		boolean discarded;
-		for (int i = 0; i < l; i++) {
-			discarded = false;
-			si = correlatedSubspaces.getSubspace(i);
-			for (int j = 0; j < l && !discarded; j++) {
-				if (i != j) {
-					sj = correlatedSubspaces.getSubspace(j);
-					// If the correlated subspace contains a superset that has
-					// at least (nearly) the same contrast we discard the
-					// current subspace
-					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + pruningDifference)) {
-						discard.add(i);
-						discarded = true;
-					}
-				}
-			}
-		}
-		SubspaceSet prunedSet = new SubspaceSet();
-		for (int i = 0; i < l; i++) {
-			if (!discard.contains(i)) {
-				prunedSet.addSubspace(correlatedSubspaces.getSubspace(i));
-			}
-		}
-		correlatedSubspaces = prunedSet;
 	}
 }

@@ -119,7 +119,7 @@ public class StreamTest {
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback);
 		changeChecker.setCallback(streamHiCS);
 
 		correctResult = new SubspaceSet();

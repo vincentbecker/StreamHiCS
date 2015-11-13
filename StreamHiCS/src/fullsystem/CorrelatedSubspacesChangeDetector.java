@@ -108,7 +108,7 @@ public class CorrelatedSubspacesChangeDetector implements Callback {
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference, contrastEvaluator);
-		this.streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, this);
+		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, this);
 		changeChecker.setCallback(streamHiCS);
 		this.fullSpaceChangeDetector = new FullSpaceChangeDetector();
 		fullSpaceChangeDetector.prepareForUse();

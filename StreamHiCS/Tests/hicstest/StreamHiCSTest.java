@@ -30,7 +30,7 @@ public class StreamHiCSTest {
 	private StreamHiCS streamHiCS;
 	private Contrast contrastEvaluator;
 	private final int numInstances = 10000;
-	private final int m = 20;
+	private final int m = 50;
 	private double alpha;
 	private double epsilon;
 	private double threshold;
@@ -308,7 +308,7 @@ public class StreamHiCSTest {
 		SubspaceSet correctResult = new SubspaceSet();
 		correctResult.addSubspace(new Subspace(0, 1, 2));
 		correctResult.addSubspace(new Subspace(3, 4, 5));
-		correctResult.addSubspace(new Subspace(6, 7, 8));
+		correctResult.addSubspace(new Subspace(7, 8, 9));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -399,7 +399,7 @@ public class StreamHiCSTest {
 			epsilon = 0;
 			threshold = 0.25;
 			cutoff = 8;
-			pruningDifference = 0.15;
+			pruningDifference = 0.1;
 
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
@@ -417,9 +417,13 @@ public class StreamHiCSTest {
 		// contrastEvaluator);
 
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, callback);
 		changeChecker.setCallback(streamHiCS);
 
+		//System.out.println("StreamHiCSTest. m = " + m + ", alpha = " + alpha + ", threshold = " + threshold
+		//		+ ", cutoff = " + cutoff + ", pruningDifference = " + pruningDifference);
+		
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = stream.nextInstance();

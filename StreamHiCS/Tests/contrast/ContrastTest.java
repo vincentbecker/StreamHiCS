@@ -48,7 +48,7 @@ public class ContrastTest {
 
 	private final static String method = "ClusTreeMC";
 
-	private static final int m = 20;
+	private static final int m = 100;
 	private static double alpha;
 	/**
 	 * The allowed error to the correct contrast value.
@@ -237,7 +237,7 @@ public class ContrastTest {
 	public void contrastTest14() {
 		// Contrast should be high
 		DoubleFunction f = x -> Math.sin(x);
-		double contrast = carryOutTest(f, 0, 1);
+		double contrast = carryOutTest(f, 0, 2*Math.PI);
 		System.out.println("Test 14 : " + contrast);
 		assertTrue(Math.abs(targetHighContrast - contrast) <= epsilon);
 	}
@@ -246,7 +246,7 @@ public class ContrastTest {
 	public void contrastTest15() {
 		// Contrast should be high
 		DoubleFunction f = x -> x + Math.sin(x);
-		double contrast = carryOutTest(f, 0, 1);
+		double contrast = carryOutTest(f, 0, 2*Math.PI);
 		System.out.println("Test 15 : " + contrast);
 		assertTrue(Math.abs(targetHighContrast - contrast) <= epsilon);
 	}

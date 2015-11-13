@@ -26,4 +26,12 @@ SOM/.classpath
 SOM/.project
 SOM/.settings/
 Test/
-MovieMaker/
+MovieMaker/.classpath
+MovieMaker/.project
+MovieMaker/.settings/
+MovieMaker/bin
+DatasetPreprocessing/.classpath
+DatasetPreprocessing/.project
+DatasetPreprocessing/.settings/
+DatasetPreprocessing/bin
+StreamHiCS/Tests/RealWorldData/

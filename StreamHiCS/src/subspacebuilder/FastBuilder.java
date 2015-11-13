@@ -21,20 +21,18 @@ public class FastBuilder extends SubspaceBuilder {
 	 * exceeds the threshold it might not be chosen due to the cutoff.
 	 */
 	private double threshold;
-	/**
-	 * The difference in contrast allowed to prune a {@link Subspace}.
-	 */
-	private double pruningDifference;
+	private int cutoff;
 	/**
 	 * The @link{Contrast} evaluator.
 	 */
 	private Contrast contrastEvaluator;
 
-	public FastBuilder(int numberOfDimensions, double threshold, double pruningDifference, Contrast contrastEvaluator) {
+	public FastBuilder(int numberOfDimensions, double threshold, int cutoff,
+			Contrast contrastEvaluator) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
-		this.pruningDifference = pruningDifference;
+		this.cutoff = cutoff;
 		this.contrastEvaluator = contrastEvaluator;
 	}
 
@@ -83,7 +81,7 @@ public class FastBuilder extends SubspaceBuilder {
 				// contrast grows
 				s = cs.copy();
 				k = 2;
-				for (int i = 0; i < dimensions.length && occurenceCounts[i] > 0; i++) {
+				for (int i = 0; i < dimensions.length && occurenceCounts[i] > 0 && i < cutoff; i++) {
 					s.addDimension((int) dimensions[i]);
 					// Check if a new dimension was added
 					if (s.size() == k + 1) {
@@ -91,69 +89,20 @@ public class FastBuilder extends SubspaceBuilder {
 						contrast = contrastEvaluator.evaluateSubspaceContrast(s);
 						if (contrast > lastContrast) {
 							lastContrast = contrast;
-						}else{
+							s.setContrast(contrast);
+						} else {
 							s.discardDimension(s.size() - 1);
 							k--;
 						}
 					}
 				}
-				s.setContrast(contrast);
 				s.sort();
 				set.addSubspace(s);
 			}
 
 			// Add all the new found subspaces to the correlated subspaces
 			correlatedSubspaces.addSubspaces(set);
-
-			// Carry out pruning as the last step. All those subspaces which are
-			// subspace to another subspace with higher contrast are discarded.
-			prune();
 		}
 		return correlatedSubspaces;
-	}
-
-	/**
-	 * If a {@link Subspace} is a subspace of another subspace with a higher
-	 * contrast value, then it is discarded.
-	 */
-	private void prune() {
-		// First pruning step raises the threshold and filters the list
-		Subspace s;
-		for (int i = 0; i < correlatedSubspaces.size(); i++) {
-			s = correlatedSubspaces.getSubspace(i);
-			if (s.getContrast() < threshold + pruningDifference) {
-				correlatedSubspaces.removeSubspace(s);
-			}
-		}
-		
-		//Second pruning step checks fo rcontained subspaces
-		ArrayList<Integer> discard = new ArrayList<Integer>();
-		int l = correlatedSubspaces.size();
-		Subspace si;
-		Subspace sj;
-		boolean discarded;
-		for (int i = 0; i < l; i++) {
-			discarded = false;
-			si = correlatedSubspaces.getSubspace(i);
-			for (int j = 0; j < l && !discarded; j++) {
-				if (i != j) {
-					sj = correlatedSubspaces.getSubspace(j);
-					// If the correlated subspace contains a superset that has
-					// at least (nearly) the same contrast we discard the
-					// current subspace
-					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + pruningDifference)) {
-						discard.add(i);
-						discarded = true;
-					}
-				}
-			}
-		}
-		SubspaceSet prunedSet = new SubspaceSet();
-		for (int i = 0; i < l; i++) {
-			if (!discard.contains(i)) {
-				prunedSet.addSubspace(correlatedSubspaces.getSubspace(i));
-			}
-		}
-		correlatedSubspaces = prunedSet;
 	}
 }

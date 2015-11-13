@@ -29,13 +29,11 @@ public class RBFDriftTest {
 	private final int numberOfDimensions = 10;
 	private final int m = 20;
 	private Callback callback = new Callback(){
-
 		@Override
 		public void onAlarm() {
 			System.out.println("StreamHiCS: onAlarm()");
 			
 		}
-		
 	};
 
 	@Before
@@ -105,7 +103,7 @@ public class RBFDriftTest {
 
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
-		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback);
 		changeChecker.setCallback(streamHiCS);
 	}
 

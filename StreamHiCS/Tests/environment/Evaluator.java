@@ -34,7 +34,10 @@ public class Evaluator {
 			System.out.println();
 		}
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
+		double score = recall - fpRatio;
+		System.out.println("Score: " + score);
+		
 		System.out.println();
-		return recall - fpRatio;
+		return score;
 	}
 }
