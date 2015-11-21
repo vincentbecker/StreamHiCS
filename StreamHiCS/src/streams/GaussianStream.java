@@ -40,6 +40,7 @@ public class GaussianStream implements InstanceStream {
 	}
 
 	private void init(double[][] covarianceMatrix) {
+		symmetryCheck(covarianceMatrix);
 		// Mean will be initialised to be n x 0.0
 		mean = new double[covarianceMatrix.length];
 		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
@@ -48,6 +49,18 @@ public class GaussianStream implements InstanceStream {
 			attributes.add(new Attribute("normalAttribute" + i));
 		}
 		streamHeader = new InstancesHeader(new Instances("GaussianStream", attributes, 0));
+	}
+
+	private void symmetryCheck(double[][] covarianceMatrix) {
+		int m = covarianceMatrix.length;
+		int n = covarianceMatrix[0].length;
+		assert(m == n);
+
+		for (int i = 0; i < n; i++) {
+			for (int j = i + 1; j < n; j++) {
+				assert(covarianceMatrix[i][j] == covarianceMatrix[j][i]);
+			}
+		}
 	}
 
 	@Override

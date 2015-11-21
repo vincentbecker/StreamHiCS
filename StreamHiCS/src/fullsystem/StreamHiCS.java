@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 import changechecker.ChangeChecker;
 import contrast.Contrast;
+import pruning.AbstractPruner;
+import pruning.SimplePruner;
+import pruning.TopDownPruner;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.SubspaceBuilder;
@@ -39,6 +42,7 @@ public class StreamHiCS implements Callback {
 	 * The @link{Callback} to notify on changes.
 	 */
 	private Callback callback;
+	private AbstractPruner pruner;
 
 	/**
 	 * Creates a {@link StreamHiCS} object with the specified update interval.
@@ -67,6 +71,8 @@ public class StreamHiCS implements Callback {
 		this.subspaceBuilder = subspaceBuilder;
 		this.changeChecker = changeChecker;
 		this.callback = callback;
+		//this.pruner = new SimplePruner(pruningDifference);
+		this.pruner = new TopDownPruner(pruningDifference);
 	}
 
 	/**
@@ -107,7 +113,7 @@ public class StreamHiCS implements Callback {
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			correlatedSubspaces = subspaceBuilder.buildCorrelatedSubspaces();
-			prune();
+			correlatedSubspaces = pruner.prune(correlatedSubspaces);
 			if (!correlatedSubspaces.isEmpty()) {
 				update = true;
 			}
@@ -140,7 +146,7 @@ public class StreamHiCS implements Callback {
 				correlatedSubspaces.addSubspaces(subspaceBuilder.buildCorrelatedSubspaces());
 				// Carry out pruning as the last step. All those subspaces which are
 				// subspace to another subspace with higher contrast are discarded.
-				prune();
+				correlatedSubspaces = pruner.prune(correlatedSubspaces);
 			}
 		}
 
@@ -155,41 +161,6 @@ public class StreamHiCS implements Callback {
 		 */
 	}
 	
-	/**
-	 * If a {@link Subspace} is a subspace of another subspace with a higher
-	 * contrast value, then it is discarded.
-	 */
-	private void prune() {
-		ArrayList<Integer> discard = new ArrayList<Integer>();
-		int l = correlatedSubspaces.size();
-		Subspace si;
-		Subspace sj;
-		boolean discarded;
-		for (int i = 0; i < l; i++) {
-			discarded = false;
-			si = correlatedSubspaces.getSubspace(i);
-			for (int j = 0; j < l && !discarded; j++) {
-				if (i != j) {
-					sj = correlatedSubspaces.getSubspace(j);
-					// If the correlated subspace contains a superset that has
-					// at least (nearly) the same contrast we discard the
-					// current subspace
-					if (si.isSubspaceOf(sj) && si.getContrast() <= (sj.getContrast() + pruningDifference)) {
-						discard.add(i);
-						discarded = true;
-					}
-				}
-			}
-		}
-		SubspaceSet prunedSet = new SubspaceSet();
-		for (int i = 0; i < l; i++) {
-			if (!discard.contains(i)) {
-				prunedSet.addSubspace(correlatedSubspaces.getSubspace(i));
-			}
-		}
-		correlatedSubspaces = prunedSet;
-	}
-
 	/**
 	 * Returns a string representation of this object.
 	 * 

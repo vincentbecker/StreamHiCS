@@ -39,7 +39,7 @@ public class ConceptDriftTest {
 	private ConceptDriftStream conceptDriftStream;
 	private StreamHiCS streamHiCS;
 	private ArrayList<SubspaceSet> correctResults;
-	private int testCounter = 1;
+	private int testCounter = 0;
 	private double scoreSum = 0;
 	private final int numInstances = 60000;
 	private int numberSamples = 0;
@@ -158,9 +158,9 @@ public class ConceptDriftTest {
 
 		double alpha = 0.15;
 		double epsilon = 0;
-		double threshold = 0.31;
+		double threshold = 0.35;
 		int cutoff = 8;
-		double pruningDifference = 0.15;
+		double pruningDifference = 0.2;
 
 		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
@@ -187,7 +187,7 @@ public class ConceptDriftTest {
 
 	private void evaluate() {
 		System.out.println("Number of samples: " + numberSamples);
-		SubspaceSet correctResult = correctResults.get(testCounter - 1);
+		SubspaceSet correctResult = correctResults.get(testCounter);
 		scoreSum += Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		testCounter++;
 	}

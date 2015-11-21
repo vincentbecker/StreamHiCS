@@ -2,10 +2,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-<<<<<<< HEAD
 import java.nio.file.StandardOpenOption;
-=======
->>>>>>> origin/master
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,13 +42,8 @@ public class Main {
 			filterColumns[6] = 21;
 			break;
 		case ELECTRICITY:
-<<<<<<< HEAD
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/elecNormNew.txt";
 			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/elecNormNew_sorted.txt";
-=======
-			inputPath = "C:/Users/Vincent/Desktop/RealWorldData/elecNormNew.txt";
-			outputPath = "C:/Users/Vincent/Desktop/RealWorldData/elecNormNew_sorted.txt";
->>>>>>> origin/master
 			comparator = new ElectricityComparator();
 			break;
 		default:
@@ -64,13 +56,9 @@ public class Main {
 	private static void sortAndWrite(String inputPath, String outputPath, Comparator<String> comparator,
 			int[] filterColumns) {
 		try {
-<<<<<<< HEAD
 			//Header
 			List<String> header = Files.readAllLines(Paths.get("D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddARFFHeader.txt"), StandardCharsets.UTF_8);
 			Files.write(Paths.get(outputPath), header);
-			
-=======
->>>>>>> origin/master
 			List<String> lines = Files.readAllLines(Paths.get(inputPath), StandardCharsets.UTF_8);
 			if (filterColumns != null) {
 				for (int i = 0; i < lines.size(); i++) {
@@ -91,11 +79,7 @@ public class Main {
 				}
 			}
 			lines.sort(comparator);
-<<<<<<< HEAD
 			Files.write(Paths.get(outputPath), lines, StandardOpenOption.APPEND);
-=======
-			Files.write(Paths.get(outputPath), lines);
->>>>>>> origin/master
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

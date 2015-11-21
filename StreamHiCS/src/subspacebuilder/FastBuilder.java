@@ -1,7 +1,5 @@
 package subspacebuilder;
 
-import java.util.ArrayList;
-
 import org.apache.commons.math3.util.MathArrays;
 
 import contrast.Contrast;

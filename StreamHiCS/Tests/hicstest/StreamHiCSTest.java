@@ -233,7 +233,7 @@ public class StreamHiCSTest {
 		String testName = "Test18";
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
-		correctResult.addSubspace(new Subspace(0, 1));
+		//correctResult.addSubspace(new Subspace(0, 1));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -243,8 +243,8 @@ public class StreamHiCSTest {
 		String testName = "Test19";
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
-		correctResult.addSubspace(new Subspace(0, 1, 2));
-		correctResult.addSubspace(new Subspace(2, 3, 4));
+		correctResult.addSubspace(new Subspace(0, 1));
+		//correctResult.addSubspace(new Subspace(2, 3, 4));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -254,8 +254,7 @@ public class StreamHiCSTest {
 		String testName = "Test20";
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
-		correctResult.addSubspace(new Subspace(0, 1, 2));
-		correctResult.addSubspace(new Subspace(2, 3, 4));
+		correctResult.addSubspace(new Subspace(0, 1));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -397,7 +396,7 @@ public class StreamHiCSTest {
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
 			epsilon = 0;
-			threshold = 0.25;
+			threshold = 0.28;
 			cutoff = 8;
 			pruningDifference = 0.1;
 
