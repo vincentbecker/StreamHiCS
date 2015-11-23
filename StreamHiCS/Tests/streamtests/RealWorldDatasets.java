@@ -9,6 +9,7 @@ import changechecker.FullSpaceContrastChecker;
 import changechecker.TimeCountChecker;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
+import contrast.SlidingWindowContrast;
 import fullsystem.Callback;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
@@ -36,7 +37,7 @@ public class RealWorldDatasets {
 	};
 	private StreamHiCS streamHiCS;
 
-	
+	/*
 	@Test
 	public void covertype() {
 		// The change points in the data are: 211840, 495141, 530895, 533642,
@@ -47,9 +48,9 @@ public class RealWorldDatasets {
 		
 		int numberOfDimensions = 54;
 		int m = 20;
-		double alpha = 0.2;
-		double epsilon = 1;
-		double threshold = 0.5;
+		double alpha = 0.25;
+		double epsilon = 0.1;
+		double threshold = 0.65;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 		int checkCount = 10000;
@@ -60,6 +61,7 @@ public class RealWorldDatasets {
 		
 		fail("Not yet implemented");
 	}
+	*/
 	
 	/*
 	@Test
@@ -99,9 +101,9 @@ public class RealWorldDatasets {
 		
 		int numberOfDimensions = 34;
 		int m = 20;
-		double alpha = 0.2;
+		double alpha = 0.15;
 		double epsilon = 0;
-		double threshold = 0.5;
+		double threshold = 0.4;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 		int checkCount = 10000;
@@ -140,24 +142,48 @@ public class RealWorldDatasets {
 	}
 	*/
 	
-	/*
+	
 	@Test
-	public void electricityNorthWest() {
+	public void electricityNSWSorted() {
 		// The change point in the data is: 26075
-		path = "Tests/RealWorldData/ElectricityNorthWest.arff";
+		path = "Tests/RealWorldData/elecNormNew_sorted.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
-		int numberOfDimensions = 19;
-		int m = 20;
+		int numberOfDimensions = 8;
+		int m = 50;
 		double alpha = 0.15;
 		double epsilon = 0;
-		double threshold = 0.6;
+		double threshold = 0.5;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 		int checkCount = 1000;
 
-		System.out.println("Electricity North West");
+		System.out.println("Electricity New South Wales sorted");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
+		System.out.println();
+		
+		fail("Not yet implemented");
+	}
+	
+	
+	/*
+	@Test
+	public void electricityNWSUnsorted() {
+		path = "Tests/RealWorldData/elecNOrmNew_unsorted.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 8;
+		int m = 50;
+		double alpha = 0.15;
+		double epsilon = 0.1;
+		double threshold = 0.45;
+		int cutoff = 8;
+		double pruningDifference = 0.15;
+		int checkCount = 1000;
+
+		System.out.println("Electricity New South Wales unsorted");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
 		System.out.println();
 		
@@ -167,10 +193,14 @@ public class RealWorldDatasets {
 
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
 			double pruningDifference, int checkCount) {
+		
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
-
+		
+		
+		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
+		
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 

@@ -43,9 +43,9 @@ public class Waveform40 {
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
-		double alpha = 0.15;
+		double alpha = 0.25;
 		double epsilon = 0;
-		double threshold = 0.5;
+		double threshold = 0.55;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 
@@ -65,6 +65,8 @@ public class Waveform40 {
 	public void test() {
 		int totalDimensions = 0;
 		int noiseDimensions = 0;
+		boolean noiseSubspace = false;
+		int noiseSubspaces = 0;
 
 		int numberOfSubspaces = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
@@ -77,11 +79,16 @@ public class Waveform40 {
 				System.out.println("Correlated: " + correlatedSubspaces.toString());
 				if (!correlatedSubspaces.isEmpty()) {
 					for (Subspace s : correlatedSubspaces.getSubspaces()) {
+						noiseSubspace = false;
 						totalDimensions += s.size();
 						for (int i = 0; i < s.size(); i++) {
 							if (s.getDimension(i) > 21) {
 								noiseDimensions++;
+								noiseSubspace = true;
 							}
+						}
+						if (noiseSubspace) {
+							noiseSubspaces++;
 						}
 						System.out.print(s.getContrast() + ", ");
 					}
@@ -90,8 +97,10 @@ public class Waveform40 {
 			}
 		}
 
-		System.out.println("Number of subspaces found: " + numberOfSubspaces + ", total dimensions: " + totalDimensions
-				+ ", noise dimensions: " + noiseDimensions + ", noise ratio: " + ((double) noiseDimensions) / totalDimensions);
+		System.out.println("Number of subspaces found: " + numberOfSubspaces + ", noise subspaces: " + noiseSubspaces
+				+ ", noise subspace ratio: " + ((double) noiseSubspaces) / numberOfSubspaces + ", total dimensions: "
+				+ totalDimensions + ", noise dimensions: " + noiseDimensions + ", noise dimension ratio: "
+				+ ((double) noiseDimensions) / totalDimensions);
 		fail("Not implemented yet. ");
 	}
 

@@ -480,6 +480,7 @@ public class KolmogorovSmirnovTest {
 				supD = curD;
 			}
 		}
+
 		return supD;
 	}
 

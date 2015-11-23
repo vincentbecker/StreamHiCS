@@ -123,6 +123,7 @@ public abstract class Contrast {
 			slicedData = getSlicedData(shuffledDimensions, selectionAlpha);
 			// Calculate the deviation and add it to the overall sum
 			deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
+			//deviation = statisticalTest.calculateDeviation(projectedData.getData(), slicedData.getData());
 			if (!Double.isNaN(deviation)) {
 				sum += deviation;
 				numberOfCorrectTests++;

@@ -138,7 +138,7 @@ public class Selection {
 		if (data[startingPoint] == data[endPoint]) {
 			// The special case that all the data values selected are the
 			// same. This case needs special handling.
-			System.out.println("Selection.selectRange(): Special handling!");
+			//System.out.println("Selection.selectRange(): Special handling!");
 			// Broadening the range if possible, until data values on the
 			// outside of the range differ
 			while (data[startingPoint] == data[endPoint] && (endPoint - startingPoint) < indexes.length - 1) {
