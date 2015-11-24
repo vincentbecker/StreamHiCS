@@ -186,7 +186,7 @@ public class Selection {
 		// Since the Kolmogorov-Smirnov-Test needs at least two samples we take
 		// at least one other another if there is one a single one selected
 		if (upper - lower == 0) {
-			//System.out.println("Only one sample.");
+			System.out.println("Only one sample.");
 			if (lower > 0) {
 				lower--;
 			}
