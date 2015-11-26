@@ -162,7 +162,7 @@ public class HighDimensionalStreamHiCSTest {
 	
 	private boolean carryOutSubspaceTest(int numberOfDimensions, int blockSize, int horizon,
 			SubspaceSet correctResult) {
-		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockSize,
+		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, blockSize,
 				0.9);
 		stream = new GaussianStream(covarianceMatrix);
 

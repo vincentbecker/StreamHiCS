@@ -22,6 +22,7 @@ public class Evaluator {
 			fpRatio = ((double) fp) / correctResult.size();
 		} else {
 			if (fp > 0) {
+				recall = 0;
 				fpRatio = 1;
 			}
 		}

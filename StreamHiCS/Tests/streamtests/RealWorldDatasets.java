@@ -53,35 +53,35 @@ public class RealWorldDatasets {
 		double threshold = 0.65;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
+		int horizon = 6000;
 		int checkCount = 10000;
-
+		
 		System.out.println("Covertype");
-		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
 		
 		fail("Not yet implemented");
 	}
 	*/
-	
 	/*
 	@Test
-	public void electricityNSW() {
-		// The change point in the data is: 26075
-		path = "Tests/RealWorldData/elecNormNew_sorted.arff";
+	public void electricityNW() {
+		path = "Tests/RealWorldData/ElectricityNorthWest.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
-		int numberOfDimensions = 8;
+		int numberOfDimensions = 19;
 		int m = 20;
 		double alpha = 0.15;
 		double epsilon = 0.05;
-		double threshold = 0.4;
+		double threshold = 0.5;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
+		int horizon = 2000;
 		int checkCount = 1000;
 
-		System.out.println("Electricity New South Wales");
-		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
+		System.out.println("Electricity North West");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
 		
 		fail("Not yet implemented");
@@ -106,10 +106,11 @@ public class RealWorldDatasets {
 		double threshold = 0.4;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
+		int horizon = 10000;
 		int checkCount = 10000;
 
 		System.out.println("Intrusion Detection 10%");
-		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
 		
 		fail("Not yet implemented");
@@ -141,8 +142,7 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-	
-	
+	/*
 	@Test
 	public void electricityNSWSorted() {
 		// The change point in the data is: 26075
@@ -165,7 +165,7 @@ public class RealWorldDatasets {
 		
 		fail("Not yet implemented");
 	}
-	
+	*/
 	
 	/*
 	@Test
@@ -191,10 +191,34 @@ public class RealWorldDatasets {
 	}
 	*/
 
+	@Test
+	public void dax30() {
+		path = "Tests/RealWorldData/dax30.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 30;
+		int m = 50;
+		double alpha = 0.15;
+		double epsilon = 0.1;
+		double threshold = 0.45;
+		int cutoff = 8;
+		double pruningDifference = 0.15;
+		int horizon = 1000;
+		int checkCount = 1000;
+
+		System.out.println("DAX 30");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
+		System.out.println();
+		
+		fail("Not yet implemented");
+	}
+	
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
-			double pruningDifference, int checkCount) {
+			double pruningDifference, int horizon, int checkCount) {
 		
 		ClusTree mcs = new ClusTree();
+		mcs.horizonOption.setValue(horizon);
 		mcs.resetLearningImpl();
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		
@@ -218,6 +242,7 @@ public class RealWorldDatasets {
 			streamHiCS.add(inst);
 			numberSamples++;
 			if (numberSamples % checkCount == 0) {
+				System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 				System.out.println("Correlated: " + streamHiCS.toString());
 				if (!streamHiCS.getCurrentlyCorrelatedSubspaces().isEmpty()) {
 					for (Subspace s : streamHiCS.getCurrentlyCorrelatedSubspaces().getSubspaces()) {

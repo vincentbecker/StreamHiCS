@@ -41,6 +41,7 @@ public class Waveform40 {
 		stream.prepareForUse();
 
 		ClusTree mcs = new ClusTree();
+		mcs.horizonOption.setValue(1100);
 		mcs.resetLearningImpl();
 
 		double alpha = 0.25;

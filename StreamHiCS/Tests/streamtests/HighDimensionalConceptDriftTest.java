@@ -1,17 +1,13 @@
 package streamtests;
 
 import static org.junit.Assert.*;
-
 import java.util.ArrayList;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
-import environment.CSVReader;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
 import fullsystem.Callback;
@@ -28,22 +24,19 @@ import weka.core.Instance;
 
 public class HighDimensionalConceptDriftTest {
 
-	private static final String path = "Tests/CovarianceMatrices/";
 	private Callback callback = new Callback() {
 		@Override
 		public void onAlarm() {
 			// System.out.println("onAlarm().");
 		}
 	};
-	private ConceptDriftStream conceptDriftStream;
 	private StreamHiCS streamHiCS;
 	private ArrayList<SubspaceSet> correctResults;
 	private int testCounter = 0;
 	private double scoreSum = 0;
-	private final int numInstances = 35000;
+	private final int numInstances = 40000;
 	private int numberSamples = 0;
 	private int numberOfDimensions = 50;
-	private int blockSize = 10;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -58,15 +51,15 @@ public class HighDimensionalConceptDriftTest {
 		s1.scaleOption.setValue(10);
 		s1.prepareForUse();
 
-		double[][] covarianceMatrix2 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0,
+		double[][] covarianceMatrix2 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, 0,
 				0.9);
 		GaussianStream s2 = new GaussianStream(covarianceMatrix2);
 
-		double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0,
+		double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, 10,
 				0.9);
 		GaussianStream s3 = new GaussianStream(covarianceMatrix3);
-
-		double[][] covarianceMatrix4 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0,
+		
+		double[][] covarianceMatrix4 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 10, 10,
 				0.9);
 		GaussianStream s4 = new GaussianStream(covarianceMatrix4);
 
@@ -87,7 +80,7 @@ public class HighDimensionalConceptDriftTest {
 		ConceptDriftStream conceptDriftStream = new ConceptDriftStream();
 		conceptDriftStream.streamOption.setCurrentObject(cds2);
 		conceptDriftStream.driftstreamOption.setCurrentObject(s4);
-		conceptDriftStreams.positionOption.setValue(30000);
+		conceptDriftStream.positionOption.setValue(30000);
 		conceptDriftStream.widthOption.setValue(500);
 		conceptDriftStream.prepareForUse();
 
@@ -105,33 +98,36 @@ public class HighDimensionalConceptDriftTest {
 		correctResults.add(cr20000);
 
 		SubspaceSet cr25000 = new SubspaceSet();
-		cr25000.addSubspace(new Subspace(0, 1, 2));
+		cr25000.addSubspace(new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
 		correctResults.add(cr25000);
 
 		SubspaceSet cr30000 = new SubspaceSet();
-		cr30000.addSubspace(new Subspace(0, 1, 2));
+		cr30000.addSubspace(new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
 		correctResults.add(cr30000);
 
 		SubspaceSet cr35000 = new SubspaceSet();
-		cr35000.addSubspace(new Subspace(0, 1));
-		cr35000.addSubspace(new Subspace(2, 3, 4));
+		cr35000.addSubspace(new Subspace(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
 		correctResults.add(cr35000);
 		
+		SubspaceSet cr40000 = new SubspaceSet();
+		cr40000.addSubspace(new Subspace(10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
+		correctResults.add(cr40000);
+		
 		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(4000);
+		mcs.horizonOption.setValue(6000);
 		mcs.resetLearningImpl();
 
-		double alpha = 0.15;
+		double alpha = 0.2;
 		double epsilon = 0;
-		double threshold = 0.35;
-		int cutoff = 8;
+		double threshold = 0.4;
+		int cutoff = 12;
 		double pruningDifference = 0.2;
 
 		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
 		ChangeChecker changeChecker = new TimeCountChecker(5000);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(5, threshold, cutoff, pruningDifference,
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
-		//SubspaceBuilder subspaceBuilder = new FastBuilder(5, threshold, pruningDifference, contrastEvaluator);
+		//SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker,
 				callback);
 		changeChecker.setCallback(streamHiCS);
@@ -141,19 +137,16 @@ public class HighDimensionalConceptDriftTest {
 			streamHiCS.add(inst);
 			numberSamples++;
 			if (numberSamples != 0 && numberSamples % 5000 == 0) {
-				evaluate();
+				System.out.println("Number of samples: " + numberSamples);
+				System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
+				SubspaceSet correctResult = correctResults.get(testCounter);
+				scoreSum += Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
+				testCounter++;
 			}
 		}
 
 		double meanScore = scoreSum / testCounter;
 		System.out.println("Mean score: " + meanScore);
 		assertTrue(meanScore >= 0.75);
-	}
-
-	private void evaluate() {
-		System.out.println("Number of samples: " + numberSamples);
-		SubspaceSet correctResult = correctResults.get(testCounter);
-		scoreSum += Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
-		testCounter++;
 	}
 }

@@ -1,5 +1,6 @@
 package contrast;
 
+import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import weka.core.Instance;
@@ -43,14 +44,13 @@ public class MicroclusterContrast extends Contrast {
 		
 		int l = microclusters.size();
 		
+		Cluster c;
 		double[] data = new double[l];
-		for (int i = 0; i < l; i++) {
-			data[i] = microclusters.get(i).getCenter()[referenceDimension];
-		}
-		
 		double[] weights = new double[l];
 		for (int i = 0; i < l; i++) {
-			weights[i] = microclusters.get(i).getWeight();
+			c = microclusters.get(i);
+			data[i] = c.getCenter()[referenceDimension];
+			weights[i] = c.getWeight();
 		}
 		
 		return new DataBundle(data, weights);

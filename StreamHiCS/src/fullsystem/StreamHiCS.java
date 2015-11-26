@@ -1,7 +1,5 @@
 package fullsystem;
 
-import java.util.ArrayList;
-
 import changechecker.ChangeChecker;
 import contrast.Contrast;
 import pruning.AbstractPruner;
@@ -124,7 +122,7 @@ public class StreamHiCS implements Callback {
 			// the iterator when removing elements at the same time
 			int l = correlatedSubspaces.size();
 			SubspaceSet keep = new SubspaceSet();
-			for (int i = 0; i < l && !update; i++) {
+			for (int i = 0; i < l; i++) {
 				Subspace subspace = correlatedSubspaces.getSubspace(i);
 				contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 				// System.out.println(contrast);

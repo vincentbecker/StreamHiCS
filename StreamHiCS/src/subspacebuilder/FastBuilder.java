@@ -36,6 +36,7 @@ public class FastBuilder extends SubspaceBuilder {
 
 	@Override
 	public SubspaceSet buildCorrelatedSubspaces() {
+		correlatedSubspaces.clear();
 		double contrast = 0;
 		// Create all 2-dimensional candidates
 		for (int i = 0; i < numberOfDimensions - 1; i++) {
