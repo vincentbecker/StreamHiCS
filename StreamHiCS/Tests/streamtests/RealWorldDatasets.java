@@ -2,17 +2,24 @@ package streamtests;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
-import changechecker.FullSpaceContrastChecker;
 import changechecker.TimeCountChecker;
 import contrast.Contrast;
 import contrast.MicroclusterContrast;
-import contrast.SlidingWindowContrast;
 import fullsystem.Callback;
 import fullsystem.StreamHiCS;
-import moa.clusterers.clustree.ClusTree;
+import clustree.ClusTree;
 import moa.streams.ArffFileStream;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
@@ -36,13 +43,13 @@ public class RealWorldDatasets {
 		}
 	};
 	private StreamHiCS streamHiCS;
-
+	
 	/*
 	@Test
-	public void covertype() {
+	public void covertypeNorm() {
 		// The change points in the data are: 211840, 495141, 530895, 533642,
 		// 543135, 560502
-		path = "Tests/RealWorldData/Covertype_sorted.arff";
+		path = "Tests/RealWorldData/covertypeNorm_sorted.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
@@ -50,10 +57,10 @@ public class RealWorldDatasets {
 		int m = 20;
 		double alpha = 0.25;
 		double epsilon = 0.1;
-		double threshold = 0.65;
+		double threshold = 0.6;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
-		int horizon = 6000;
+		int horizon = 4000;
 		int checkCount = 10000;
 		
 		System.out.println("Covertype");
@@ -63,10 +70,11 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
+	
 	/*
 	@Test
 	public void electricityNW() {
-		path = "Tests/RealWorldData/ElectricityNorthWest.arff";
+		path = "Tests/RealWorldData/electricityNorthWest_labelled.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
@@ -106,7 +114,7 @@ public class RealWorldDatasets {
 		double threshold = 0.4;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
-		int horizon = 10000;
+		int horizon = 5000;
 		int checkCount = 10000;
 
 		System.out.println("Intrusion Detection 10%");
@@ -170,7 +178,7 @@ public class RealWorldDatasets {
 	/*
 	@Test
 	public void electricityNWSUnsorted() {
-		path = "Tests/RealWorldData/elecNOrmNew_unsorted.arff";
+		path = "Tests/RealWorldData/elecNormNew_unsorted.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
@@ -190,22 +198,22 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-
+	/*
 	@Test
 	public void dax30() {
-		path = "Tests/RealWorldData/dax30.arff";
+		path = "Tests/RealWorldData/dax30_labelled.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
 		int numberOfDimensions = 30;
 		int m = 50;
-		double alpha = 0.15;
+		double alpha = 0.2;
 		double epsilon = 0.1;
-		double threshold = 0.45;
+		double threshold = 0.65;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
-		int horizon = 1000;
-		int checkCount = 1000;
+		int horizon = 250;
+		int checkCount = 250;
 
 		System.out.println("DAX 30");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
@@ -213,6 +221,31 @@ public class RealWorldDatasets {
 		
 		fail("Not yet implemented");
 	}
+	*/
+	
+	@Test
+	public void dax30Returns() {
+		path = "Tests/RealWorldData/dax30_returns.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 30;
+		int m = 50;
+		double alpha = 0.15;
+		double epsilon = 0.1;
+		double threshold = 0.43;
+		int cutoff = 15;
+		double pruningDifference = 0.1;
+		int horizon = 250;
+		int checkCount = 250;
+
+		System.out.println("DAX 30 Returns");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
+		System.out.println();
+		
+		fail("Not yet implemented");
+	}
+	
 	
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
 			double pruningDifference, int horizon, int checkCount) {
@@ -236,12 +269,41 @@ public class RealWorldDatasets {
 		//ChangeChecker changeChecker = new FullSpaceContrastChecker(checkCount, numberOfDimensions, contrastEvaluator, 0.2, 0.1);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback);
 		changeChecker.setCallback(streamHiCS);
-
+		
+		PearsonsCorrelation pc = new PearsonsCorrelation();
+		double[][] data = new double[checkCount][numberOfDimensions];
+		//String filePath = "‪D:/Informatik/MSc/IV/Masterarbeit Porto/Results/Correlations.txt";
+		//String filePath = "D:/Dokumente/Correlations.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/DAXCorrelations.csv";
+		
+		List<String> correlOut = new ArrayList<String>();
+		
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
 			streamHiCS.add(inst);
+			data[numberSamples % checkCount] = inst.toDoubleArray();
 			numberSamples++;
 			if (numberSamples % checkCount == 0) {
+				RealMatrix correlationMatrix = pc.computeCorrelationMatrix(data);
+				double[][] cm = correlationMatrix.getData();
+				for(int i = 0; i < numberOfDimensions; i++){
+					String line = "";
+					for(int j = 0; j < numberOfDimensions - 1; j++){
+						line += cm[i][j] + ",";
+					}
+					line += cm[i][numberOfDimensions - 1];
+					correlOut.add(line);
+				}
+				correlOut.add("");
+				try {
+					Files.write(Paths.get(filePath), correlOut, StandardOpenOption.APPEND);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				correlOut.clear();
+				
+				data = new double[checkCount][numberOfDimensions];
 				System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 				System.out.println("Correlated: " + streamHiCS.toString());
 				if (!streamHiCS.getCurrentlyCorrelatedSubspaces().isEmpty()) {

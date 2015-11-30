@@ -14,7 +14,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.INTRUSION_DETECTION;
+		Dataset set = Dataset.COVERTYPE;
 
 		String inputPath = null;
 		String outputPath = null;
@@ -22,8 +22,8 @@ public class Main {
 		int[] filterColumns = null;
 		switch (set) {
 		case COVERTYPE:
-			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/Covertype.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/Covertype_sorted.txt";
+			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm.txt";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_sorted.txt";
 			comparator = new CovertypeComparator();
 			break;
 		case INTRUSION_DETECTION:
@@ -57,8 +57,8 @@ public class Main {
 			int[] filterColumns) {
 		try {
 			//Header
-			List<String> header = Files.readAllLines(Paths.get("D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddARFFHeader.txt"), StandardCharsets.UTF_8);
-			Files.write(Paths.get(outputPath), header);
+			//List<String> header = Files.readAllLines(Paths.get("D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddARFFHeader.txt"), StandardCharsets.UTF_8);
+			//Files.write(Paths.get(outputPath), header);
 			List<String> lines = Files.readAllLines(Paths.get(inputPath), StandardCharsets.UTF_8);
 			if (filterColumns != null) {
 				for (int i = 0; i < lines.size(); i++) {
