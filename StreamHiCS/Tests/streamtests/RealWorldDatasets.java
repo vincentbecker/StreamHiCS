@@ -71,7 +71,7 @@ public class RealWorldDatasets {
 	}
 	*/
 	
-	/*
+	
 	@Test
 	public void electricityNW() {
 		path = "Tests/RealWorldData/electricityNorthWest_labelled.arff";
@@ -79,11 +79,11 @@ public class RealWorldDatasets {
 		stream = new ArffFileStream(path, -1);
 		
 		int numberOfDimensions = 19;
-		int m = 20;
+		int m = 50;
 		double alpha = 0.15;
-		double epsilon = 0.05;
-		double threshold = 0.5;
-		int cutoff = 8;
+		double epsilon = 0.1;
+		double threshold = 0.65;
+		int cutoff = 15;
 		double pruningDifference = 0.15;
 		int horizon = 2000;
 		int checkCount = 1000;
@@ -94,7 +94,7 @@ public class RealWorldDatasets {
 		
 		fail("Not yet implemented");
 	}
-	*/
+	
 	/*
 	@Test
 	public void intrusionDetection10Percent() {
@@ -223,6 +223,7 @@ public class RealWorldDatasets {
 	}
 	*/
 	
+	/*
 	@Test
 	public void dax30Returns() {
 		path = "Tests/RealWorldData/dax30_returns.arff";
@@ -233,7 +234,7 @@ public class RealWorldDatasets {
 		int m = 50;
 		double alpha = 0.15;
 		double epsilon = 0.1;
-		double threshold = 0.43;
+		double threshold = 0.4;
 		int cutoff = 15;
 		double pruningDifference = 0.1;
 		int horizon = 250;
@@ -245,7 +246,7 @@ public class RealWorldDatasets {
 		
 		fail("Not yet implemented");
 	}
-	
+	*/
 	
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
 			double pruningDifference, int horizon, int checkCount) {
@@ -272,11 +273,12 @@ public class RealWorldDatasets {
 		
 		PearsonsCorrelation pc = new PearsonsCorrelation();
 		double[][] data = new double[checkCount][numberOfDimensions];
-		//String filePath = "‪D:/Informatik/MSc/IV/Masterarbeit Porto/Results/Correlations.txt";
-		//String filePath = "D:/Dokumente/Correlations.txt";
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/DAXCorrelations.csv";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ElectricityNorthWest/ENWCorrelations.csv";
 		
 		List<String> correlOut = new ArrayList<String>();
+		double overallMinCorrelation = Double.MAX_VALUE;
+		double sumCorrelation = 0;
+		int correlCount = 0;
 		
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
@@ -308,12 +310,30 @@ public class RealWorldDatasets {
 				System.out.println("Correlated: " + streamHiCS.toString());
 				if (!streamHiCS.getCurrentlyCorrelatedSubspaces().isEmpty()) {
 					for (Subspace s : streamHiCS.getCurrentlyCorrelatedSubspaces().getSubspaces()) {
-						System.out.print(s.getContrast() + ", ");
+						double minCorrelation = Double.MAX_VALUE;
+						for(int i = 0; i < s.size(); i++){
+							for(int j = i + 1; j < s.size(); j++){
+								double correl = cm[s.getDimension(i)][s.getDimension(j)];
+								if(!Double.isNaN(correl)){
+									sumCorrelation += correl;
+								}
+								correlCount++;
+								if(correl < minCorrelation){
+									minCorrelation = correl;
+								}
+							}
+						}
+						if(minCorrelation < overallMinCorrelation){
+							overallMinCorrelation = minCorrelation;
+						}
+						System.out.print(s.getContrast() + "|" + minCorrelation + ", ");
 					}
 					System.out.println();
 				}
 			}
 		}
+		double averageCorrelation = sumCorrelation / correlCount;
+		System.out.println("Overall minimum correlation: " + overallMinCorrelation + ", average correlation: " + averageCorrelation);
 	}
 
 }
