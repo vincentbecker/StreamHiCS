@@ -18,13 +18,14 @@ public class MicroclusterContrast extends Contrast {
 
 	@Override
 	public void add(Instance instance) {
-		microclusterImplementation.trainOnInstanceImpl(instance);
+		microclusterImplementation.trainOnInstance(instance);
+		//microclusterImplementation.trainOnInstanceImpl(instance);
 		microclusters = null;
 	}
 
 	@Override
 	public void clear() {
-		microclusterImplementation.resetLearningImpl();
+		microclusterImplementation.resetLearning();
 		microclusters = null;
 	}
 
@@ -32,6 +33,9 @@ public class MicroclusterContrast extends Contrast {
 	public int getNumberOfElements() {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();
+		}
+		if(microclusters == null){
+			return 0;
 		}
 		return microclusters.size();
 	}

@@ -82,6 +82,25 @@ public class StreamHiCS implements Callback {
 	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
 		return correlatedSubspaces;
 	}
+	
+	/**
+	 * Returns the number of elements in the summarisation structure.
+	 * 
+	 * @return The number of elements in the summarisation structure.
+	 */
+	public int getNumberOfElements(){
+		return contrastEvaluator.getNumberOfElements();
+	}
+	
+	/**
+	 * Sets the callback.
+	 * 
+	 * @param callback
+	 *            The callback.
+	 */
+	public void setCallback(Callback callback){
+		this.callback = callback;
+	}
 
 	/**
 	 * Add a new {@link Instance}.

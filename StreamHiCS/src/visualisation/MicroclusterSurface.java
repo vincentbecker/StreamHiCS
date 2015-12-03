@@ -45,7 +45,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private StatisticalTest statTest;
 	private int count = 0;
 	private int imageCount = 0;
-	private boolean captureScreen = true;
+	private boolean captureScreen = false;
 	private double xRange = 10;
 	private double yRange = 10;
 	private int[] shuffledDimensions = { 0, 1 };

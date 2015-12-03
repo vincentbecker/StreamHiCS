@@ -17,6 +17,10 @@ public class SubspaceChangeDetector extends SingleClassifierDrift {
 		this.subspace = subspace;
 	}
 	
+	public Subspace getSubspace(){
+		return this.subspace;
+	}
+	
 	public boolean isWarningDetected() {
 		return (this.ddmLevel == DDM_WARNING_LEVEL);
 	}

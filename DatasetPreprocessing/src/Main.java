@@ -9,37 +9,74 @@ import java.util.List;
 public class Main {
 
 	public enum Dataset {
-		COVERTYPE, INTRUSION_DETECTION, ELECTRICITY
+		COVERTYPE, COVERTYPE_FILTERED, INTRUSION_DETECTION, INTRUSION_DETECTION_FILTERED, ELECTRICITY
 	};
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.COVERTYPE;
+		Dataset set = Dataset.INTRUSION_DETECTION_FILTERED;
 
+		String headerPath = null;
 		String inputPath = null;
 		String outputPath = null;
 		Comparator<String> comparator = null;
 		int[] filterColumns = null;
 		switch (set) {
 		case COVERTYPE:
+			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeHeader.txt";
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_sorted.txt";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_sorted.arff";
 			comparator = new CovertypeComparator();
 			break;
+		case COVERTYPE_FILTERED:
+			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeHeader_filtered.txt";
+			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm.txt";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_sorted_filtered.arff";
+			comparator = new CovertypeComparator();
+			filterColumns = new int[44];
+			for (int i = 0; i < 44; i++) {
+				filterColumns[i] = i + 10;
+			}
+			break;
 		case INTRUSION_DETECTION:
-			//inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.txt";
-			//outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted.txt";
-			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_sorted.txt";
+			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddHeader.txt";
+			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.txt";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
+			// inputPath = "D:/Informatik/MSc/IV/Masterarbeit
+			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99.txt";
+			// outputPath = "D:/Informatik/MSc/IV/Masterarbeit
+			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_sorted.txt";
 			comparator = new IntrusionDetectionComparator();
-			filterColumns = new int[7];
+			filterColumns = new int[8];
+			filterColumns[0] = 0;
+			filterColumns[1] = 1;
+			filterColumns[2] = 2;
+			filterColumns[3] = 3;
+			filterColumns[4] = 6;
+			filterColumns[5] = 11;
+			filterColumns[6] = 20;
+			filterColumns[7] = 21;
+			break;
+		case INTRUSION_DETECTION_FILTERED:
+			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddHeader_filtered.txt";
+			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.txt";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted_filtered.arff";
+			// inputPath = "D:/Informatik/MSc/IV/Masterarbeit
+			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99.txt";
+			// outputPath = "D:/Informatik/MSc/IV/Masterarbeit
+			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_sorted.txt";
+			comparator = new IntrusionDetectionComparator();
+			filterColumns = new int[18];
 			filterColumns[0] = 1;
 			filterColumns[1] = 2;
 			filterColumns[2] = 3;
 			filterColumns[3] = 6;
-			filterColumns[4] = 11;
-			filterColumns[5] = 20;
-			filterColumns[6] = 21;
+			filterColumns[4] = 7;
+			filterColumns[5] = 8;
+			filterColumns[6] = 10;
+			for (int i = 7; i < 18; i++) {
+				filterColumns[i] = i + 4;
+			}
 			break;
 		case ELECTRICITY:
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/elecNormNew.txt";
@@ -50,15 +87,15 @@ public class Main {
 			break;
 		}
 
-		sortAndWrite(inputPath, outputPath, comparator, filterColumns);
+		sortAndWrite(headerPath, inputPath, outputPath, comparator, filterColumns);
 	}
 
-	private static void sortAndWrite(String inputPath, String outputPath, Comparator<String> comparator,
-			int[] filterColumns) {
+	private static void sortAndWrite(String headerPath, String inputPath, String outputPath,
+			Comparator<String> comparator, int[] filterColumns) {
 		try {
-			//Header
-			//List<String> header = Files.readAllLines(Paths.get("D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddARFFHeader.txt"), StandardCharsets.UTF_8);
-			//Files.write(Paths.get(outputPath), header);
+			// Header
+			List<String> header = Files.readAllLines(Paths.get(headerPath), StandardCharsets.UTF_8);
+			Files.write(Paths.get(outputPath), header);
 			List<String> lines = Files.readAllLines(Paths.get(inputPath), StandardCharsets.UTF_8);
 			if (filterColumns != null) {
 				for (int i = 0; i < lines.size(); i++) {
@@ -74,6 +111,7 @@ public class Main {
 						}
 					}
 					String classLabel = splitLine[splitLine.length - 1].replace(".", "");
+					//String classLabel = splitLine[splitLine.length - 1];
 					newLine += classLabel;
 					lines.set(i, newLine);
 				}

@@ -11,12 +11,19 @@ public class DataBundle {
 		this.data = data;
 		this.weights = weights;
 	}
-
+	
 	public double[] getData() {
 		return data;
 	}
 
 	public double[] getWeights() {
 		return weights;
+	}
+	
+	public boolean isEmpty(){
+		if(data == null || data.length == 0){
+			return true;
+		}
+		return false;
 	}
 }
