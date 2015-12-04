@@ -5,100 +5,82 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import changechecker.ChangeChecker;
-import changechecker.TimeCountChecker;
-import clustree.ClusTree;
-import contrast.Contrast;
-import contrast.MicroclusterContrast;
-import moa.cluster.Clustering;
-import streams.UncorrelatedStream;
-import subspacebuilder.AprioriBuilder;
-import subspacebuilder.SubspaceBuilder;
-import weka.core.DenseInstance;
+import moa.classifiers.drift.SingleClassifierDrift;
+import moa.streams.generators.RandomRBFGeneratorDrift;
 import weka.core.Instance;
 
 public class RBFDriftTest {
 
-	//private RandomRBFGeneratorDrift stream;
-	private UncorrelatedStream stream;
+	private RandomRBFGeneratorDrift stream;
 	private int numberSamples = 0;
 	private final int numInstances = 10000;
-	private final int numberOfDimensions = 2;
-	private final int m = 50;
+	private final int numberOfDimensions = 10;
 	private double alpha;
 	private double epsilon;
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private StreamHiCS streamHiCS;
 	private CorrelatedSubspacesChangeDetector cscd;
-	private ClusTree ct2;
+	private FullSpaceChangeDetector refDetector;
 
 	@Before
 	public void setUp() throws Exception {
-		//stream = new RandomRBFGeneratorDrift();
-		//stream.speedChangeOption.setValue(1);
-		//stream.prepareForUse();
-
-		stream = new UncorrelatedStream();
-		stream.dimensionsOption.setValue(2);
+		stream = new RandomRBFGeneratorDrift();
+		stream.speedChangeOption.setValue(1);
 		stream.prepareForUse();
+
+		//stream = new UncorrelatedStream();
+		//stream.dimensionsOption.setValue(5);
+		//stream.prepareForUse();
 		
 		alpha = 0.15;
 		epsilon = 0.15;
-		threshold = 0.2;
+		threshold = 0.25;
 		cutoff = 8;
 		pruningDifference = 0.15;
 
-		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(1000);
-		mcs.resetLearning();
-		
-		ct2 = new ClusTree();
-		ct2.resetLearning();
-
-		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
-		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, null);
-		changeChecker.setCallback(streamHiCS);
-
 		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions);
+		cscd.alphaOption.setValue(alpha);
+		cscd.epsilonOption.setValue(epsilon);
+		cscd.thresholdOption.setValue(threshold);
+		cscd.cutoffOption.setValue(cutoff);
+		cscd.pruningDifferenceOption.setValue(pruningDifference);
 		cscd.prepareForUse();
-		streamHiCS.setCallback(cscd);
+		
+		refDetector = new FullSpaceChangeDetector();
+		refDetector.prepareForUse();
 	}
 
 	@Test
 	public void test() {
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			if (numberSamples % 1000 == 0) {
-				System.out.println("Time: " + numberSamples);
-				System.out.println("Number of microclusters: " + streamHiCS.getNumberOfElements());
-				Clustering mcsR = ct2.getMicroClusteringResult();
-				int s = 0;
-				if(mcsR != null){
-					s = mcsR.size();
-				}
-				System.out.println("ct2 elements: " + s);
+				//System.out.println("Time: " + numberSamples);
+				//System.out.println("Number of microclusters: " + cscd.getNumberOfElements());
+				//System.out.println("sh2: " + sh2.toString());
 			}
 			Instance inst = stream.nextInstance();
 			cscd.trainOnInstance(inst);
+			refDetector.trainOnInstance(inst);
 			/*
 			DenseInstance newInst = new DenseInstance(numberOfDimensions);
 			for(int i = 0; i < numberOfDimensions; i++){
 				newInst.setValue(i, inst.value(i));
 			}
 			*/
-			//ct2.trainOnInstance(inst);
-			/*
+			
 			if (cscd.isWarningDetected()) {
-				System.out.println("WARNING at " + numberSamples);
+				System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (cscd.isChangeDetected()) {
-				System.out.println("CHANGE at " + numberSamples);
+				System.out.println("cscd: CHANGE at " + numberSamples);
 			}
-			*/
+			
+			if (refDetector.isWarningDetected()) {
+				System.out.println("refDetector: WARNING at " + numberSamples);
+			} else if (refDetector.isChangeDetected()) {
+				System.out.println("refDetector: CHANGE at " + numberSamples);
+			}
+			
 			numberSamples++;
 		}
 

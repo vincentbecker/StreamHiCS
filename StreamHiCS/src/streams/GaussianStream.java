@@ -31,7 +31,13 @@ public class GaussianStream implements InstanceStream {
 	 */
 	private InstancesHeader streamHeader;
 
-	public GaussianStream(double[][] covarianceMatrix) {
+	public GaussianStream(double[] mean, double[][] covarianceMatrix) {
+		if (mean == null) {
+			// Mean will be initialised to be n x 0.0
+			mean = new double[covarianceMatrix.length];
+		} else {
+			this.mean = mean;
+		}
 		init(covarianceMatrix);
 	}
 
@@ -41,24 +47,26 @@ public class GaussianStream implements InstanceStream {
 
 	private void init(double[][] covarianceMatrix) {
 		symmetryCheck(covarianceMatrix);
-		// Mean will be initialised to be n x 0.0
-		mean = new double[covarianceMatrix.length];
 		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		for (int i = 0; i < mean.length; i++) {
 			attributes.add(new Attribute("normalAttribute" + i));
 		}
 		streamHeader = new InstancesHeader(new Instances("GaussianStream", attributes, 0));
+		ArrayList<Double> classLabels = new ArrayList<Double>();
+		classLabels.add(0.0);
+		classLabels.add(1.0);
+		attributes.add(new Attribute("class", classLabels));
 	}
 
 	private void symmetryCheck(double[][] covarianceMatrix) {
 		int m = covarianceMatrix.length;
 		int n = covarianceMatrix[0].length;
-		assert(m == n);
+		assert (m == n);
 
 		for (int i = 0; i < n; i++) {
 			for (int j = i + 1; j < n; j++) {
-				assert(covarianceMatrix[i][j] == covarianceMatrix[j][i]);
+				assert (covarianceMatrix[i][j] == covarianceMatrix[j][i]);
 			}
 		}
 	}

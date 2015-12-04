@@ -13,7 +13,6 @@ import moa.streams.InstanceStream;
 import moa.tasks.TaskMonitor;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
-import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -108,8 +107,8 @@ public class UncorrelatedStream extends AbstractOptionHandler implements Instanc
 		for (int i = 0; i < numberOfDimensions; i++) {
 			attributes.add(new Attribute("attribute" + i));
 		}
-		FastVector classLabels = new FastVector();
-		classLabels.addElement("NO_LABEL");
+		ArrayList<String> classLabels = new ArrayList<String>();
+		classLabels.add("NO_LABEL");
 		attributes.add(new Attribute("class", classLabels));
 		streamHeader = new InstancesHeader(new Instances("UncorrelatedStream", attributes, 0));
 		streamHeader.setClassIndex(numberOfDimensions);

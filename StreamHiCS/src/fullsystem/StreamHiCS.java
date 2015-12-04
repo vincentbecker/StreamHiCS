@@ -3,7 +3,6 @@ package fullsystem;
 import changechecker.ChangeChecker;
 import contrast.Contrast;
 import pruning.AbstractPruner;
-import pruning.SimplePruner;
 import pruning.TopDownPruner;
 import subspace.Subspace;
 import subspace.SubspaceSet;
