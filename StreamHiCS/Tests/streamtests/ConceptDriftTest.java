@@ -58,16 +58,16 @@ public class ConceptDriftTest {
 		s1.scaleOption.setValue(10);
 		s1.prepareForUse();
 
-		GaussianStream s2 = new GaussianStream(csvReader.read(path + "Test1.csv"));
+		GaussianStream s2 = new GaussianStream(null, csvReader.read(path + "Test1.csv"));
 
-		GaussianStream s3 = new GaussianStream(csvReader.read(path + "Test5.csv"));
+		GaussianStream s3 = new GaussianStream(null, csvReader.read(path + "Test5.csv"));
 
-		GaussianStream s4 = new GaussianStream(csvReader.read(path + "Test2.csv"));
+		GaussianStream s4 = new GaussianStream(null, csvReader.read(path + "Test2.csv"));
 
-		GaussianStream s5 = new GaussianStream(csvReader.read(path + "Test3.csv"));
+		GaussianStream s5 = new GaussianStream(null, csvReader.read(path + "Test3.csv"));
 
 		//GaussianStream s6 = new GaussianStream(csvReader.read(path + "Test4.csv"));
-		GaussianStream s6 = new GaussianStream(csvReader.read(path + "Test2.csv"));
+		GaussianStream s6 = new GaussianStream(null, csvReader.read(path + "Test2.csv"));
 
 		ConceptDriftStream cds1 = new ConceptDriftStream();
 		cds1.streamOption.setCurrentObject(s1);
@@ -175,6 +175,10 @@ public class ConceptDriftTest {
 			Instance inst = conceptDriftStream.nextInstance();
 			streamHiCS.add(inst);
 			numberSamples++;
+			if(numberSamples % 1000 == 0){
+				System.out.println("Time: " + numberSamples);
+				System.out.println("Number of elements: " + streamHiCS.getNumberOfElements());
+			}
 			if (numberSamples != 0 && numberSamples % 5000 == 0) {
 				evaluate();
 			}

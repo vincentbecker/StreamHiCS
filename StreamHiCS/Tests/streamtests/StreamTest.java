@@ -55,14 +55,13 @@ public class StreamTest {
 		@Override
 		public void onAlarm() {
 			System.out.println("StreamHiCS: onAlarm()");
-
 		}
 
 	};
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		stream = new GaussianStream(covarianceMatrices[0]);
+		stream = new GaussianStream(null, covarianceMatrices[0]);
 
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;

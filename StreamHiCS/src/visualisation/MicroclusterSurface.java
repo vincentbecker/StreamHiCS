@@ -62,8 +62,8 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		s1.dimensionsOption.setValue(2);
 		s1.scaleOption.setValue(10);
 		s1.prepareForUse();
-		GaussianStream s2 = new GaussianStream(covarianceMatrix1);
-		GaussianStream s3 = new GaussianStream(covarianceMatrix2);
+		GaussianStream s2 = new GaussianStream(null, covarianceMatrix1);
+		GaussianStream s3 = new GaussianStream(null, covarianceMatrix2);
 
 		ConceptDriftStream cds1 = new ConceptDriftStream();
 		cds1.streamOption.setCurrentObject(s1);

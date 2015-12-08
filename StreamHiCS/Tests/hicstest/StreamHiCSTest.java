@@ -36,7 +36,7 @@ public class StreamHiCSTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private final String method = "ClusTreeMC";
+	private final String method = "DenStreamMC";
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
 	private Callback callback = new Callback() {
@@ -355,7 +355,7 @@ public class StreamHiCSTest {
 	}
 
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
-		stream = new GaussianStream(covarianceMatrix);
+		stream = new GaussianStream(null, covarianceMatrix);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;
@@ -390,7 +390,7 @@ public class StreamHiCSTest {
 			mcs.epsilonOption.setValue(0.5);
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
-			mcs.resetLearningImpl();
+			mcs.resetLearning();
 			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
@@ -408,6 +408,8 @@ public class StreamHiCSTest {
 			contrastEvaluator = null;
 		}
 
+		System.out.println(method);
+		
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);
 
@@ -433,6 +435,10 @@ public class StreamHiCSTest {
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		// Evaluation
-		return Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75;
+		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
+		Evaluator.displayResult(result, correctResult);
+		double tpVSfp = Evaluator.evaluateTPvsFP(result, correctResult);
+		Evaluator.evaluateJaccardIndex(result, correctResult);
+		return tpVSfp >= 0.75;
 	}
 }

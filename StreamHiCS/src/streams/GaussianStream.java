@@ -3,6 +3,7 @@ package streams;
 import java.util.ArrayList;
 
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
 import moa.MOAObject;
 import moa.core.InstancesHeader;
@@ -30,15 +31,17 @@ public class GaussianStream implements InstanceStream {
 	 * The header of the stream.
 	 */
 	private InstancesHeader streamHeader;
+	private EuclideanDistance euclideanDistance;
 
 	public GaussianStream(double[] mean, double[][] covarianceMatrix) {
 		if (mean == null) {
 			// Mean will be initialised to be n x 0.0
-			mean = new double[covarianceMatrix.length];
+			this.mean = new double[covarianceMatrix.length];
 		} else {
 			this.mean = mean;
 		}
 		init(covarianceMatrix);
+		this.euclideanDistance = new EuclideanDistance();
 	}
 
 	public void setCovarianceMatrix(double[][] covarianceMatrix) {
@@ -49,14 +52,16 @@ public class GaussianStream implements InstanceStream {
 		symmetryCheck(covarianceMatrix);
 		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		for (int i = 0; i < mean.length; i++) {
+		int n = mean.length;
+		for (int i = 0; i < n; i++) {
 			attributes.add(new Attribute("normalAttribute" + i));
 		}
-		streamHeader = new InstancesHeader(new Instances("GaussianStream", attributes, 0));
-		ArrayList<Double> classLabels = new ArrayList<Double>();
-		classLabels.add(0.0);
-		classLabels.add(1.0);
+		ArrayList<String> classLabels = new ArrayList<String>();
+		classLabels.add("in");
+		classLabels.add("out");
 		attributes.add(new Attribute("class", classLabels));
+		streamHeader = new InstancesHeader(new Instances("GaussianStream", attributes, 0));
+		streamHeader.setClassIndex(n);
 	}
 
 	private void symmetryCheck(double[][] covarianceMatrix) {
@@ -111,7 +116,17 @@ public class GaussianStream implements InstanceStream {
 		for (int i = 0; i < mean.length; i++) {
 			inst.setValue(i, sample[i]);
 		}
+
+		// Determine the class value
+		double classValue;
+		double distance = euclideanDistance.compute(sample, mean);
+		if (distance <= 1) {
+			classValue = 0;
+		} else {
+			classValue = 1;
+		}
 		inst.setDataset(header);
+		inst.setClassValue(classValue);
 
 		return inst;
 	}

@@ -7,6 +7,7 @@ import pruning.TopDownPruner;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.SubspaceBuilder;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 
 public class StreamHiCS implements Callback {
@@ -55,8 +56,8 @@ public class StreamHiCS implements Callback {
 	 *            contrast above or equal to the threshold may be considered as
 	 *            correlated.
 	 */
-	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator, SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker,
-			Callback callback) {
+	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator,
+			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback) {
 		correlatedSubspaces = new SubspaceSet();
 		if (epsilon < 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
@@ -68,7 +69,7 @@ public class StreamHiCS implements Callback {
 		this.subspaceBuilder = subspaceBuilder;
 		this.changeChecker = changeChecker;
 		this.callback = callback;
-		//this.pruner = new SimplePruner(pruningDifference);
+		// this.pruner = new SimplePruner(pruningDifference);
 		this.pruner = new TopDownPruner(pruningDifference);
 	}
 
@@ -81,23 +82,23 @@ public class StreamHiCS implements Callback {
 	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
 		return correlatedSubspaces;
 	}
-	
+
 	/**
 	 * Returns the number of elements in the summarisation structure.
 	 * 
 	 * @return The number of elements in the summarisation structure.
 	 */
-	public int getNumberOfElements(){
+	public int getNumberOfElements() {
 		return contrastEvaluator.getNumberOfElements();
 	}
-	
+
 	/**
 	 * Sets the callback.
 	 * 
 	 * @param callback
 	 *            The callback.
 	 */
-	public void setCallback(Callback callback){
+	public void setCallback(Callback callback) {
 		this.callback = callback;
 	}
 
@@ -108,6 +109,18 @@ public class StreamHiCS implements Callback {
 	 *            The {@link Instance} to be added.
 	 */
 	public void add(Instance instance) {
+		// StreamHiCS is works in an unsupervised fashion. Therefore we create a
+		// new instance without a class label, since this will simply be used as
+		// an additional dimension.
+		// Check if the instance has a class attribute
+		if (instance.classIndex() >= 0) {
+			int numberOfDimensions = instance.numAttributes() - 1;
+			DenseInstance newInst = new DenseInstance(numberOfDimensions);
+			for (int i = 0; i < numberOfDimensions; i++) {
+				newInst.setValue(i, instance.value(i));
+			}
+			instance = newInst;
+		}
 		contrastEvaluator.add(instance);
 		changeChecker.poll();
 	}
@@ -149,7 +162,7 @@ public class StreamHiCS implements Callback {
 				// the threshold we start a new complete evaluation.
 				if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
 					update = true;
-				}else{
+				} else {
 					keep.addSubspace(subspace);
 				}
 				subspace.setContrast(contrast);
@@ -160,8 +173,10 @@ public class StreamHiCS implements Callback {
 				correlatedSubspaces.clear();
 				correlatedSubspaces.addSubspaces(keep);
 				correlatedSubspaces.addSubspaces(subspaceBuilder.buildCorrelatedSubspaces());
-				// Carry out pruning as the last step. All those subspaces which are
-				// subspace to another subspace with higher contrast are discarded.
+				// Carry out pruning as the last step. All those subspaces which
+				// are
+				// subspace to another subspace with higher contrast are
+				// discarded.
 				correlatedSubspaces = pruner.prune(correlatedSubspaces);
 			}
 		}
@@ -176,7 +191,7 @@ public class StreamHiCS implements Callback {
 		 * for (Double d : res) { if (d < threshold) { update = true; } }
 		 */
 	}
-	
+
 	/**
 	 * Returns a string representation of this object.
 	 * 

@@ -57,7 +57,7 @@ public class SubspaceChangeDetector extends SingleClassifierDrift {
 		for (int i = 0; i < l; i++) {
 			subspaceData[i] = inst.value(subspace.getDimension(i));
 		}
-		// Getting the class label
+		// Setting the class label
 		subspaceData[l] = inst.value(inst.classIndex());
 		Instance subspaceInstance = new DenseInstance(inst.weight(), subspaceData);
 		subspaceInstance.setDataset(header);

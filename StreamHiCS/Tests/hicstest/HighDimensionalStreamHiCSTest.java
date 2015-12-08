@@ -164,7 +164,7 @@ public class HighDimensionalStreamHiCSTest {
 			SubspaceSet correctResult) {
 		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, blockSize,
 				0.9);
-		stream = new GaussianStream(covarianceMatrix);
+		stream = new GaussianStream(null, covarianceMatrix);
 
 		alpha = 0.2;
 		epsilon = 0;

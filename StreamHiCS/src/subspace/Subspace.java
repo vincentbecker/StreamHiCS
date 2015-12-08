@@ -259,6 +259,10 @@ public class Subspace {
 		}
 		return true;
 	}
+	
+	public boolean isEmpty(){
+		return dimensions.isEmpty();
+	}
 
 	/**
 	 * Returns a string representation of this object.
@@ -267,5 +271,21 @@ public class Subspace {
 	 */
 	public String toString() {
 		return dimensions.toString();
+	}
+
+	/**
+	 * Returns the number of common elements with the other subspace.
+	 * 
+	 * @param s2
+	 * @return
+	 */
+	public int cut(Subspace s2) {
+		int count = 0;
+		for (Integer dim : dimensions) {
+			if (s2.contains(dim)) {
+				count++;
+			}
+		}
+		return count;
 	}
 }

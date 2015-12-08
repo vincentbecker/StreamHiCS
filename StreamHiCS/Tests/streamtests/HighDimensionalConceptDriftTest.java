@@ -53,15 +53,15 @@ public class HighDimensionalConceptDriftTest {
 
 		double[][] covarianceMatrix2 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, 0,
 				0.9);
-		GaussianStream s2 = new GaussianStream(covarianceMatrix2);
+		GaussianStream s2 = new GaussianStream(null, covarianceMatrix2);
 
 		double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, 10,
 				0.9);
-		GaussianStream s3 = new GaussianStream(covarianceMatrix3);
+		GaussianStream s3 = new GaussianStream(null, covarianceMatrix3);
 		
 		double[][] covarianceMatrix4 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 10, 10,
 				0.9);
-		GaussianStream s4 = new GaussianStream(covarianceMatrix4);
+		GaussianStream s4 = new GaussianStream(null, covarianceMatrix4);
 
 		ConceptDriftStream cds1 = new ConceptDriftStream();
 		cds1.streamOption.setCurrentObject(s1);

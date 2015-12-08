@@ -14,6 +14,7 @@ import moa.core.ObjectRepository;
 import moa.options.FloatOption;
 import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
+import moa.clusterers.denstream.WithDBSCAN;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
@@ -96,9 +97,15 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		// Happens anyway: fullSpaceChangeDetector.resetLearning();
 		SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		// subspaceChangeDetectors.clear();
+		/*
 		System.out.println("Number of samples: " + numberSamples);
 		System.out.println("Number of microclusters: " + streamHiCS.getNumberOfElements());
 		System.out.println("Correlated: " + streamHiCS.toString());
+		for (Subspace s : correlatedSubspaces.getSubspaces()) {
+			System.out.print(s.getContrast() + ", ");
+		}
+		System.out.println();
+		*/
 		ArrayList<SubspaceChangeDetector> temp = new ArrayList<SubspaceChangeDetector>();
 		boolean found = false;
 		for (Subspace s : correlatedSubspaces.getSubspaces()) {
@@ -124,7 +131,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
 		streamHiCS.add(inst);
-		if(inst.classValue() < 0){
+		if (inst.classValue() < 0) {
 			System.out.println("Class value < 0");
 		}
 		fullSpaceChangeDetector.trainOnInstance(inst);
@@ -156,9 +163,20 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		cutoff = cutoffOption.getValue();
 		pruningDifference = pruningDifferenceOption.getValue();
 
-		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(1000);
-		mcs.resetLearningImpl();
+		
+		 ClusTree mcs = new ClusTree(); mcs.horizonOption.setValue(1000);
+		 mcs.horizonOption.setValue(20000);
+		 mcs.resetLearning(); mcs.prepareForUse();
+		 
+
+		/*
+		WithDBSCAN mcs = new WithDBSCAN();
+		mcs.speedOption.setValue(100);
+		mcs.epsilonOption.setValue(0.4);
+		mcs.betaOption.setValue(0.1);
+		mcs.lambdaOption.setValue(0.05);
+		mcs.prepareForUse();
+*/
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
@@ -175,6 +193,10 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	public int getNumberOfElements() {
 		return streamHiCS.getNumberOfElements();
+	}
+
+	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
+		return streamHiCS.getCurrentlyCorrelatedSubspaces();
 	}
 
 	@Override
