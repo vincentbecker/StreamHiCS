@@ -86,8 +86,8 @@ public class Waveform40_sorted {
 		mcs.speedOption.setValue(100);
 		mcs.epsilonOption.setValue(0.1);
 		mcs.betaOption.setValue(0.01);
-		mcs.lambdaOption.setValue(0.0001);
-		mcs.initPointsOption.setValue(100);
+		mcs.lambdaOption.setValue(0.000001);
+		//mcs.initPointsOption.setValue(100);
 		mcs.prepareForUse();
 		
 		/*

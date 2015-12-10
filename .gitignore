@@ -34,4 +34,7 @@ DatasetPreprocessing/.classpath
 DatasetPreprocessing/.project
 DatasetPreprocessing/.settings/
 DatasetPreprocessing/bin
-StreamHiCS/Tests/RealWorldData/
+StreamHiCS/Tests/RealWorldData
+StreamHiCS/Tests/waveform.arff
+StreamHiCS/Tests/waveform_sorted.arff
+StreamHiCS/Tests/waveformHeader.txt
