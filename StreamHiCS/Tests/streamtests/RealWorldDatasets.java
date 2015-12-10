@@ -303,7 +303,6 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-	
 	/*
 	@Test
 	public void dax30Returns() {
@@ -328,7 +327,6 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-	
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
 			double pruningDifference, int horizon, int checkCount) {
 		/*
@@ -341,9 +339,9 @@ public class RealWorldDatasets {
 		WithDBSCAN mcs = new WithDBSCAN();
 		mcs.speedOption.setValue(100);
 		mcs.epsilonOption.setValue(0.02);
-		mcs.betaOption.setValue(0.05);
+		mcs.betaOption.setValue(0.1);
 		mcs.lambdaOption.setValue(0.01);
-		mcs.resetLearningImpl();
+		mcs.prepareForUse();
 		
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		

@@ -163,20 +163,20 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		cutoff = cutoffOption.getValue();
 		pruningDifference = pruningDifferenceOption.getValue();
 
-		
+		/*
 		 ClusTree mcs = new ClusTree(); mcs.horizonOption.setValue(1000);
 		 mcs.horizonOption.setValue(20000);
-		 mcs.resetLearning(); mcs.prepareForUse();
-		 
+		 mcs.prepareForUse();
+		 */
 
-		/*
+		
 		WithDBSCAN mcs = new WithDBSCAN();
 		mcs.speedOption.setValue(100);
 		mcs.epsilonOption.setValue(0.4);
 		mcs.betaOption.setValue(0.1);
 		mcs.lambdaOption.setValue(0.05);
 		mcs.prepareForUse();
-*/
+
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,

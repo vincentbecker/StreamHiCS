@@ -39,9 +39,7 @@ public class Evaluator {
 		
 		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
 		double score = recall - fpRatio;
-		System.out.println("Score: " + score);
-		
-		System.out.println();
+		System.out.println("TPvsFP-score: " + score);
 		return score;
 	}
 	
@@ -67,9 +65,18 @@ public class Evaluator {
 			sumMaxJaccardIndex += maxJaccardIndex;
 		}
 		
-		double averageMaxJaccardIndex = sumMaxJaccardIndex / result.size();
+		double averageMaxJaccardIndex = 0;
+		if(result.isEmpty()){
+			if(correctResult.isEmpty()){
+				averageMaxJaccardIndex = 1;
+			}else{
+				averageMaxJaccardIndex = 0;
+			}
+		}else{
+			averageMaxJaccardIndex = sumMaxJaccardIndex / result.size();
+		}
 		
-		System.out.println("Average max Jaccard-Index: " + averageMaxJaccardIndex);
+		System.out.println("Average max Jaccard-index: " + averageMaxJaccardIndex);
 		
 		return averageMaxJaccardIndex;
 	}

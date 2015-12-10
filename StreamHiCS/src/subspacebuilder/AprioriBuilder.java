@@ -5,7 +5,7 @@ import subspace.Subspace;
 import subspace.SubspaceSet;
 
 public class AprioriBuilder extends SubspaceBuilder {
-	SubspaceSet correlatedSubspaces;
+	private SubspaceSet correlatedSubspaces;
 	/**
 	 * The number of dimensions of the full space.
 	 */
@@ -51,7 +51,7 @@ public class AprioriBuilder extends SubspaceBuilder {
 				Subspace s = new Subspace();
 				s.addDimension(i);
 				s.addDimension(j);
-				// Only use subspace for the further process which are
+				// Only use subspaces for the further process which are
 				// correlated
 				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
 				s.setContrast(contrast);

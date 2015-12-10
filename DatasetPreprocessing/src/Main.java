@@ -6,15 +6,18 @@ import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
 
+import moa.streams.generators.WaveformGenerator;
+import moa.tasks.WriteStreamToARFFFile;
+
 public class Main {
 
 	public enum Dataset {
-		COVERTYPE, COVERTYPE_FILTERED, INTRUSION_DETECTION, INTRUSION_DETECTION_FILTERED, ELECTRICITY
+		COVERTYPE, COVERTYPE_FILTERED, INTRUSION_DETECTION, INTRUSION_DETECTION_FILTERED, ELECTRICITY, WAVEFORM
 	};
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.INTRUSION_DETECTION_FILTERED;
+		Dataset set = Dataset.WAVEFORM;
 
 		String headerPath = null;
 		String inputPath = null;
@@ -85,6 +88,21 @@ public class Main {
 			break;
 		default:
 			break;
+		case WAVEFORM:
+			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/waveformHeader.txt";
+			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/waveform.arff";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/waveform_sorted.arff";
+			WriteStreamToARFFFile writer = new WriteStreamToARFFFile();
+			WaveformGenerator stream = new WaveformGenerator();
+			stream.addNoiseOption.set();
+			stream.prepareForUse();
+			writer.streamOption.setCurrentObject(stream);
+			writer.arffFileOption.setValue(inputPath);
+			writer.maxInstancesOption.setValue(100000);
+			writer.suppressHeaderOption.setValue(true);
+			writer.doTask();
+			
+			comparator = new WaveformComparator();
 		}
 
 		sortAndWrite(headerPath, inputPath, outputPath, comparator, filterColumns);
@@ -111,7 +129,7 @@ public class Main {
 						}
 					}
 					String classLabel = splitLine[splitLine.length - 1].replace(".", "");
-					//String classLabel = splitLine[splitLine.length - 1];
+					// String classLabel = splitLine[splitLine.length - 1];
 					newLine += classLabel;
 					lines.set(i, newLine);
 				}

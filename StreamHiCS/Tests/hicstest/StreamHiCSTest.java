@@ -2,6 +2,7 @@ package hicstest;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -20,6 +21,7 @@ import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
+import subspacebuilder.HierarchicalBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustree.ClusTree;
@@ -36,7 +38,7 @@ public class StreamHiCSTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private final String method = "DenStreamMC";
+	private final String method = "ClusTreeMC";
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
 	private Callback callback = new Callback() {
@@ -45,10 +47,19 @@ public class StreamHiCSTest {
 			System.out.println("StreamHiCS: onAlarm()");
 		}
 	};
-
+	private static double tpVSfpSum = 0;
+	private static double amjsSum = 0;
+	private static int testCounter = 0;
+	
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		csvReader = new CSVReader();
+	}
+	
+	@AfterClass
+	public static void calculateAverageScores() {
+		System.out.println("Average TPvsFP-score: " + tpVSfpSum / testCounter);
+		System.out.println("Average AMJS-score: " + amjsSum / testCounter);
 	}
 
 	@Test
@@ -233,7 +244,7 @@ public class StreamHiCSTest {
 		String testName = "Test18";
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
-		//correctResult.addSubspace(new Subspace(0, 1));
+		// correctResult.addSubspace(new Subspace(0, 1));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -244,7 +255,7 @@ public class StreamHiCSTest {
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
 		correctResult.addSubspace(new Subspace(0, 1));
-		//correctResult.addSubspace(new Subspace(2, 3, 4));
+		// correctResult.addSubspace(new Subspace(2, 3, 4));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -409,22 +420,30 @@ public class StreamHiCSTest {
 		}
 
 		System.out.println(method);
-		
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
-				pruningDifference, contrastEvaluator);
 
+		
+		 SubspaceBuilder subspaceBuilder = new
+		 AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
+		 pruningDifference, contrastEvaluator);
+		
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
 		// contrastEvaluator);
-
+		
+		/*
+		SubspaceBuilder subspaceBuilder = new HierarchicalBuilder(covarianceMatrix.length, threshold, contrastEvaluator, true);
+		*/
+	
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
 				changeChecker, callback);
 		changeChecker.setCallback(streamHiCS);
 
-		//System.out.println("StreamHiCSTest. m = " + m + ", alpha = " + alpha + ", threshold = " + threshold
-		//		+ ", cutoff = " + cutoff + ", pruningDifference = " + pruningDifference);
-		
+		// System.out.println("StreamHiCSTest. m = " + m + ", alpha = " + alpha
+		// + ", threshold = " + threshold
+		// + ", cutoff = " + cutoff + ", pruningDifference = " +
+		// pruningDifference);
+
 		int numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = stream.nextInstance();
@@ -438,7 +457,12 @@ public class StreamHiCSTest {
 		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		Evaluator.displayResult(result, correctResult);
 		double tpVSfp = Evaluator.evaluateTPvsFP(result, correctResult);
-		Evaluator.evaluateJaccardIndex(result, correctResult);
+		tpVSfpSum += tpVSfp;
+		double amjs = Evaluator.evaluateJaccardIndex(result, correctResult);
+		amjsSum += amjs;
+		testCounter++;
+		System.out.println();
+		
 		return tpVSfp >= 0.75;
 	}
 }
