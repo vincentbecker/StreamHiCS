@@ -44,7 +44,7 @@ public class WithDBSCAN extends AbstractClusterer {
 	public IntOption horizonOption = new IntOption("horizon", 'h',
 			"Range of the window.", 1000);
 	public FloatOption epsilonOption = new FloatOption("epsilon", 'e',
-			"Defines the epsilon neighbourhood", 0.02, 0, 1);
+			"Defines the epsilon neighbourhood", 0.02, 0, Double.MAX_VALUE);
 	// public IntOption minPointsOption = new IntOption("minPoints", 'p',
 	// "Minimal number of points cluster has to contain.", 10);
 
@@ -116,7 +116,10 @@ public class WithDBSCAN extends AbstractClusterer {
 		o_micro_cluster = new Clustering();
 		initBuffer = new ArrayList<DenPoint>();
 		
-		tp = Math.round(1 / lambda * Math.log((beta * mu) / (beta * mu - 1))) + 1;
+		//tp = Math.round(1 / lambda * Math.log((beta * mu) / (beta * mu - 1))) + 1;
+		//beta*mu should be greater than 1
+		double frac = (beta * mu) / (beta * mu - 1);
+		tp = (long) Math.ceil(1 / lambda * (Math.log(frac) / Math.log(2)));
 		
 		numProcessedPerUnit = 0;
 		processingSpeed = speedOption.getValue();
@@ -171,6 +174,7 @@ public class WithDBSCAN extends AbstractClusterer {
 				MicroCluster x = nearestCluster(point, p_micro_cluster);
 				MicroCluster xCopy = x.copy();
 				xCopy.insert(point, timestamp);
+				//System.out.println("Radius p: " + xCopy.getRadius(timestamp));
 				if (xCopy.getRadius(timestamp) <= epsilon) {
 					x.insert(point, timestamp);
 					merged = true;
@@ -180,7 +184,7 @@ public class WithDBSCAN extends AbstractClusterer {
 				MicroCluster x = nearestCluster(point, o_micro_cluster);
 				MicroCluster xCopy = x.copy();
 				xCopy.insert(point, timestamp);
-
+				//System.out.println("Radius o: " + xCopy.getRadius(timestamp));
 				if (xCopy.getRadius(timestamp) <= epsilon) {
 					x.insert(point, timestamp);
 					merged = true;

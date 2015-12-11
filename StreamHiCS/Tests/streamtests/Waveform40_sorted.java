@@ -51,14 +51,12 @@ public class Waveform40_sorted {
 	public void WaveformSorted() {
 		// The change points in the data are: 33368, 66707
 		path = "Tests/waveform_sorted.arff";
-		//path = "Tests/RealWorldData/kddcup99_10_percent_sorted_filtered.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
 		int numberOfDimensions = 40;
-		//int numberOfDimensions = 23;
 		int m = 50;
-		double alpha = 0.15;
+		double alpha = 0.25;
 		double epsilon = 0.1;
 		double threshold = 0.5;
 		int cutoff = 8;
@@ -76,20 +74,22 @@ public class Waveform40_sorted {
 	private void carryOutTest(int numberOfDimensions, int m, double alpha, double epsilon, double threshold, int cutoff,
 			double pruningDifference, int horizon, int checkCount) {
 		
-		/*
+		
 		ClusTree mcs = new ClusTree();
 		mcs.horizonOption.setValue(horizon);
 		mcs.prepareForUse();
-		*/
 		
+		
+		/*
 		WithDBSCAN mcs = new WithDBSCAN();
-		mcs.speedOption.setValue(100);
-		mcs.epsilonOption.setValue(0.1);
-		mcs.betaOption.setValue(0.01);
-		mcs.lambdaOption.setValue(0.000001);
+		mcs.speedOption.setValue(1000);
+		mcs.epsilonOption.setValue(1.8);
+		mcs.betaOption.setValue(0.2);
+		mcs.muOption.setValue(10);
+		mcs.lambdaOption.setValue(0.05);
 		//mcs.initPointsOption.setValue(100);
 		mcs.prepareForUse();
-		
+		*/
 		/*
 		Clustream mcs = new Clustream();
 		mcs.kernelRadiFactorOption.setValue(2);
@@ -123,13 +123,12 @@ public class Waveform40_sorted {
 		
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
-			//streamHiCS.add(inst);
-			mcs.trainOnInstance(inst);
+			streamHiCS.add(inst);
+			//mcs.trainOnInstance(inst);
 			data[numberSamples % checkCount] = inst.toDoubleArray();
 			numberSamples++;
 			if (numberSamples % checkCount == 0) {
-				System.out.println("Number of elements: " + mcs.getMicroClusteringResult().size());
-				/*
+				//System.out.println("Time: " + numberSamples + ", Number of elements: " + mcs.getMicroClusteringResult().size());
 				RealMatrix correlationMatrix = pc.computeCorrelationMatrix(data);
 				double[][] cm = correlationMatrix.getData();
 				for(int i = 0; i < numberOfDimensions; i++){
@@ -174,7 +173,6 @@ public class Waveform40_sorted {
 					}
 					System.out.println();
 				}
-				*/
 			}
 		}
 		double averageCorrelation = sumCorrelation / correlCount;
