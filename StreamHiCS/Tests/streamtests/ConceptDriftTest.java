@@ -168,7 +168,7 @@ public class ConceptDriftTest {
 				contrastEvaluator);
 		//SubspaceBuilder subspaceBuilder = new FastBuilder(5, threshold, pruningDifference, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker,
-				callback);
+				callback, null);
 		changeChecker.setCallback(streamHiCS);
 
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {

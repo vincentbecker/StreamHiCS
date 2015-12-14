@@ -182,7 +182,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, this);
+				changeChecker, this, null);
 		changeChecker.setCallback(streamHiCS);
 		this.fullSpaceChangeDetector = new FullSpaceChangeDetector();
 		fullSpaceChangeDetector.prepareForUse();

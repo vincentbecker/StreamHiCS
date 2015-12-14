@@ -357,7 +357,7 @@ public class RealWorldDatasets {
 
 		ChangeChecker changeChecker = new TimeCountChecker(checkCount);
 		//ChangeChecker changeChecker = new FullSpaceContrastChecker(checkCount, numberOfDimensions, contrastEvaluator, 0.2, 0.1);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, null);
 		changeChecker.setCallback(streamHiCS);
 		
 		PearsonsCorrelation pc = new PearsonsCorrelation();

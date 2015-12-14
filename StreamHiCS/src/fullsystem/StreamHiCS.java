@@ -2,6 +2,7 @@ package fullsystem;
 
 import changechecker.ChangeChecker;
 import contrast.Contrast;
+import environment.Stopwatch;
 import pruning.AbstractPruner;
 import pruning.TopDownPruner;
 import subspace.Subspace;
@@ -41,6 +42,7 @@ public class StreamHiCS implements Callback {
 	 */
 	private Callback callback;
 	private AbstractPruner pruner;
+	private Stopwatch stopwatch;
 
 	/**
 	 * Creates a {@link StreamHiCS} object with the specified update interval.
@@ -57,7 +59,7 @@ public class StreamHiCS implements Callback {
 	 *            correlated.
 	 */
 	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator,
-			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback) {
+			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback, Stopwatch stopwatch) {
 		correlatedSubspaces = new SubspaceSet();
 		if (epsilon < 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
@@ -71,6 +73,7 @@ public class StreamHiCS implements Callback {
 		this.callback = callback;
 		// this.pruner = new SimplePruner(pruningDifference);
 		this.pruner = new TopDownPruner(pruningDifference);
+		this.stopwatch = stopwatch;
 	}
 
 	/**
@@ -109,6 +112,7 @@ public class StreamHiCS implements Callback {
 	 *            The {@link Instance} to be added.
 	 */
 	public void add(Instance instance) {
+		stopwatch.start("Adding");
 		// StreamHiCS is works in an unsupervised fashion. Therefore we create a
 		// new instance without a class label, since this will simply be used as
 		// an additional dimension.
@@ -123,6 +127,7 @@ public class StreamHiCS implements Callback {
 		}
 		contrastEvaluator.add(instance);
 		changeChecker.poll();
+		stopwatch.stop("Adding");
 	}
 
 	/**
@@ -203,9 +208,11 @@ public class StreamHiCS implements Callback {
 
 	@Override
 	public void onAlarm() {
+		stopwatch.start("Evaluation");
 		if (evaluateCorrelatedSubspaces()) {
 			// Notify the callback
 			callback.onAlarm();
 		}
+		stopwatch.stop("Evaluation");
 	}
 }

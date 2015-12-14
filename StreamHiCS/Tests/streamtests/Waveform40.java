@@ -55,15 +55,15 @@ public class Waveform40 {
 		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
 		ChangeChecker changeChecker = new TimeCountChecker(checkInterval);
 		
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
+		//SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
+		//		contrastEvaluator);
 		
 		// SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions,
 		// threshold, cutoff, pruningDifference,
 		// contrastEvaluator);
-		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilder(numberOfDimensions, threshold, contrastEvaluator, false);
+		SubspaceBuilder subspaceBuilder = new HierarchicalBuilder(numberOfDimensions, threshold, contrastEvaluator, false);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback);
+				changeChecker, callback, null);
 		changeChecker.setCallback(streamHiCS);
 	}
 

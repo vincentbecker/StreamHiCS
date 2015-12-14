@@ -10,10 +10,12 @@ import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import contrast.CentroidContrast;
 import contrast.Contrast;
+import contrast.CoresetContrast;
 import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
 import environment.CSVReader;
 import environment.Evaluator;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.StreamHiCS;
 import streamDataStructures.WithDBSCAN;
@@ -24,6 +26,7 @@ import subspacebuilder.AprioriBuilder;
 import subspacebuilder.HierarchicalBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
+import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
 
 public class StreamHiCSTest {
@@ -50,16 +53,19 @@ public class StreamHiCSTest {
 	private static double tpVSfpSum = 0;
 	private static double amjsSum = 0;
 	private static int testCounter = 0;
+	private static Stopwatch stopwatch;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		csvReader = new CSVReader();
+		stopwatch = new Stopwatch();
 	}
 	
 	@AfterClass
 	public static void calculateAverageScores() {
 		System.out.println("Average TPvsFP-score: " + tpVSfpSum / testCounter);
 		System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println(stopwatch.toString());
 	}
 
 	@Test
@@ -412,9 +418,29 @@ public class StreamHiCSTest {
 			pruningDifference = 0.1;
 
 			ClusTree mcs = new ClusTree();
+			mcs.horizonOption.setValue(4000);
 			mcs.resetLearningImpl();
 			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
+		} else if(method.equals("ClustreamMC")){
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.28;
+			cutoff = 8;
+			pruningDifference = 0.1;
+			
+			Clustream mcs = new Clustream();
+			mcs.kernelRadiFactorOption.setValue(2);
+			mcs.maxNumKernelsOption.setValue(500);
+			mcs.prepareForUse();
+			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+		} else if(method.equals("Coreset")){
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.32;
+			cutoff = 8;
+			pruningDifference = 0.1;
+			contrastEvaluator = new CoresetContrast(m, alpha, 10000, 1000);
 		} else {
 			contrastEvaluator = null;
 		}
@@ -436,7 +462,7 @@ public class StreamHiCSTest {
 	
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback);
+				changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		// System.out.println("StreamHiCSTest. m = " + m + ", alpha = " + alpha

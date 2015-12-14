@@ -80,6 +80,7 @@ public class HierarchicalBuilder extends SubspaceBuilder {
 				finished = true;
 			} else {
 				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
+				System.out.println(s.toString() + " : " + contrast);
 			}
 		}
 

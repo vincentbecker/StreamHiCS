@@ -182,7 +182,7 @@ public class HighDimensionalStreamHiCSTest {
 
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback);
+				changeChecker, callback, null);
 		changeChecker.setCallback(streamHiCS);
 
 		int numberSamples = 0;
