@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package statisticalTests;
+package statisticaltests;
 
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.exception.DimensionMismatchException;

@@ -6,14 +6,12 @@ import org.apache.commons.math3.util.MathArrays;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import contrast.CentroidContrast;
-import contrast.Contrast;
-import contrast.MicroclusterContrast;
-import contrast.SlidingWindowContrast;
+import fullsystem.Contrast;
 import moa.clusterers.clustree.ClusTree;
-import streamDataStructures.SlidingWindow;
-import streamDataStructures.WithDBSCAN;
+import streamdatastructures.SlidingWindow;
+import streamdatastructures.SlidingWindowAdapter;
+import streamdatastructures.SummarisationAdapter;
+import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -62,7 +60,8 @@ public class ContrastTest {
 	public static void setUpBeforeClass() throws Exception {
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
-			contrastEvaluator = new SlidingWindowContrast(2, m, alpha, numInstances);
+			SummarisationAdapter adapter = new SlidingWindowAdapter(2, numInstances);
+			contrastEvaluator = new Contrast(m, alpha, adapter);
 
 			targetLowContrast = 0;
 			targetMiddleContrast = 0.2;

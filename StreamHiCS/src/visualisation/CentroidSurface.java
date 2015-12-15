@@ -13,8 +13,10 @@ import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
 
 import centroids.Centroid;
-import contrast.CentroidContrast;
-import contrast.Selection;
+import fullsystem.Contrast;
+import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.Selection;
+import streamdatastructures.SummarisationAdapter;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
@@ -26,16 +28,18 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final int DELAY = 10;
 	private Timer timer;
-	private CentroidContrast contrast;
+	private Contrast contrast;
 	private int count = 0;
 	private int conceptChange = 1100;
 	private double xRange = 10;
 	private double yRange = 10;
 	private Random r;
 	private int[] shuffledDimensions = { 0, 1 };
+	private SummarisationAdapter adapter;
 
 	public CentroidSurface() {
-		this.contrast = new CentroidContrast(2, 20, 0.4, 0.01, 0.2, 0.1, 0.2);
+		adapter = new CentroidsAdapter(2, 0.01, 0.2, 0.1, 0.2);
+		this.contrast = new Contrast(20, 0.4, adapter);
 		r = new Random();
 		initTimer();
 	}
@@ -66,7 +70,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 		int xPixel = 0;
 		int yPixel = 0;
 		int weight = 0;
-		Centroid[] cs = contrast.getCentroids();
+		Centroid[] cs = ((CentroidsAdapter) adapter).getCentroids();
 		Centroid c;
 		boolean drawSlice = (count % 100 == 0);
 		Selection s = null;

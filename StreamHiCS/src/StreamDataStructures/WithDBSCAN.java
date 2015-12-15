@@ -22,7 +22,7 @@
  *    
  */
 
-package streamDataStructures;
+package streamdatastructures;
 
 import java.util.ArrayList;
 import moa.cluster.Cluster;

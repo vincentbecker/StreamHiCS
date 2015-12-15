@@ -9,7 +9,6 @@ import org.junit.Test;
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import contrast.CentroidContrast;
-import contrast.Contrast;
 import contrast.CoresetContrast;
 import contrast.MicroclusterContrast;
 import contrast.SlidingWindowContrast;
@@ -17,8 +16,8 @@ import environment.CSVReader;
 import environment.Evaluator;
 import environment.Stopwatch;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
-import streamDataStructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -28,6 +27,7 @@ import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.WithDBSCAN;
 
 public class StreamHiCSTest {
 
@@ -398,15 +398,16 @@ public class StreamHiCSTest {
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
-			threshold = 0.3;
+			threshold = 0.6;
 			cutoff = 8;
 			pruningDifference = 0.15;
 
 			WithDBSCAN mcs = new WithDBSCAN();
-			mcs.speedOption.setValue(100);
-			mcs.epsilonOption.setValue(0.5);
-			mcs.betaOption.setValue(0.005);
-			mcs.lambdaOption.setValue(0.005);
+			mcs.speedOption.setValue(1000);
+			mcs.epsilonOption.setValue(0.4);
+			mcs.betaOption.setValue(0.2);
+			mcs.muOption.setValue(10);
+			mcs.lambdaOption.setValue(0.05);
 			mcs.resetLearning();
 			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 
@@ -446,7 +447,6 @@ public class StreamHiCSTest {
 		}
 
 		System.out.println(method);
-
 		
 		 SubspaceBuilder subspaceBuilder = new
 		 AprioriBuilder(covarianceMatrix.length, threshold, cutoff,

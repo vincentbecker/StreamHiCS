@@ -1,6 +1,6 @@
-package statisticalTests;
+package statisticaltests;
 
-import contrast.DataBundle;
+import streamdatastructures.DataBundle;
 
 public abstract class StatisticalTest {
 	public abstract double calculateDeviation(double[] sample1, double[] sample2);

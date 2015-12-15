@@ -1,6 +1,6 @@
 package subspacebuilder;
 
-import contrast.Contrast;
+import fullsystem.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 

@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import environment.CSVReader;
 import clustree.ClusTree;

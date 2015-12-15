@@ -1,7 +1,5 @@
-package streamDataStructures;
+package streamdatastructures;
 
-import contrast.DataBundle;
-import contrast.Selection;
 import subspace.Subspace;
 import weka.core.Instance;
 

@@ -1,4 +1,4 @@
-package statisticalTests;
+package statisticaltests;
 
 public class StatisticsBundle {
 	private double mean;

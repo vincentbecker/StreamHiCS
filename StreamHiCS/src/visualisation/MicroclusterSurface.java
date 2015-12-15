@@ -18,16 +18,17 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import org.apache.commons.math3.util.MathArrays;
-
-import contrast.DataBundle;
-import contrast.MicroclusterContrast;
-import contrast.Selection;
+import fullsystem.Contrast;
 import moa.cluster.Cluster;
 import moa.cluster.Clustering;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
-import statisticalTests.KolmogorovSmirnov;
-import statisticalTests.StatisticalTest;
+import statisticaltests.KolmogorovSmirnov;
+import statisticaltests.StatisticalTest;
+import streamdatastructures.DataBundle;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.Selection;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import streams.UncorrelatedStream;
 import weka.core.DenseInstance;
@@ -41,7 +42,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final int DELAY = 10;
 	private Timer timer;
-	private MicroclusterContrast contrast;
+	private Contrast contrast;
 	private StatisticalTest statTest;
 	private int count = 0;
 	private int imageCount = 0;
@@ -84,7 +85,8 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
-		this.contrast = new MicroclusterContrast(20, 0.2, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		this.contrast = new Contrast(20, 0.2, adapter);
 		this.statTest = new KolmogorovSmirnov();
 		initTimer();
 	}

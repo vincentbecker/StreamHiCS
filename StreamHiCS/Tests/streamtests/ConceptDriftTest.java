@@ -9,11 +9,11 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import environment.CSVReader;
 import environment.Evaluator;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;

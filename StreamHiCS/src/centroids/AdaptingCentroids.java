@@ -2,9 +2,9 @@ package centroids;
 
 import java.util.ArrayList;
 
-import contrast.DataBundle;
-import contrast.Selection;
 import fullsystem.Callback;
+import streamdatastructures.DataBundle;
+import streamdatastructures.Selection;
 import weka.core.Instance;
 
 /**

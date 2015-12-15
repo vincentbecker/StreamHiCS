@@ -5,15 +5,14 @@ import java.util.ArrayList;
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import clustree.ClusTree;
-import contrast.Contrast;
-import contrast.MicroclusterContrast;
 import moa.classifiers.AbstractClassifier;
-//import moa.clusterers.clustree.ClusTree;
 import moa.core.Measurement;
 import moa.core.ObjectRepository;
 import moa.options.FloatOption;
 import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import moa.clusterers.denstream.WithDBSCAN;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -177,8 +176,9 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		mcs.lambdaOption.setValue(0.05);
 		mcs.prepareForUse();
 
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,

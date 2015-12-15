@@ -1,6 +1,6 @@
 package changechecker;
 
-import contrast.Contrast;
+import fullsystem.Contrast;
 
 /**
  * Signals a change when the number of microclusters changes significantly (using the Page-Hinkley Test).

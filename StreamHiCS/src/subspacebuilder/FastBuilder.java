@@ -2,7 +2,7 @@ package subspacebuilder;
 
 import org.apache.commons.math3.util.MathArrays;
 
-import contrast.Contrast;
+import fullsystem.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 

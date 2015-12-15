@@ -1,5 +1,6 @@
-package contrast;
+package streamdatastructures;
 
+import java.util.BitSet;
 import java.util.Random;
 import org.apache.commons.math3.util.MathArrays;
 
@@ -95,8 +96,34 @@ public class Selection {
 			MathArrays.sortInPlace(data, indexes);
 			// Start at a random point and take the selectionSize
 			int startingPoint = generator.nextInt(l - selectionSize + 1);
-			selectRange(data, startingPoint, selectionSize);
+			int endPoint = startingPoint + selectionSize - 1;
+			if (startingPoint < 0 || endPoint > indexes.length - 1) {
+				throw new IllegalArgumentException("Selection outside of range: [" + startingPoint + endPoint + "]");
+			}
+			if (data[startingPoint] == data[endPoint]) {
+				// The special case that all the data values selected are the
+				// same. This case needs special handling.
+				// System.out.println("Selection.selectRange(): Special handling!");
+				// Broadening the range if possible, until data values on the
+				// outside of the range differ
+				while (data[startingPoint] == data[endPoint] && (endPoint - startingPoint) < indexes.length - 1) {
+					if (startingPoint > 0) {
+						startingPoint--;
+					}
+					if (endPoint < indexes.length - 1) {
+						endPoint++;
+					}
+				}
+			}
+			double[] newIndexes = new double[endPoint - startingPoint + 1];
+			for (int i = startingPoint; i <= endPoint; i++) {
+				newIndexes[i - startingPoint] = indexes[i];
+			}
+
+			// Set the indexes to the new range of indexes
+			indexes = newIndexes;
 		}
+		
 	}
 
 	public void selectWithWeights(double[] data, double[] weights) {
@@ -108,58 +135,10 @@ public class Selection {
 
 		// Sort the data and arrange the indexes correspondingly
 		MathArrays.sortInPlace(data, indexes, weights);
-		/*
-		 * TODO: Remove System.out.println("Data: "); for(int i = 0; i <
-		 * data.length; i++){ System.out.print(data[i] + ", "); }
-		 * System.out.println("Indexes: "); for(int i = 0; i < data.length;
-		 * i++){ System.out.print(indexes[i] + ", "); }
-		 */
+
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
-		// System.out.println("Starting point: " + startingPoint);
-		selectRangeWithWeights(data, weights, startingPoint, selectionSize);
-	}
 
-	/**
-	 * Selects a given range from the given indexes.
-	 * 
-	 * @param startingPoint
-	 *            The starting point for selection.
-	 * @param selectionSize
-	 *            The number of elements to be selected.
-	 * @throws IllegalArgumentException
-	 *             if the range is out of the bounds of the ArrayList.
-	 */
-	private void selectRange(double[] data, int startingPoint, int selectionSize) {
-		int endPoint = startingPoint + selectionSize - 1;
-		if (startingPoint < 0 || endPoint > indexes.length - 1) {
-			throw new IllegalArgumentException("Selection outside of range: [" + startingPoint + endPoint + "]");
-		}
-		if (data[startingPoint] == data[endPoint]) {
-			// The special case that all the data values selected are the
-			// same. This case needs special handling.
-			//System.out.println("Selection.selectRange(): Special handling!");
-			// Broadening the range if possible, until data values on the
-			// outside of the range differ
-			while (data[startingPoint] == data[endPoint] && (endPoint - startingPoint) < indexes.length - 1) {
-				if (startingPoint > 0) {
-					startingPoint--;
-				}
-				if (endPoint < indexes.length - 1) {
-					endPoint++;
-				}
-			}
-		}
-		double[] newIndexes = new double[endPoint - startingPoint + 1];
-		for (int i = startingPoint; i <= endPoint; i++) {
-			newIndexes[i - startingPoint] = indexes[i];
-		}
-
-		// Set the indexes to the new range of indexes
-		indexes = newIndexes;
-	}
-
-	private void selectRangeWithWeights(double[] data, double[] weights, int startingPoint, double selectionSize) {
 		// Select a block around the starting point
 		int lower = startingPoint;
 		int upper = startingPoint;
@@ -186,7 +165,7 @@ public class Selection {
 		// Since the Kolmogorov-Smirnov-Test needs at least two samples we take
 		// at least one other another if there is one a single one selected
 		if (upper - lower == 0) {
-			//System.out.println("Only one sample.");
+			// System.out.println("Only one sample.");
 			if (lower > 0) {
 				lower--;
 			}
@@ -208,23 +187,80 @@ public class Selection {
 			// handling!");
 		}
 
-		/*
-		 * if (data[lower] == data[upper]) { // The special case that all the
-		 * data values selected are the // same. This case needs special
-		 * handling. System.out.println(
-		 * "Selection.selectRangeWithWeights(): Special handling!"); //
-		 * Broadening the range if possible, until data values on the // outside
-		 * of the range differ while (data[lower] == data[upper] && (upper -
-		 * lower) < data.length - 1) { if (lower > 0) { lower--; } if (upper <
-		 * data.length - 1) { upper++; } } }
-		 */
-
 		// System.out.println("Lower: " + lower + " Upper: " + upper);
 		double[] newIndexes = new double[upper - lower + 1];
 		for (int i = lower; i <= upper; i++) {
 			newIndexes[i - lower] = indexes[i];
 		}
 		indexes = newIndexes;
+	}
+	
+	public BitSet selectRandomBlock(DataBundle databundle){
+		double[] indexes = databundle.getIndexes();
+		double[] data = databundle.getData();
+		double[] weights = databundle.getWeights();
+		
+		int n = data.length;
+		double totalWeight = 0;
+		for (int i = 0; i < n; i++) {
+			totalWeight += weights[i];
+		}
+		double selectionSize = totalWeight * selectionAlpha;
+
+		// Start at a random point and take the selectionSize
+		int startingPoint = generator.nextInt(n);
+
+		// Select a block around the starting point
+		int lower = startingPoint;
+		int upper = startingPoint;
+		double lowerWeight = 0;
+		double upperWeight = 0;
+		double accumulatedWeight = weights[startingPoint];
+		double selectionPerSide = (selectionSize - weights[startingPoint]) / 2;
+		boolean searchOn = false;
+		while (accumulatedWeight < selectionSize) {
+			while ((lowerWeight < selectionPerSide || (searchOn && accumulatedWeight < selectionSize)) && lower > 0) {
+				lower--;
+				lowerWeight += weights[lower];
+				accumulatedWeight += weights[lower];
+			}
+			while ((upperWeight < selectionPerSide || (searchOn && accumulatedWeight < selectionSize))
+					&& upper < n - 1) {
+				upper++;
+				upperWeight += weights[upper];
+				accumulatedWeight += weights[upper];
+			}
+			searchOn = true;
+		}
+
+		// Since the Kolmogorov-Smirnov-Test needs at least two samples we take
+		// at least one other another if there is one a single one selected
+		if (upper - lower == 0) {
+			// System.out.println("Only one sample.");
+			if (lower > 0) {
+				lower--;
+			}
+			if (upper < n - 1) {
+				upper++;
+			}
+		}
+
+		// Broadening the range until the values on the edges differ from the
+		// next value outside. This is done to from a correct slice.
+		while (lower > 0 && data[lower - 1] == data[lower]) {
+			lower--;
+		}
+		while (upper < n - 1 && data[upper] == data[upper + 1]) {
+			upper++;
+		}
+		// All boolean entries initialized to false
+		BitSet selected = new BitSet(n);
+		for (int i = lower; i <= upper; i++) {
+			selected.set((int) indexes[i]);
+		}	
+		
+		return selected;
+		
 	}
 
 	/**

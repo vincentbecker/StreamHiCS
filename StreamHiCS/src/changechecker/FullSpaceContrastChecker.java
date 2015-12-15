@@ -1,6 +1,6 @@
 package changechecker;
 
-import contrast.Contrast;
+import fullsystem.Contrast;
 import subspace.Subspace;
 
 public class FullSpaceContrastChecker extends ChangeChecker {

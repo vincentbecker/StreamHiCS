@@ -47,8 +47,8 @@ public class Stopwatch {
 			return name;
 		}
 
-		private long getTotalTime() {
-			return totalTime.getSeconds();
+		private double getTotalTime() {
+			return totalTime.getSeconds() + ((double) totalTime.getNano())/1000000000;
 		}
 
 		private void start() {
@@ -71,7 +71,7 @@ public class Stopwatch {
 
 		@Override
 		public String toString() {
-			return name + ": " + totalTime.getSeconds() + "s";
+			return name + ": " + (totalTime.getSeconds() + ((double) totalTime.getNano())/1000000000) + "s";
 		}
 	}
 }

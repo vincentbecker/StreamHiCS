@@ -1,10 +1,9 @@
-package streamDataStructures;
+package streamdatastructures;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Queue;
 
-import contrast.Selection;
 import weka.core.Instance;
 
 /**
@@ -24,7 +23,7 @@ public class SlidingWindow extends DataStreamContainer {
 	 * The number of {@link Instance}s currently contained in the
 	 * {@link SlidingWindow}.
 	 */
-	//private int numberOfInstances = 0;
+	// private int numberOfInstances = 0;
 	/**
 	 * An {@link ArrayList} containing one queue for {@link Double}s for each
 	 * dimension. An instance is stored by storing each attribute value in the
@@ -104,5 +103,15 @@ public class SlidingWindow extends DataStreamContainer {
 	public double[][] getUnderlyingPoints() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public double[] getDimensionData(int dimension) {
+		double[] data = new double[numberOfInstances];
+		Double[] tempData = new Double[numberOfInstances];
+		tempData = instanceQueue.get(dimension).toArray(tempData);
+		for (int i = 0; i < numberOfInstances; i++) {
+			data[i] = tempData[i];
+		}
+		return data;
 	}
 }

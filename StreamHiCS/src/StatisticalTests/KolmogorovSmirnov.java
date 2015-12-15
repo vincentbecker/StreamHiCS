@@ -1,6 +1,6 @@
-package statisticalTests;
+package statisticaltests;
 
-import contrast.DataBundle;
+import streamdatastructures.DataBundle;
 
 public class KolmogorovSmirnov extends StatisticalTest {
 	private KolmogorovSmirnovTest kolmogorovSmirnovTest;

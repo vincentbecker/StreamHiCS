@@ -1,7 +1,6 @@
 package fullsystem;
 
 import changechecker.ChangeChecker;
-import contrast.Contrast;
 import environment.Stopwatch;
 import pruning.AbstractPruner;
 import pruning.TopDownPruner;
@@ -126,8 +125,8 @@ public class StreamHiCS implements Callback {
 			instance = newInst;
 		}
 		contrastEvaluator.add(instance);
-		changeChecker.poll();
 		stopwatch.stop("Adding");
+		changeChecker.poll();
 	}
 
 	/**

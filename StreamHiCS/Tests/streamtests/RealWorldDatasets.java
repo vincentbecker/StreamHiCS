@@ -15,13 +15,13 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import clustree.ClusTree;
 import moa.streams.ArffFileStream;
-import streamDataStructures.WithDBSCAN;
+import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;

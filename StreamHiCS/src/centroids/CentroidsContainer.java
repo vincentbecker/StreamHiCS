@@ -1,7 +1,7 @@
 package centroids;
 
-import contrast.DataBundle;
-import statisticalTests.StatisticsBundle;
+import statisticaltests.StatisticsBundle;
+import streamdatastructures.DataBundle;
 import weka.core.Instance;
 
 public abstract class CentroidsContainer {

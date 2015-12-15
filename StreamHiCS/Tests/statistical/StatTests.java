@@ -5,10 +5,10 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import contrast.DataBundle;
-import statisticalTests.KolmogorovSmirnov;
-import statisticalTests.StatisticalTest;
-import statisticalTests.WelchT;
+import statisticaltests.KolmogorovSmirnov;
+import statisticaltests.StatisticalTest;
+import statisticaltests.WelchT;
+import streamdatastructures.DataBundle;
 
 public class StatTests {
 

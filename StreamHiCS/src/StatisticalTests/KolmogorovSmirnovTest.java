@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package statisticalTests;
+package statisticaltests;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

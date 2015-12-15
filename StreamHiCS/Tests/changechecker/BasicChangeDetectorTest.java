@@ -3,16 +3,18 @@ import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import changechecker.FullSpaceContrastChecker;
-import contrast.MicroclusterContrast;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import weka.core.Instance;
 
 public class BasicChangeDetectorTest {
 
 	private static GaussianStream stream;
-	private static MicroclusterContrast microclusterContrast;
+	private static Contrast contrast;
 	private static Callback callback;
 	private static int counter = 0;
 	private int numInstances = 10000;
@@ -46,8 +48,9 @@ public class BasicChangeDetectorTest {
 		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(1000, 5, null, 0.2, 0.03);
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		microclusterContrast = new MicroclusterContrast(100, 0.1, mcs);
-		fscc.setContrastEvaluator(microclusterContrast);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		contrast = new Contrast(100, 0.1, adapter);
+		fscc.setContrastEvaluator(contrast);
 		fscc.setCallback(callback);
 
 	}
@@ -90,7 +93,7 @@ public class BasicChangeDetectorTest {
 		numberSamples = 0;
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = stream.nextInstance();
-			microclusterContrast.add(inst);
+			contrast.add(inst);
 			numberSamples++;
 		}
 		System.out.println();

@@ -5,11 +5,11 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Contrast;
 import contrast.MicroclusterContrast;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import streams.GaussianStream;

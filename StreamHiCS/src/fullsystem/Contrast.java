@@ -1,9 +1,11 @@
-package contrast;
+package fullsystem;
 
 import org.apache.commons.math3.util.MathArrays;
 
-import statisticalTests.KolmogorovSmirnov;
-import statisticalTests.StatisticalTest;
+import statisticaltests.KolmogorovSmirnov;
+import statisticaltests.StatisticalTest;
+import streamdatastructures.DataBundle;
+import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import weka.core.Instance;
 
@@ -13,7 +15,7 @@ import weka.core.Instance;
  * @author Vincent
  *
  */
-public abstract class Contrast {
+public class Contrast {
 	/**
 	 * Number of Monte Carlo iterations in the contrast evaluation. m must be
 	 * positive.
@@ -29,6 +31,7 @@ public abstract class Contrast {
 	 * marginal sample and the conditional (sliced) sample.
 	 */
 	private StatisticalTest statisticalTest;
+	private SummarisationAdapter summarisationAdapter;
 
 	/**
 	 * 
@@ -42,10 +45,11 @@ public abstract class Contrast {
 	 *            of the conditional density.
 	 * @param statisticalTest
 	 */
-	public Contrast(int m, double alpha) {
+	public Contrast(int m, double alpha, SummarisationAdapter summarisationAdapter) {
 		this.m = m;
 		this.alpha = alpha;
 		this.statisticalTest = new KolmogorovSmirnov();
+		this.summarisationAdapter = summarisationAdapter;
 	}
 
 	/**
@@ -54,45 +58,20 @@ public abstract class Contrast {
 	 * @param instance
 	 *            The @link{Instance} to be added.
 	 */
-	public abstract void add(Instance instance);
+	public void add(Instance instance){
+		summarisationAdapter.add(instance);
+	}
 
 	/**
 	 * Clears all stored {@link Instance}s.
 	 */
-	public abstract void clear();
+	public void clear(){
+		summarisationAdapter.clear();
+	}
 
-	public abstract int getNumberOfElements();
-
-	public abstract double[][] getUnderlyingPoints();
-
-	/**
-	 * Returns the data contained projected to the given reference dimension.
-	 * 
-	 * @param referenceDimension
-	 *            The dimension the data is projected to.
-	 * @return The data projected to teh reference dimension.
-	 */
-	public abstract DataBundle getProjectedData(int referenceDimension);
-
-	/**
-	 * Returns the one dimensional data of a random conditional sample
-	 * corresponding to the last dimension in the int[] and the {@link Subspace}
-	 * which contains this dimension. On every dimension in the {@link Subspace}
-	 * except the specified one random range selections on instances (of the
-	 * specified selection size) are done, representing a conditional sample for
-	 * the given dimension.
-	 * 
-	 * @param shuffledDimensions
-	 *            The dimensions. The last one is the one for which a random
-	 *            conditional sample should be drawn.
-	 * @param selectionAlpha
-	 *            The fraction of instances that should be selected per
-	 *            dimension (i.e. the number of selected instances becomes
-	 *            smaller per selection step).
-	 * @return A double[] containing a random conditional sample corresponding
-	 *         to the given dimension.
-	 */
-	public abstract DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha);
+	public int getNumberOfElements(){
+		return summarisationAdapter.getNumberOfElements();
+	}
 
 	/**
 	 * Calculates the contrast of the given @link{Subspace}.
@@ -118,9 +97,9 @@ public abstract class Contrast {
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
 			// Get the projected data
-			projectedData = getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
+			projectedData = summarisationAdapter.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
 			// Get the randomly sliced data
-			slicedData = getSlicedData(shuffledDimensions, selectionAlpha);
+			slicedData = summarisationAdapter.getSlicedData(shuffledDimensions, selectionAlpha);
 			// Calculate the deviation and add it to the overall sum
 			deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
 			//deviation = statisticalTest.calculateDeviation(projectedData.getData(), slicedData.getData());
