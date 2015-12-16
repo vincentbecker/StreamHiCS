@@ -42,6 +42,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final int DELAY = 10;
 	private Timer timer;
+	private SummarisationAdapter adapter;
 	private Contrast contrast;
 	private StatisticalTest statTest;
 	private int count = 0;
@@ -85,7 +86,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		adapter = new MicroclusterAdapter(mcs);
 		this.contrast = new Contrast(20, 0.2, adapter);
 		this.statTest = new KolmogorovSmirnov();
 		initTimer();
@@ -122,7 +123,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 
 		// Draw each centroid
 		int weight = 0;
-		Clustering microclusters = contrast.getMicroclusters();
+		Clustering microclusters = ((MicroclusterAdapter) adapter).getMicroclusters();
 		Cluster c;
 		drawSlice = (count % 500 == 0);
 		Selection s = null;
@@ -130,11 +131,11 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 			System.out.println(count);
 			// Shuffle dimensions
 			MathArrays.shuffle(shuffledDimensions);
-			s = contrast.getSliceIndexes(shuffledDimensions, 0.2);
+			s = adapter.getSliceIndexes(shuffledDimensions, 0.2);
 			// Calculate contrast
-			DataBundle projectedData = contrast.getProjectedData(shuffledDimensions[1]);
-			double[] slice = contrast.getSelectedData(shuffledDimensions[1], s);
-			double[] sliceWeights = contrast.getSelectedWeights(s);
+			DataBundle projectedData = adapter.getProjectedData(shuffledDimensions[1]);
+			double[] slice = adapter.getSelectedData(shuffledDimensions[1], s);
+			double[] sliceWeights = adapter.getSelectedWeights(s);
 			DataBundle sliceData = new DataBundle(slice, sliceWeights);
 			double contrast = statTest.calculateWeightedDeviation(projectedData, sliceData);
 			System.out.println(contrast);

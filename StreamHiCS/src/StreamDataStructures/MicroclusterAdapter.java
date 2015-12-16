@@ -76,4 +76,11 @@ public class MicroclusterAdapter extends SummarisationAdapter {
 		return microclusters.size();
 	}
 
+	public Clustering getMicroclusters() {
+		if (microclusters == null) {
+			microclusters = microclusterImplementation.getMicroClusteringResult();
+		}
+		return microclusters;
+	}
+
 }

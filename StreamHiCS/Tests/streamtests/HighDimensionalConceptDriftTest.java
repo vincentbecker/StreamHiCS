@@ -3,17 +3,20 @@ package streamtests;
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.MicroclusterContrast;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import streams.UncorrelatedStream;
 import subspace.Subspace;
@@ -37,6 +40,12 @@ public class HighDimensionalConceptDriftTest {
 	private final int numInstances = 40000;
 	private int numberSamples = 0;
 	private int numberOfDimensions = 50;
+	private static Stopwatch stopwatch;
+	
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		stopwatch = new Stopwatch();
+	}
 	
 	@Before
 	public void setUp() throws Exception {
@@ -123,13 +132,14 @@ public class HighDimensionalConceptDriftTest {
 		int cutoff = 12;
 		double pruningDifference = 0.2;
 
-		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(5000);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 		//SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker,
-				callback, null);
+				callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {

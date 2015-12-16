@@ -15,8 +15,6 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.CoresetContrast;
-import contrast.MicroclusterContrast;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
@@ -24,6 +22,9 @@ import clustree.ClusTree;
 import moa.clusterers.AbstractClusterer;
 import moa.clusterers.clustream.Clustream;
 import moa.streams.ArffFileStream;
+import streamdatastructures.CoresetAdapter;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
@@ -102,8 +103,9 @@ public class Waveform40_sorted {
 		
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
-		Contrast contrastEvaluator = new CoresetContrast(m, alpha, 100000, 1000);
-		
+		//SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new CoresetAdapter( 100000, 1000);
+		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 		

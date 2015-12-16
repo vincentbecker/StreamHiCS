@@ -7,12 +7,13 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.MicroclusterContrast;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.generators.WaveformGenerator;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -52,7 +53,8 @@ public class Waveform40 {
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 
-		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(checkInterval);
 		
 		//SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,

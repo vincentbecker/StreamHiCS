@@ -58,6 +58,10 @@ public class Selection {
 	public int getIndex(int i) {
 		return (int) indexes[i];
 	}
+	
+	public double[] getIndexes(){
+		return indexes;
+	}
 
 	public boolean contains(int i) {
 		for (Double d : indexes) {
@@ -138,7 +142,7 @@ public class Selection {
 
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
-
+		
 		// Select a block around the starting point
 		int lower = startingPoint;
 		int upper = startingPoint;
@@ -195,10 +199,15 @@ public class Selection {
 		indexes = newIndexes;
 	}
 	
+	/**
+	 * Works with sorted data. 
+	 * @param databundle
+	 * @return
+	 */
 	public BitSet selectRandomBlock(DataBundle databundle){
-		double[] indexes = databundle.getIndexes();
-		double[] data = databundle.getData();
-		double[] weights = databundle.getWeights();
+		double[] indexes = databundle.getSortedIndexes();
+		double[] data = databundle.getSortedData();
+		double[] weights = databundle.getSortedWeights();
 		
 		int n = data.length;
 		double totalWeight = 0;

@@ -5,13 +5,14 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.MicroclusterContrast;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -175,7 +176,8 @@ public class HighDimensionalStreamHiCSTest {
 		ClusTree mcs = new ClusTree();
 		mcs.horizonOption.setValue(horizon);
 		mcs.resetLearningImpl();
-		contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		contrastEvaluator = new Contrast(m, alpha, adapter);
 
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);

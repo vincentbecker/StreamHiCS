@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.MicroclusterContrast;
 import environment.CSVReader;
 import environment.Evaluator;
 import fullsystem.Callback;
@@ -17,6 +16,8 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import streams.UncorrelatedStream;
 import subspace.Subspace;
@@ -162,7 +163,8 @@ public class ConceptDriftTest {
 		int cutoff = 8;
 		double pruningDifference = 0.2;
 
-		Contrast contrastEvaluator = new MicroclusterContrast(50, alpha, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(5, threshold, cutoff, pruningDifference,
 				contrastEvaluator);

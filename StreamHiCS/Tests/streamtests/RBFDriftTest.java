@@ -6,14 +6,15 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.CentroidContrast;
-import contrast.MicroclusterContrast;
-import contrast.SlidingWindowContrast;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.generators.RandomRBFGeneratorDrift;
+import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SlidingWindowAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;
@@ -41,6 +42,7 @@ public class RBFDriftTest {
 		stream = new RandomRBFGeneratorDrift();
 		stream.prepareForUse();
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
+		SummarisationAdapter adapter;
 		Contrast contrastEvaluator;
 		double alpha = 0.05;
 		double epsilon = 0.1;
@@ -55,8 +57,7 @@ public class RBFDriftTest {
 			cutoff = 6;
 			pruningDifference = 0.1;
 
-			contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha,
-					numInstances);
+			adapter = new SlidingWindowAdapter(numberOfDimensions, numInstances);
 		} else if (method.equals("adaptiveCentroids")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -69,7 +70,7 @@ public class RBFDriftTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			contrastEvaluator = new CentroidContrast(numberOfDimensions, m, alpha, fadingLambda, radius,
+			adapter = new CentroidsAdapter(numberOfDimensions, fadingLambda, radius,
 					weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
@@ -84,7 +85,7 @@ public class RBFDriftTest {
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+			adapter = new MicroclusterAdapter(mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
@@ -95,12 +96,12 @@ public class RBFDriftTest {
 
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
-
+			adapter = new MicroclusterAdapter(mcs);
 		} else {
-			contrastEvaluator = null;
+			adapter = null;
 		}
 
+		contrastEvaluator = new Contrast(m, alpha, adapter);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, null);

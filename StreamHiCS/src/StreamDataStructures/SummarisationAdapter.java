@@ -7,7 +7,7 @@ import weka.core.Instance;
 
 public abstract class SummarisationAdapter {
 
-	private boolean fast = true;
+	private boolean fast = false;
 
 	protected DataBundle[] data;
 
@@ -61,8 +61,19 @@ public abstract class SummarisationAdapter {
 		if (data == null) {
 			getAndSortData();
 		}
-
-		return data[referenceDimension];
+		
+		//Copying the dimension data
+		double[] dimData = data[referenceDimension].getData();
+		double[] dimWeights = data[referenceDimension].getWeights();
+		int n = dimData.length;
+		double[] dataCopy = new double[n];
+		double[] weightsCopy = new double[n];
+		for(int i = 0; i < n; i++){
+			dataCopy[i] = dimData[i];
+			weightsCopy[i] = dimWeights[i];
+		}
+		
+		return new DataBundle(dataCopy, weightsCopy);
 	}
 
 	/**
@@ -92,7 +103,7 @@ public abstract class SummarisationAdapter {
 		if (n == 0) {
 			return new DataBundle(new double[0], new double[0]);
 		}
-		
+
 		double[] dimData;
 		double[] weights;
 
@@ -105,7 +116,7 @@ public abstract class SummarisationAdapter {
 			BitSet dimSelected;
 			Selection selection = new Selection(n, selectionAlpha);
 			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
-				dimSelected = selection.selectRandomBlock(data[i]);
+				dimSelected = selection.selectRandomBlock(data[shuffledDimensions[i]]);
 				// boolean conjunction
 				selected.and(dimSelected);
 			}
@@ -145,6 +156,66 @@ public abstract class SummarisationAdapter {
 		return new DataBundle(dimData, weights);
 	}
 
+	/**
+	 * This method is mainly for the visualization. It contains dupliacted code from above. 
+	 * @param shuffledDimensions
+	 * @param selectionAlpha
+	 * @return
+	 */
+	public Selection getSliceIndexes(int[] shuffledDimensions, double selectionAlpha) {
+		if (data == null) {
+			getAndSortData();
+		}
+
+		int n = getNumberOfElements();
+		if (n == 0) {
+			return null;
+		}
+
+		if (fast) {
+			// Do a selection per dimension and do a boolean conjunction on the
+			// selection
+			BitSet selected = new BitSet(n);
+			selected.set(0, n);
+
+			BitSet dimSelected;
+			Selection selection = new Selection(n, selectionAlpha);
+			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
+				dimSelected = selection.selectRandomBlock(data[i]);
+				// boolean conjunction
+				selected.and(dimSelected);
+			}
+
+			int l = selected.cardinality();
+			Selection selectedIndexes = new Selection(l, selectionAlpha);
+			int j = 0;
+			for (int i = 0; i < n; i++) {
+				if (selected.get(i)) {
+					selectedIndexes.getIndexes()[j] = i;
+					j++;
+				}
+			}
+			return selectedIndexes;
+		} else {
+			Selection selectedIndexes = new Selection(n, selectionAlpha);
+			// Fill the list with all the indexes
+			selectedIndexes.fillRange();
+
+			double[] dimData;
+			double[] weights;
+			
+			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
+				// Get all the data for the specific dimension that is selected
+				dimData = getSelectedData(shuffledDimensions[i], selectedIndexes);
+				weights = getSelectedWeights(selectedIndexes);
+				// Reduce the number of indexes according to a new selection in
+				// the current dimension
+				selectedIndexes.selectWithWeights(dimData, weights);
+			}
+			return selectedIndexes;
+		}
+	}
+
 	private void getAndSortData() {
 		data = getData();
 		if (fast) {
@@ -161,7 +232,7 @@ public abstract class SummarisationAdapter {
 	 * @param selectedIndexes
 	 * @return
 	 */
-	private double[] getSelectedData(int dimension, Selection selectedIndexes) {
+	public double[] getSelectedData(int dimension, Selection selectedIndexes) {
 		double[] origData = data[dimension].getData();
 		int l = selectedIndexes.size();
 		double[] selectedData = new double[l];

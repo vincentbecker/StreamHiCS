@@ -3,23 +3,27 @@ package streamtests;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.Contrast;
-import contrast.MicroclusterContrast;
+import environment.Stopwatch;
 import fullsystem.Callback;
+import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ArffFileStream;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
 /**
- * The change points in the data are: 211840, 495141, 530895, 533642, 543135, 560502
+ * The change points in the data are: 211840, 495141, 530895, 533642, 543135,
+ * 560502
  * 
  * @author Vincent
  *
@@ -36,7 +40,13 @@ public class ForestCovertype {
 		}
 	};
 	private StreamHiCS streamHiCS;
+	private static Stopwatch stopwatch;
 
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		stopwatch = new Stopwatch();
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		// Class index is last attribute but not relevant for this task
@@ -55,7 +65,8 @@ public class ForestCovertype {
 
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
@@ -65,7 +76,8 @@ public class ForestCovertype {
 		// contrastEvaluator);
 
 		ChangeChecker changeChecker = new TimeCountChecker(10000);
-		streamHiCS = new StreamHiCS(epsilon, threshold, contrastEvaluator, subspaceBuilder, changeChecker, callback);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		while (stream.hasMoreInstances()) {

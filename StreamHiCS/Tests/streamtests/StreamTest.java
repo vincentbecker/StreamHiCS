@@ -8,14 +8,16 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.CentroidContrast;
-import contrast.MicroclusterContrast;
-import contrast.SlidingWindowContrast;
 import environment.Evaluator;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SlidingWindowAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
@@ -28,6 +30,7 @@ public class StreamTest {
 
 	private static GaussianStream stream;
 	private static StreamHiCS streamHiCS;
+	private static SummarisationAdapter adapter;
 	private static Contrast contrastEvaluator;
 	private static final int numInstances = 10000;
 	private static final int m = 20;
@@ -58,6 +61,7 @@ public class StreamTest {
 		}
 
 	};
+	private static Stopwatch stopwatch;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -70,7 +74,7 @@ public class StreamTest {
 			cutoff = 6;
 			pruningDifference = 0.1;
 
-			contrastEvaluator = new SlidingWindowContrast(covarianceMatrices[0].length, m, alpha, 2000);
+			adapter = new SlidingWindowAdapter(covarianceMatrices[0].length, 2000);
 		} else if (method.equals("adaptiveCentroids")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -83,7 +87,7 @@ public class StreamTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			contrastEvaluator = new CentroidContrast(covarianceMatrices[0].length, m, alpha, fadingLambda, radius,
+			adapter = new CentroidsAdapter(covarianceMatrices[0].length, fadingLambda, radius,
 					weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
@@ -98,7 +102,7 @@ public class StreamTest {
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+			adapter = new MicroclusterAdapter(mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
@@ -109,16 +113,17 @@ public class StreamTest {
 
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+			adapter = new MicroclusterAdapter(mcs);
 
 		} else {
-			contrastEvaluator = null;
+			adapter = null;
 		}
 
+		contrastEvaluator = new Contrast(m, alpha, adapter);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, null);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		correctResult = new SubspaceSet();

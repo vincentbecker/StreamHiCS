@@ -15,12 +15,13 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
-import contrast.MicroclusterContrast;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import clustree.ClusTree;
 import moa.streams.ArffFileStream;
+import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
@@ -343,8 +344,9 @@ public class RealWorldDatasets {
 		mcs.lambdaOption.setValue(0.01);
 		mcs.prepareForUse();
 		
-		Contrast contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
 		
+		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
 		

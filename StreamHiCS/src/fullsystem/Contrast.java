@@ -100,12 +100,16 @@ public class Contrast {
 			projectedData = summarisationAdapter.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
 			// Get the randomly sliced data
 			slicedData = summarisationAdapter.getSlicedData(shuffledDimensions, selectionAlpha);
-			// Calculate the deviation and add it to the overall sum
-			deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
-			//deviation = statisticalTest.calculateDeviation(projectedData.getData(), slicedData.getData());
-			if (!Double.isNaN(deviation)) {
-				sum += deviation;
-				numberOfCorrectTests++;
+			if(slicedData.size() > 1){
+				// Calculate the deviation and add it to the overall sum
+				deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
+				//deviation = statisticalTest.calculateDeviation(projectedData.getData(), slicedData.getData());
+				if (!Double.isNaN(deviation)) {
+					sum += deviation;
+					numberOfCorrectTests++;
+				}
+			}else{
+				//System.out.println("Slice too small: " + slicedData.size());
 			}
 		}
 

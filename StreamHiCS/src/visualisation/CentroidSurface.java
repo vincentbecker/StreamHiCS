@@ -80,7 +80,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 			// System.out.println("[" + shuffledDimensions[0] + ", " +
 			// shuffledDimensions[1] + "]");
 			// System.out.println("Number of centroids: " + cs.length);
-			s = contrast.getSliceIndexes(shuffledDimensions, 0.2);
+			s = adapter.getSliceIndexes(shuffledDimensions, 0.2);
 			// System.out.println("Selected Indexes: " + s.toString());
 			// System.out.println("Selected IDs: ");
 			// for(int i = 0; i < s.size(); i++){

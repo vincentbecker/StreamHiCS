@@ -8,6 +8,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import fullsystem.Contrast;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SlidingWindow;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -20,7 +22,7 @@ import weka.core.Instance;
  * Testing the contrast measure in 2D space. It represents a static test, as
  * long as a {@link SlidingWindow} is used, since we fill it completely and then
  * carry out the test. BASED ON THE KOLMOGOROV-SMIRNOV-TEST. As max we expect
- * values of 0.5
+ * values of 0.75
  * 
  * @author Vincent
  *
@@ -35,6 +37,7 @@ public class ContrastTest {
 	 * The contrast measure.
 	 */
 	private static Contrast contrastEvaluator;
+	private static SummarisationAdapter adapter;
 	/**
 	 * The number of instances used in the test.
 	 */
@@ -60,8 +63,7 @@ public class ContrastTest {
 	public static void setUpBeforeClass() throws Exception {
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
-			SummarisationAdapter adapter = new SlidingWindowAdapter(2, numInstances);
-			contrastEvaluator = new Contrast(m, alpha, adapter);
+			adapter = new SlidingWindowAdapter(2, numInstances);
 
 			targetLowContrast = 0;
 			targetMiddleContrast = 0.2;
@@ -73,7 +75,9 @@ public class ContrastTest {
 			double radius = 0.2;
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
-			contrastEvaluator = new CentroidContrast(2, m, alpha, fadingLambda, radius, weightThreshold, learningRate);
+			
+			adapter = new CentroidsAdapter(2, fadingLambda, radius, weightThreshold, learningRate);
+			contrastEvaluator = new Contrast(m, alpha, adapter);
 
 			targetLowContrast = 0.1;
 			targetMiddleContrast = 0.3;
@@ -83,30 +87,32 @@ public class ContrastTest {
 			alpha = 0.1;
 			WithDBSCAN mcs = new WithDBSCAN();
 			mcs.speedOption.setValue(100);
-			mcs.epsilonOption.setValue(0.5);
-			mcs.betaOption.setValue(0.005);
+			mcs.epsilonOption.setValue(1);
+			mcs.betaOption.setValue(0.2);
+			mcs.muOption.setValue(10);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+			adapter = new MicroclusterAdapter(mcs);
 
 			targetLowContrast = 0.2;
 			targetMiddleContrast = 0.4;
 			targetHighContrast = 0.6;
-
+			
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			contrastEvaluator = new MicroclusterContrast(m, alpha, mcs);
+			adapter = new MicroclusterAdapter(mcs);
 
 			targetLowContrast = 0.15;
 			targetMiddleContrast = 0.35;
 			targetHighContrast = 0.7;
-
+			
 		} else {
-			contrastEvaluator = null;
+			adapter = null;
 		}
 
+		contrastEvaluator = new Contrast(m, alpha, adapter);
 		subspace = new Subspace(0, 1);
 	}
 
@@ -252,6 +258,7 @@ public class ContrastTest {
 
 	@Test
 	public void contrastTest16() {
+		contrastEvaluator.clear();
 		// Contrast should be 0
 		double x = 0;
 		double y = 0;
