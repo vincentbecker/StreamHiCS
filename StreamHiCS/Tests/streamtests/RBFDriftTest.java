@@ -1,4 +1,5 @@
 package streamtests;
+
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -29,11 +30,11 @@ public class RBFDriftTest {
 	private final String method = "ClusTreeMC";
 	private final int numberOfDimensions = 10;
 	private final int m = 20;
-	private Callback callback = new Callback(){
+	private Callback callback = new Callback() {
 		@Override
 		public void onAlarm() {
 			System.out.println("StreamHiCS: onAlarm()");
-			
+
 		}
 	};
 
@@ -70,8 +71,7 @@ public class RBFDriftTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(numberOfDimensions, fadingLambda, radius,
-					weightThreshold, learningRate);
+			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -104,7 +104,8 @@ public class RBFDriftTest {
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
 				contrastEvaluator);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, null);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, callback, null);
 		changeChecker.setCallback(streamHiCS);
 	}
 

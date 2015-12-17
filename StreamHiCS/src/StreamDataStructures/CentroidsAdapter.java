@@ -2,7 +2,6 @@ package streamdatastructures;
 
 import centroids.AdaptingCentroids;
 import centroids.Centroid;
-import centroids.CentroidsContainer;
 
 import weka.core.Instance;
 
@@ -11,30 +10,25 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	/**
 	 * The {@link CentroidsContainer} holding the {@link Centroid}s.
 	 */
-	private CentroidsContainer centroidsContainer;
-	private Centroid[] centroids;
+	private AdaptingCentroids centroidsImplementation;
 	
-	public CentroidsAdapter(int numberOfDimensions, double fadingLambda, double radius, double weightThreshold, double learningRate) {
-		centroidsContainer = new AdaptingCentroids(numberOfDimensions, fadingLambda, radius, weightThreshold, learningRate);
+	public CentroidsAdapter(double fadingLambda, double radius, double weightThreshold, double learningRate) {
+		centroidsImplementation = new AdaptingCentroids(fadingLambda, radius, weightThreshold, learningRate);
 	}
 	
 	@Override
 	public void addImpl(Instance instance) {
-		centroidsContainer.add(instance);
-		centroids = null;
+		centroidsImplementation.add(instance);
 	}
 
 	@Override
 	public void clearImpl() {
-		centroidsContainer.clear();
-		centroids = null;
+		centroidsImplementation.clear();
 	}
 
 	@Override
 	public DataBundle[] getData() {
-		if (centroids == null) {
-			centroids = centroidsContainer.getCentroids();
-		}
+		Centroid[] centroids = centroidsImplementation.getCentroids();
 		
 		int n = centroids.length;
 		if (n > 0) {
@@ -71,11 +65,11 @@ public class CentroidsAdapter extends SummarisationAdapter {
 
 	@Override
 	public int getNumberOfElements() {
-		return centroidsContainer.getNumberOfInstances();
+		return centroidsImplementation.getNumberOfInstances();
 	}
 	
 	public Centroid[] getCentroids(){
-		return centroidsContainer.getCentroids();
+		return centroidsImplementation.getCentroids();
 	}
 
 }

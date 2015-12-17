@@ -87,8 +87,7 @@ public class StreamTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(covarianceMatrices[0].length, fadingLambda, radius,
-					weightThreshold, learningRate);
+			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -123,7 +122,8 @@ public class StreamTest {
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, stopwatch);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		correctResult = new SubspaceSet();

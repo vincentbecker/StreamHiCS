@@ -76,7 +76,7 @@ public class ContrastTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 			
-			adapter = new CentroidsAdapter(2, fadingLambda, radius, weightThreshold, learningRate);
+			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
 			contrastEvaluator = new Contrast(m, alpha, adapter);
 
 			targetLowContrast = 0.1;

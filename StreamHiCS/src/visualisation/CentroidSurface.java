@@ -38,7 +38,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private SummarisationAdapter adapter;
 
 	public CentroidSurface() {
-		adapter = new CentroidsAdapter(2, 0.01, 0.2, 0.1, 0.2);
+		adapter = new CentroidsAdapter(0.01, 0.2, 0.1, 0.2);
 		this.contrast = new Contrast(20, 0.4, adapter);
 		r = new Random();
 		initTimer();

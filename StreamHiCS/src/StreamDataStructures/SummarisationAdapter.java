@@ -7,7 +7,7 @@ import weka.core.Instance;
 
 public abstract class SummarisationAdapter {
 
-	private boolean fast = false;
+	private boolean fast = true;
 
 	protected DataBundle[] data;
 
@@ -62,10 +62,14 @@ public abstract class SummarisationAdapter {
 			getAndSortData();
 		}
 		
+		int n = getNumberOfElements();
+		if (n == 0) {
+			return new DataBundle(new double[0], new double[0]);
+		}
+		
 		//Copying the dimension data
 		double[] dimData = data[referenceDimension].getData();
 		double[] dimWeights = data[referenceDimension].getWeights();
-		int n = dimData.length;
 		double[] dataCopy = new double[n];
 		double[] weightsCopy = new double[n];
 		for(int i = 0; i < n; i++){

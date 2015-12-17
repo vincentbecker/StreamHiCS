@@ -80,9 +80,9 @@ public class HierarchicalBuilder extends SubspaceBuilder {
 				finished = true;
 			} else {
 				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
-				System.out.println(s.toString() + " : " + contrast);
 			}
 		}
+		//System.out.println(s.toString() + " : " + contrast);
 
 		// If we have already checked the subspace in another branch of the tree
 		// we are finished, otherwise we carry on with calculating the contrast

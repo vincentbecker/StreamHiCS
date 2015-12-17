@@ -1,18 +1,27 @@
 package hicstest;
 
 import static org.junit.Assert.*;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
+import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
+import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.CoresetAdapter;
 import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
+import streamdatastructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -38,8 +47,23 @@ public class HighDimensionalStreamHiCSTest {
 			// System.out.println("StreamHiCS: onAlarm()");
 		}
 	};
+	private static Stopwatch stopwatch;
+	private String method;
+	private SummarisationAdapter adapter;
 
-	/*
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		stopwatch = new Stopwatch();
+	}
+
+	@AfterClass
+	public static void calculateAverageScores() {
+		// System.out.println("Average TPvsFP-score: " + tpVSfpSum /
+		// testCounter);
+		// System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println(stopwatch.toString());
+	}
+
 	@Test
 	public void subspaceTest1() {
 		String testName = "Test1";
@@ -63,7 +87,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-	
+
 	@Test
 	public void subspaceTest3() {
 		String testName = "Test3";
@@ -87,7 +111,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-	
+
 	@Test
 	public void subspaceTest5() {
 		String testName = "Test5";
@@ -123,8 +147,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-	*/
-	
+
 	@Test
 	public void subspaceTest8() {
 		String testName = "Test8";
@@ -160,23 +183,96 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-	
+
 	private boolean carryOutSubspaceTest(int numberOfDimensions, int blockSize, int horizon,
 			SubspaceSet correctResult) {
-		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0, blockSize,
-				0.9);
+		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0,
+				blockSize, 0.9);
 		stream = new GaussianStream(null, covarianceMatrix);
 
-		alpha = 0.2;
-		epsilon = 0;
-		threshold = 0.4;
-		cutoff = 40;
-		pruningDifference = 0.2;
+		method = "adaptiveCentroids";
 
-		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(horizon);
-		mcs.resetLearningImpl();
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		stream = new GaussianStream(null, covarianceMatrix);
+		if (method.equals("slidingWindow")) {
+			alpha = 0.05;
+			epsilon = 0;
+			threshold = 0.1;
+			cutoff = 40;
+			pruningDifference = 0.2;
+
+			adapter = new SlidingWindowAdapter(covarianceMatrix.length, numInstances);
+		} else if (method.equals("adaptiveCentroids")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.23;
+			cutoff = 15;
+			pruningDifference = 0.25;
+
+			double fadingLambda = 0.01;
+			double radius = 2;
+			double weightThreshold = 0.1;
+			double learningRate = 0.1;
+
+			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
+		} else if (method.equals("DenStreamMC")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.6;
+			cutoff = 40;
+			pruningDifference = 0.15;
+
+			WithDBSCAN mcs = new WithDBSCAN();
+			mcs.speedOption.setValue(1000);
+			mcs.epsilonOption.setValue(0.8);
+			mcs.betaOption.setValue(0.2);
+			mcs.muOption.setValue(10);
+			mcs.lambdaOption.setValue(0.005);
+			mcs.resetLearning();
+			adapter = new MicroclusterAdapter(mcs);
+
+		} else if (method.equals("ClusTreeMC")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.3;
+			cutoff = 15;
+			pruningDifference = 0.2;
+
+			ClusTree mcs = new ClusTree();
+			mcs.horizonOption.setValue(horizon);
+			mcs.resetLearning();
+			adapter = new MicroclusterAdapter(mcs);
+
+			System.out.println("Horizon: " + horizon);
+
+		} else if (method.equals("ClustreamMC")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.26;
+			cutoff = 40;
+			pruningDifference = 0.15;
+
+			Clustream mcs = new Clustream();
+			mcs.kernelRadiFactorOption.setValue(2);
+			mcs.maxNumKernelsOption.setValue(500);
+			mcs.prepareForUse();
+			adapter = new MicroclusterAdapter(mcs);
+		} else if (method.equals("Coreset")) {
+			alpha = 0.1;
+			epsilon = 0;
+			threshold = 0.35;
+			cutoff = 40;
+			pruningDifference = 0.15;
+			adapter = new CoresetAdapter(10000, 300);
+		} else {
+			adapter = null;
+		}
+
+		/*
+		 * alpha = 0.2; epsilon = 0; threshold = 0.4; cutoff = 40;
+		 * pruningDifference = 0.2; ClusTree mcs = new ClusTree();
+		 * mcs.horizonOption.setValue(horizon); mcs.resetLearningImpl();
+		 * SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		 */
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
@@ -184,7 +280,7 @@ public class HighDimensionalStreamHiCSTest {
 
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, null);
+				changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		int numberSamples = 0;
@@ -195,10 +291,10 @@ public class HighDimensionalStreamHiCSTest {
 		}
 
 		System.out.println("Dimensionality: " + numberOfDimensions + ", block  size: " + blockSize);
-		System.out.println("Horizon: " + horizon);
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		// Evaluation
+		Evaluator.displayResult(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		return Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75;
 	}
 }

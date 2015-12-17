@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import clustree.ClusTree;
 import environment.CSVReader;
 import environment.Evaluator;
 import environment.Stopwatch;
@@ -22,7 +23,6 @@ import subspacebuilder.HierarchicalBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustream.Clustream;
-import moa.clusterers.clustree.ClusTree;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.MicroclusterAdapter;
@@ -43,7 +43,7 @@ public class StreamHiCSTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private final String method = "ClusTreeMC";
+	private String method;
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
 	private Callback callback = new Callback() {
@@ -374,6 +374,8 @@ public class StreamHiCSTest {
 	}
 
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
+		method = "ClusTreeMC";
+
 		stream = new GaussianStream(null, covarianceMatrix);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
@@ -395,8 +397,7 @@ public class StreamHiCSTest {
 			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(covarianceMatrix.length, fadingLambda, radius, weightThreshold,
-					learningRate);
+			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
@@ -406,7 +407,7 @@ public class StreamHiCSTest {
 
 			WithDBSCAN mcs = new WithDBSCAN();
 			mcs.speedOption.setValue(1000);
-			mcs.epsilonOption.setValue(0.4);
+			mcs.epsilonOption.setValue(0.5);
 			mcs.betaOption.setValue(0.2);
 			mcs.muOption.setValue(10);
 			mcs.lambdaOption.setValue(0.05);
@@ -418,19 +419,19 @@ public class StreamHiCSTest {
 			epsilon = 0;
 			threshold = 0.28;
 			cutoff = 8;
-			pruningDifference = 0.1;
+			pruningDifference = 0.15;
 
 			ClusTree mcs = new ClusTree();
 			mcs.horizonOption.setValue(1000);
-			mcs.resetLearningImpl();
+			mcs.resetLearning();
 			adapter = new MicroclusterAdapter(mcs);
 
 		} else if (method.equals("ClustreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;
-			threshold = 0.28;
+			threshold = 0.26;
 			cutoff = 8;
-			pruningDifference = 0.1;
+			pruningDifference = 0.15;
 
 			Clustream mcs = new Clustream();
 			mcs.kernelRadiFactorOption.setValue(2);
@@ -440,10 +441,10 @@ public class StreamHiCSTest {
 		} else if (method.equals("Coreset")) {
 			alpha = 0.1;
 			epsilon = 0;
-			threshold = 0.32;
+			threshold = 0.35;
 			cutoff = 8;
-			pruningDifference = 0.1;
-			adapter = new CoresetAdapter(10000, 1000);
+			pruningDifference = 0.15;
+			adapter = new CoresetAdapter(10000, 300);
 		} else {
 			adapter = null;
 		}
