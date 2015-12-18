@@ -38,7 +38,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private SummarisationAdapter adapter;
 
 	public CentroidSurface() {
-		adapter = new CentroidsAdapter(0.01, 0.2, 0.1, 0.2);
+		adapter = new CentroidsAdapter(1000, 0.2, 0.2);
 		this.contrast = new Contrast(20, 0.4, adapter);
 		r = new Random();
 		initTimer();
@@ -92,10 +92,10 @@ class CentroidSurface extends JPanel implements ActionListener {
 			if (drawSlice && s.contains(i)) {
 				g2d.setColor(Color.RED);
 			}
-			vector = c.getVector();
+			vector = c.getCentre();
 			xPixel = (int) (w * (vector[0] / xRange));
 			yPixel = (int) (h * (vector[1] / yRange));
-			weight = (int) (c.getWeight() * 10);
+			weight = (int) (c.getWeight(count) * 10);
 			g2d.drawOval(xPixel, yPixel, weight, weight);
 			// g2d.drawString(c.getId() + "", xPixel, yPixel);
 			if (drawSlice) {

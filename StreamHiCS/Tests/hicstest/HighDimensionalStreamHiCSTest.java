@@ -208,12 +208,11 @@ public class HighDimensionalStreamHiCSTest {
 			cutoff = 15;
 			pruningDifference = 0.25;
 
-			double fadingLambda = 0.01;
-			double radius = 2;
-			double weightThreshold = 0.1;
-			double learningRate = 0.1;
+			double radius = 2.5;
+			double learningRate = 0.2;
 
-			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
+			horizon = 1000;
+			adapter = new CentroidsAdapter(horizon, radius, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

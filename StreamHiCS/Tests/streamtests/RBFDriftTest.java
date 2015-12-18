@@ -66,12 +66,11 @@ public class RBFDriftTest {
 			cutoff = 8;
 			pruningDifference = 0.15;
 
-			double fadingLambda = 0.005;
+			int horizon = 1000;
 			double radius = 0.2;
-			double weightThreshold = 0.1;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(fadingLambda, radius, weightThreshold, learningRate);
+			adapter = new CentroidsAdapter(horizon, radius, learningRate);
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

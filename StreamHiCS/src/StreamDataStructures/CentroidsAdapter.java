@@ -1,19 +1,23 @@
 package streamdatastructures;
 
-import centroids.AdaptingCentroids;
+import centroids.FadingCentroids;
+import centroids.AdaptingCentroid;
 import centroids.Centroid;
-
 import weka.core.Instance;
 
 public class CentroidsAdapter extends SummarisationAdapter {
 
 	/**
-	 * The {@link CentroidsContainer} holding the {@link Centroid}s.
+	 * The {@link CentroidsContainer} holding the {@link AdaptingCentroid}s.
 	 */
-	private AdaptingCentroids centroidsImplementation;
+	private FadingCentroids centroidsImplementation;
 	
-	public CentroidsAdapter(double fadingLambda, double radius, double weightThreshold, double learningRate) {
-		centroidsImplementation = new AdaptingCentroids(fadingLambda, radius, weightThreshold, learningRate);
+	public CentroidsAdapter(int horizon, double radius, double learningRate) {
+		centroidsImplementation = new FadingCentroids();
+		centroidsImplementation.horizonOption.setValue(horizon);
+		centroidsImplementation.radiusOption.setValue(radius);
+		centroidsImplementation.learningRateOption.setValue(learningRate);
+		centroidsImplementation.prepareForUse();
 	}
 	
 	@Override
@@ -32,14 +36,14 @@ public class CentroidsAdapter extends SummarisationAdapter {
 		
 		int n = centroids.length;
 		if (n > 0) {
-			int d = centroids[0].getVector().length;
+			int d = centroids[0].getCentre().length;
 			double[][] points = new double[n][];
 			double[] weights = new double[n];
 			Centroid c;
 			for (int i = 0; i < n; i++) {
 				c = centroids[i];
-				points[i] = c.getVector();
-				weights[i] = c.getWeight();
+				points[i] = c.getCentre();
+				weights[i] = c.getWeight(-1);
 			}
 
 			// Construct the DataBundles from the data

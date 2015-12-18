@@ -1,52 +1,50 @@
 package centroids;
 
-public class Centroid {
-	private final long id;
-	private double[] vector;
-	private int count = 0;
-	private double weight = 0;
-	private int lastUpdate;
-	private double fadingFactor;
-
-	public Centroid(long id, double[] vector, double fadingFactor, int lastUpdate) {
-		this.id = id;
-		this.vector = vector;
-		this.fadingFactor = fadingFactor;
-		this.lastUpdate = lastUpdate;
-	}
-
-	public long getId() {
-		return id;
-	}
-
-	public double[] getVector() {
-		return vector;
-	}
-
-	public void setVector(double[] vector) {
-		this.vector = vector;
-	}
-
-	public double getWeight() {
-		return this.weight;
-	}
-
-	public int getCount() {
-		return count;
-	}
-
-	public void increment() {
-		weight++;
-		count++;
-	}
-
-	public void fade(int currentTime) {
-		weight = weight * Math.pow(fadingFactor, currentTime - lastUpdate);
-		lastUpdate = currentTime;
+public abstract class Centroid {
+	protected int lastUpdate;
+	protected double weight = 1;
+	protected double negLambda;
+	
+	public Centroid(double negLambda, int currentTime){
+		this.negLambda = negLambda;
+		this.lastUpdate = currentTime;
 	}
 	
+	public abstract double[] getCentre();
+	public boolean addPoint(double[] point, int currentTime){
+		fade(currentTime);
+		boolean added = addPointImpl(point);
+		if(added){
+			weight++;
+		}
+		return added;
+	}
+	public abstract boolean addPointImpl(double[] point);
+	public double getRadius(int currentTime){
+		fade(currentTime);
+		return getRadiusImpl();
+	}
+	public abstract double getRadiusImpl();
+	
+	public double getWeight(int currentTime){
+		if(currentTime >= 0){
+			fade(currentTime);
+		}
+		return weight;
+	}
+	
+	private void fade(int currentTime) {
+		if(lastUpdate != currentTime){
+			weight = weight * Math.pow(2.0, negLambda * (currentTime - lastUpdate));
+			fadeImpl(currentTime);
+			lastUpdate = currentTime;
+		}
+	}
+	
+	public abstract void fadeImpl(int currentTime);
+	
 	public double euclideanDistance(double[] vector) {
-		double[] v1 = this.vector;
+		double[] v1 = getCentre();
 		double[] v2 = vector;
 		if (v1.length != v2.length) {
 			throw new IllegalArgumentException("Centroid vectors are of different length.");
@@ -58,15 +56,15 @@ public class Centroid {
 
 		return Math.sqrt(distance);
 	}
-
-
+	
 	/**
 	 * Returns a string representation of this object.
 	 * 
 	 * @return A string representation of this object.
 	 */
 	public String toString() {
-		String s = "ID: " + id + " [";
+		String s = "[";
+		double[] vector = getCentre();
 		for (int i = 0; i < vector.length - 1; i++) {
 			s += vector[i] + ", ";
 		}
