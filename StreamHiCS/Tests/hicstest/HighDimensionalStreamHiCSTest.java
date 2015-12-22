@@ -209,6 +209,7 @@ public class HighDimensionalStreamHiCSTest {
 			pruningDifference = 0.25;
 
 			double radius = 2.5;
+			//double radius = 0.7;
 			double learningRate = 0.2;
 
 			horizon = 1000;
@@ -292,8 +293,11 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println("Dimensionality: " + numberOfDimensions + ", block  size: " + blockSize);
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
+		System.out.println("Faded: " + ((CentroidsAdapter) adapter).getFadedCount());
+		
 		// Evaluation
 		Evaluator.displayResult(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
+		Evaluator.evaluateJaccardIndex(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		return Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75;
 	}
 }

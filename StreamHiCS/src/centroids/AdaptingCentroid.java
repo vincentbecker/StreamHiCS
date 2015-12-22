@@ -3,6 +3,9 @@ package centroids;
 public class AdaptingCentroid extends Centroid {
 
 	private double[] centre;
+	/**
+	 * The learning rate for the adaptation of the {@link AdaptingCentroid}.
+	 */
 	private double learningRate;
 	private double radius;
 
@@ -30,9 +33,11 @@ public class AdaptingCentroid extends Centroid {
 		for (int i = 0; i < centre.length; i++) {
 			centre[i] += point[i];
 		}
+		
+		weight++;
 
 		// Adapt according to the weight of the centroid
-		double adaptationRate = h(point) / (weight + 1);
+		double adaptationRate = h(point) / (weight);
 		for (int i = 0; i < centre.length; i++) {
 			centre[i] += adaptationRate * (point[i] - centre[i]);
 		}

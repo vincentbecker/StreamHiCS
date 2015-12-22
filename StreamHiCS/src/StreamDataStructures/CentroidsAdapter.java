@@ -11,7 +11,7 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	 * The {@link CentroidsContainer} holding the {@link AdaptingCentroid}s.
 	 */
 	private FadingCentroids centroidsImplementation;
-	
+
 	public CentroidsAdapter(int horizon, double radius, double learningRate) {
 		centroidsImplementation = new FadingCentroids();
 		centroidsImplementation.horizonOption.setValue(horizon);
@@ -19,7 +19,7 @@ public class CentroidsAdapter extends SummarisationAdapter {
 		centroidsImplementation.learningRateOption.setValue(learningRate);
 		centroidsImplementation.prepareForUse();
 	}
-	
+
 	@Override
 	public void addImpl(Instance instance) {
 		centroidsImplementation.add(instance);
@@ -33,7 +33,7 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	@Override
 	public DataBundle[] getData() {
 		Centroid[] centroids = centroidsImplementation.getCentroids();
-		
+
 		int n = centroids.length;
 		if (n > 0) {
 			int d = centroids[0].getCentre().length;
@@ -71,9 +71,13 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	public int getNumberOfElements() {
 		return centroidsImplementation.getNumberOfInstances();
 	}
-	
-	public Centroid[] getCentroids(){
+
+	public Centroid[] getCentroids() {
 		return centroidsImplementation.getCentroids();
+	}
+
+	public int getFadedCount() {
+		return centroidsImplementation.faded;
 	}
 
 }

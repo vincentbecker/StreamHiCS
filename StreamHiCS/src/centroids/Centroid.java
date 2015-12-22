@@ -11,19 +11,19 @@ public abstract class Centroid {
 	}
 	
 	public abstract double[] getCentre();
+	
 	public boolean addPoint(double[] point, int currentTime){
 		fade(currentTime);
-		boolean added = addPointImpl(point);
-		if(added){
-			weight++;
-		}
-		return added;
+		return addPointImpl(point);
 	}
+	
 	public abstract boolean addPointImpl(double[] point);
+	
 	public double getRadius(int currentTime){
 		fade(currentTime);
 		return getRadiusImpl();
 	}
+	
 	public abstract double getRadiusImpl();
 	
 	public double getWeight(int currentTime){

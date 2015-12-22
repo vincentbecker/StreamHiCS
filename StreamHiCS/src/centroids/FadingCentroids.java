@@ -54,6 +54,8 @@ public class FadingCentroids extends AbstractOptionHandler {
 	private double learningRate;
 	private boolean initialized = false;
 
+	public int faded = 0;
+
 	public IntOption horizonOption = new IntOption("horizon", 'h', "Horizon", 1000, 1, Integer.MAX_VALUE);
 
 	/**
@@ -69,7 +71,7 @@ public class FadingCentroids extends AbstractOptionHandler {
 
 	public Centroid[] getCentroids() {
 		updateWeights();
-		AdaptingCentroid[] cs = new AdaptingCentroid[centroids.size()];
+		Centroid[] cs = new Centroid[centroids.size()];
 		centroids.toArray(cs);
 		return cs;
 	}
@@ -89,15 +91,19 @@ public class FadingCentroids extends AbstractOptionHandler {
 		// Find the closest centroid
 		Centroid nearest = findNearestCentroid(vector);
 		if (nearest == null) {
-			nearest = new AdaptingCentroid(vector, negLambda, time, radius, learningRate);
-			centroids.add(nearest);
+			createCentroid(vector);
 		} else {
 			if (!nearest.addPoint(vector, time)) {
-				centroids.add(new AdaptingCentroid(vector, negLambda, time, radius, learningRate));
+				createCentroid(vector);
 			}
 		}
 		time++;
 		updated = false;
+	}
+
+	private void createCentroid(double[] vector) {
+		centroids.add(new AdaptingCentroid(vector, negLambda, time, radius, learningRate));
+		//centroids.add(new RadiusCentroid(vector, negLambda, time, radius));
 	}
 
 	/**
@@ -140,11 +146,15 @@ public class FadingCentroids extends AbstractOptionHandler {
 		if (!updated) {
 			ArrayList<Centroid> removalList = new ArrayList<Centroid>();
 			for (Centroid c : centroids) {
+				// Fading is already done in getWeight()
 				// c.fade(time);
 				if (c.getWeight(time) < weightThreshold) {
 					removalList.add(c);
 				}
 			}
+
+			faded += removalList.size();
+
 			for (Centroid c : removalList) {
 				centroids.remove(c);
 			}
