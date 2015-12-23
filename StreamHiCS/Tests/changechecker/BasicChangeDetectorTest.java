@@ -43,7 +43,7 @@ public class BasicChangeDetectorTest {
 
 		};
 
-		stream = new GaussianStream(null, covarianceMatrices[0]);
+		stream = new GaussianStream(null, covarianceMatrices[0], 1);
 		
 		FullSpaceContrastChecker fscc = new FullSpaceContrastChecker(1000, 5, null, 0.2, 0.03);
 		ClusTree mcs = new ClusTree();

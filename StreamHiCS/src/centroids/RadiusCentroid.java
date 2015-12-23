@@ -1,5 +1,10 @@
 package centroids;
 
+/**
+ * 
+ * @author Vincent
+ *
+ */
 public class RadiusCentroid extends Centroid {
 	private static final double RADIUS_FACTOR = 1.8;
 	private double[] LS;

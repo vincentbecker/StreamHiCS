@@ -11,7 +11,8 @@ import weka.core.Instance;
 
 /**
  * This class represents a {@link AdaptingCentroid} implementation which adapts
- * to the input data.
+ * to the input data by moving the {@link Centroid}s in direction of the
+ * incoming {@link Instance}s.
  * 
  * @author Vincent
  *
@@ -21,54 +22,81 @@ public class FadingCentroids extends AbstractOptionHandler {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
 	/**
 	 * The centroids.
 	 */
 	private ArrayList<Centroid> centroids;
+
 	/**
 	 * The number of dimensions of the full space.
 	 */
 	private int numberOfDimensions = -1;
 
+	/**
+	 * The negative lambda for fading.
+	 */
 	private double negLambda;
+
 	/**
 	 * For each incoming instance we search for the nearest
 	 * {@link AdaptingCentroid} in which radius the instance falls.
 	 */
 	private double radius;
+
 	/**
 	 * Keeps track of the current time.
 	 */
 	private int time = 0;
+
 	/**
 	 * The threshold determining when a {@link AdaptingCentroid} is removed.
 	 */
 	private final double weightThreshold = 0.25;
+
 	/**
 	 * A flag showing if all weights are updated currently.
 	 */
 	private boolean updated = true;
+
 	/**
 	 * The learning rate for the adaptation of the {@link AdaptingCentroid}.
 	 */
 	private double learningRate;
+
+	/**
+	 * A flag showing whether the number of dimensions was already set.
+	 */
 	private boolean initialized = false;
 
+	/**
+	 * Counts how many {@link Centroid}s faded away throughout the streaming
+	 * process.
+	 */
 	public int faded = 0;
 
+	/**
+	 * The option determining the horizon for fading.
+	 */
 	public IntOption horizonOption = new IntOption("horizon", 'h', "Horizon", 1000, 1, Integer.MAX_VALUE);
 
 	/**
-	 * The radius of a {@link AdaptingCentroid} determining if a
+	 * The option determining the radius of a {@link Centroid} determining if a
 	 * new @link{Instance} could belong to it.
 	 */
 	public FloatOption radiusOption = new FloatOption("radius", 'r', "Radius", 1, 0, Double.MAX_VALUE);
 
 	/**
-	 * The learning rate.
+	 * The option determining the learning rate for the adaptation of the
+	 * {@link Centroid}s.
 	 */
 	public FloatOption learningRateOption = new FloatOption("scale", 's', "Scale.", 1, 0, Double.MAX_VALUE);
 
+	/**
+	 * An array containing all the currently held {@link Centroid}s.
+	 * 
+	 * @return An array of the Centroid}s.
+	 */
 	public Centroid[] getCentroids() {
 		updateWeights();
 		Centroid[] cs = new Centroid[centroids.size()];
@@ -76,6 +104,13 @@ public class FadingCentroids extends AbstractOptionHandler {
 		return cs;
 	}
 
+	/**
+	 * Adds an incoming {@link Instance} to the nearest {@link Centroid} (by
+	 * euclidean distance), if possible. If not, a new centroid is added, of
+	 * which the initial centre is set to the instance.
+	 * 
+	 * @param instance
+	 */
 	public void add(Instance instance) {
 		if (!initialized) {
 			this.numberOfDimensions = instance.numAttributes();
@@ -101,22 +136,30 @@ public class FadingCentroids extends AbstractOptionHandler {
 		updated = false;
 	}
 
+	/**
+	 * Creates a new {@link Centroid} with the given vector as the initial
+	 * centre and adds it to the centorid collection.
+	 * 
+	 * @param vector
+	 *            The vector
+	 */
 	private void createCentroid(double[] vector) {
 		centroids.add(new AdaptingCentroid(vector, negLambda, time, radius, learningRate));
-		//centroids.add(new RadiusCentroid(vector, negLambda, time, radius));
+		// centroids.add(new RadiusCentroid(vector, negLambda, time, radius));
 	}
 
 	/**
-	 * Finds the nearest centroid to the given vector. The vector has to fall in
-	 * the radius of the {@link AdaptingCentroid}. Before searching fo the
-	 * nearest {@link AdaptingCentroid} the weights of all
-	 * {@link AdaptingCentroid}s are updated.
+	 * Finds the nearest {@link Centroid} to the given vector. The vector has to
+	 * fall in the radius of the {@link AdaptingCentroid}. Before searching for
+	 * the nearest {@link AdaptingCentroid} the weights of all
+	 * {@link AdaptingCentroid}s are updated and the centroids removed if their
+	 * weight falls below the threshold.
 	 * 
 	 * @param vector
-	 *            The input vector.
+	 *            The input vector
 	 * @return The nearest {@link AdaptingCentroid} to the given vector, in
 	 *         which's radius the vector falls. Null, if such a vector does not
-	 *         exist.
+	 *         exist
 	 */
 	private Centroid findNearestCentroid(double[] vector) {
 		double distance;
@@ -136,11 +179,9 @@ public class FadingCentroids extends AbstractOptionHandler {
 	}
 
 	/**
-	 * Updates the weights of all contained {@link AdaptingCentroid}s by
-	 * multiplying the fading factor to the power of the difference between the
-	 * current time and the last time the {@link AdaptingCentroid} was updated.
-	 * If the weight falls below the weight threshold the
-	 * {@link AdaptingCentroid} is removed.
+	 * Updates the weights of all contained {@link AdaptingCentroid}s. If the
+	 * weight falls below the weight threshold the {@link AdaptingCentroid} is
+	 * removed.
 	 */
 	private void updateWeights() {
 		if (!updated) {
@@ -162,6 +203,9 @@ public class FadingCentroids extends AbstractOptionHandler {
 		}
 	}
 
+	/**
+	 * Resets the implementation.
+	 */
 	public void clear() {
 		centroids.clear();
 		time = 0;
@@ -169,6 +213,11 @@ public class FadingCentroids extends AbstractOptionHandler {
 		numberOfDimensions = -1;
 	}
 
+	/**
+	 * Returns the number of currently held {@link Centroids}.
+	 * 
+	 * @return The number of currently held {@link Centroids}.
+	 */
 	public int getNumberOfInstances() {
 		updateWeights();
 		return centroids.size();

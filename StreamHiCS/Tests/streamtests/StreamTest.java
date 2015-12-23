@@ -65,7 +65,7 @@ public class StreamTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		stream = new GaussianStream(null, covarianceMatrices[0]);
+		stream = new GaussianStream(null, covarianceMatrices[0], 1);
 
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;

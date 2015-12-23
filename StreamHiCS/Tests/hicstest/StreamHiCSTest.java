@@ -376,7 +376,7 @@ public class StreamHiCSTest {
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
 		method = "ClusTreeMC";
 
-		stream = new GaussianStream(null, covarianceMatrix);
+		stream = new GaussianStream(null, covarianceMatrix, 1);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;

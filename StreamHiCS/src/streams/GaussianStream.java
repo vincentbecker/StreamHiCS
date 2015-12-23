@@ -32,8 +32,9 @@ public class GaussianStream implements InstanceStream {
 	 */
 	private InstancesHeader streamHeader;
 	private EuclideanDistance euclideanDistance;
+	private double classRadius;
 
-	public GaussianStream(double[] mean, double[][] covarianceMatrix) {
+	public GaussianStream(double[] mean, double[][] covarianceMatrix, double classRadius) {
 		if (mean == null) {
 			// Mean will be initialised to be n x 0.0
 			this.mean = new double[covarianceMatrix.length];
@@ -42,6 +43,7 @@ public class GaussianStream implements InstanceStream {
 		}
 		init(covarianceMatrix);
 		this.euclideanDistance = new EuclideanDistance();
+		this.classRadius = classRadius;
 	}
 
 	public void setCovarianceMatrix(double[][] covarianceMatrix) {
@@ -120,7 +122,7 @@ public class GaussianStream implements InstanceStream {
 		// Determine the class value
 		double classValue;
 		double distance = euclideanDistance.compute(sample, mean);
-		if (distance <= 1) {
+		if (distance <= classRadius) {
 			classValue = 0;
 		} else {
 			classValue = 1;

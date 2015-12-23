@@ -188,11 +188,11 @@ public class HighDimensionalStreamHiCSTest {
 			SubspaceSet correctResult) {
 		double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, 0,
 				blockSize, 0.9);
-		stream = new GaussianStream(null, covarianceMatrix);
+		stream = new GaussianStream(null, covarianceMatrix, 1);
 
 		method = "adaptiveCentroids";
 
-		stream = new GaussianStream(null, covarianceMatrix);
+		stream = new GaussianStream(null, covarianceMatrix, 1);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;
@@ -209,7 +209,7 @@ public class HighDimensionalStreamHiCSTest {
 			pruningDifference = 0.25;
 
 			double radius = 2.5;
-			//double radius = 0.7;
+			// double radius = 0.7;
 			double learningRate = 0.2;
 
 			horizon = 1000;
@@ -294,7 +294,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
 		System.out.println("Faded: " + ((CentroidsAdapter) adapter).getFadedCount());
-		
+
 		// Evaluation
 		Evaluator.displayResult(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		Evaluator.evaluateJaccardIndex(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
