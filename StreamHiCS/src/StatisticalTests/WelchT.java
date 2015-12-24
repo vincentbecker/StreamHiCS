@@ -2,10 +2,22 @@ package statisticaltests;
 
 import streamdatastructures.DataBundle;
 
+/**
+ * Implements a {@link StatisticalTest} using the Welch-t-test.
+ * 
+ * @author Vincent
+ *
+ */
 public class WelchT extends StatisticalTest {
 
+	/**
+	 * The test instance. 
+	 */
 	private TTest tTest;
 
+	/**
+	 * Creates an instance of this class. 
+	 */
 	public WelchT() {
 		tTest = new TTest();
 	}
@@ -32,6 +44,13 @@ public class WelchT extends StatisticalTest {
 		return 1 - p;
 	}
 
+	/**
+	 * Calculates mean, variance, and total weight of a sample and corresponding weights. 
+	 * 
+	 * @param sample The sample
+	 * @param weights The weights
+	 * @return A {@link StatisticsBundle} containing the mean, variance, and total weight. 
+	 */
 	private StatisticsBundle weightedStatistics(double[] sample, double[] weights) {
 		if (sample.length != weights.length) {
 			throw new IllegalArgumentException("Sample and weights have different length.");

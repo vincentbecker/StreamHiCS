@@ -11,43 +11,65 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 
 public class StreamHiCS implements Callback {
+
 	/**
 	 * The set of the currently correlated {@link Subspace}s.
 	 */
 	private SubspaceSet correlatedSubspaces;
+
 	/**
 	 * Determines how much the contrast values of {@link Subspace]s are allowed
 	 * to deviate from the last evaluation. If the deviation exceeds epsilon the
 	 * correlated {Subspace}s are newly built. Epsilon must be positive.
 	 */
 	private double epsilon;
+
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
 	 * for the correlated subspaces.
 	 */
 	private double threshold;
+
 	/**
-	 * The difference in contrast allowed to prune a {@link Subspace}.
+	 * The difference in contrast allowed to prune a {@link Subspace}, if a
+	 * correlated super-space exists.
 	 */
 	private double pruningDifference;
+
 	/**
-	 * The @link{Contrast} evaluator.
+	 * The @link{Contrast} instance.
 	 */
 	private Contrast contrastEvaluator;
+
+	/**
+	 * The {@link SubspaceBuilder} instance.
+	 */
 	private SubspaceBuilder subspaceBuilder;
+
+	/**
+	 * The {@link ChangeChecker} instance.
+	 */
 	private ChangeChecker changeChecker;
+
 	/**
 	 * The @link{Callback} to notify on changes.
 	 */
 	private Callback callback;
+
+	/**
+	 * The {@link AbstractPruner} instance.
+	 */
 	private AbstractPruner pruner;
+
+	/**
+	 * The {@link Stopwatch} instance.
+	 */
 	private Stopwatch stopwatch;
 
 	/**
-	 * Creates a {@link StreamHiCS} object with the specified update interval.
+	 * Creates an instance of this class.
 	 * 
-	 * @param numberOfDimensions
-	 *            The number of dimensions of the full space.
+	 * 
 	 * @param epsilon
 	 *            The deviation that is allowed for contrast values between two
 	 *            evaluation without starting a full new build of the correlated
@@ -56,6 +78,19 @@ public class StreamHiCS implements Callback {
 	 *            The threshold for the contrast. {@link Subspace}s with a
 	 *            contrast above or equal to the threshold may be considered as
 	 *            correlated.
+	 * @param pruningDifference
+	 *            The difference in contrast allowed to prune a {@link Subspace}
+	 *            , if a correlated super-space exists.
+	 * @param contrastEvaluator
+	 *            The {@link Contrast} instance
+	 * @param subspaceBuilder
+	 *            The {@link SubspaceBuilder} instance
+	 * @param changeChecker
+	 *            The {@link ChangeChecker} instance
+	 * @param callback
+	 *            The {@link Callback} instance
+	 * @param stopwatch
+	 *            The {@link Stopwatch} instance
 	 */
 	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator,
 			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback, Stopwatch stopwatch) {

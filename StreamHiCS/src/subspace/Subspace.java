@@ -259,8 +259,14 @@ public class Subspace {
 		}
 		return true;
 	}
-	
-	public boolean isEmpty(){
+
+	/**
+	 * Checks, whether the {@link Subspace} is empty, i.e. contains no
+	 * dimensions.
+	 * 
+	 * @return True, if the subspace is empty, false otherwise.
+	 */
+	public boolean isEmpty() {
 		return dimensions.isEmpty();
 	}
 
@@ -274,10 +280,11 @@ public class Subspace {
 	}
 
 	/**
-	 * Returns the number of common elements with the other subspace.
+	 * Returns the number of common dimensions with the other {@link Subspace}.
 	 * 
 	 * @param s2
-	 * @return
+	 *            The other subspace
+	 * @return The number of common dimensions.
 	 */
 	public int cut(Subspace s2) {
 		int count = 0;

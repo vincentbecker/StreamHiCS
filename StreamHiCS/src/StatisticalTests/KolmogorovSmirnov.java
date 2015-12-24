@@ -2,9 +2,22 @@ package statisticaltests;
 
 import streamdatastructures.DataBundle;
 
+/**
+ * Implements a {@link StatisticalTest} using the Kolmogorov-Smirnov-test.
+ * 
+ * @author Vincent
+ *
+ */
 public class KolmogorovSmirnov extends StatisticalTest {
+	
+	/**
+	 * The test instance. 
+	 */
 	private KolmogorovSmirnovTest kolmogorovSmirnovTest;
 
+	/**
+	 * Creates an instance of this class. 
+	 */
 	public KolmogorovSmirnov() {
 		kolmogorovSmirnovTest = new KolmogorovSmirnovTest();
 	}

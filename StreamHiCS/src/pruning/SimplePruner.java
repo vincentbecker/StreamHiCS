@@ -6,15 +6,31 @@ import subspace.Subspace;
 import subspace.SubspaceSet;
 
 /**
- * May cause cascading pruning problems.
+ * Uses the simplest form of pruning. Iterates over the {@link SubspaceSet} and
+ * deletes {@link Subspace}s which have a super-space with a contrast greater
+ * then contrast(subspace) - pruningDifference. This may cause cascading pruning
+ * problems, since a small subspace with a high contrast is pruned by a very
+ * high-dimensional {@link Subspace} with low contrast because there are
+ * intermediate {@link Subspace}.
  * 
  * @author Vincent
  *
  */
 public class SimplePruner extends AbstractPruner {
 
+	/**
+	 * The difference in contrast allowed to prune a {@link Subspace}, if a
+	 * correlated super-space exists.
+	 */
 	private double pruningDifference;
 
+	/**
+	 * Creates an instance of this class.
+	 * 
+	 * @param pruningDifference
+	 *            The difference in contrast allowed to prune a {@link Subspace}
+	 *            , if a correlated super-space exists
+	 */
 	public SimplePruner(double pruningDifference) {
 		this.pruningDifference = pruningDifference;
 	}

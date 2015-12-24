@@ -13,8 +13,14 @@ import weka.core.Instance;
  * @author Vincent
  *
  */
-public class SlidingWindow extends DataStreamContainer {
+public class SlidingWindow {
 
+	/**
+	 * The number of instances currently contained in the
+	 * {@link SlidingWindow}.
+	 */
+	private int numberOfInstances;
+	
 	/**
 	 * The window length of the {@link SlidingWindow}.
 	 */
@@ -59,7 +65,6 @@ public class SlidingWindow extends DataStreamContainer {
 		this.numberOfDimensions = numberOfDimensions;
 	}
 
-	@Override
 	public void add(Instance instance) {
 		if (numberOfInstances >= windowLength) {
 			// Removing the oldest instance
@@ -75,7 +80,6 @@ public class SlidingWindow extends DataStreamContainer {
 		numberOfInstances++;
 	}
 
-	@Override
 	public void clear() {
 		for (Queue<Double> q : instanceQueue) {
 			q.clear();
@@ -83,26 +87,8 @@ public class SlidingWindow extends DataStreamContainer {
 		numberOfInstances = 0;
 	}
 
-	@Override
 	public int getNumberOfInstances() {
 		return numberOfInstances;
-	}
-
-	@Override
-	public double[] getSelectedData(int dimension, Selection selectedIndexes) {
-		double[] data = new double[selectedIndexes.size()];
-		Double[] tempData = new Double[numberOfInstances];
-		tempData = instanceQueue.get(dimension).toArray(tempData);
-		for (int i = 0; i < selectedIndexes.size(); i++) {
-			data[i] = tempData[selectedIndexes.getIndex(i)];
-		}
-		return data;
-	}
-
-	@Override
-	public double[][] getUnderlyingPoints() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public double[] getDimensionData(int dimension) {

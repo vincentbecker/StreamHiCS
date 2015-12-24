@@ -16,34 +16,43 @@ import weka.core.Instance;
  *
  */
 public class Contrast {
+
 	/**
 	 * Number of Monte Carlo iterations in the contrast evaluation. m must be
 	 * positive.
 	 */
 	private int m;
+
 	/**
 	 * The relative size of the conditional (sliced) sample in relation to the
 	 * whole data set. The number must be positive.
 	 */
 	private double alpha;
+
 	/**
 	 * The {@link StatisticalTest} used to calculate the deviation of the
 	 * marginal sample and the conditional (sliced) sample.
 	 */
 	private StatisticalTest statisticalTest;
+
+	/**
+	 * The {@link SummarisationAdapter} providing access to the data stream
+	 * summarisation structure.
+	 */
 	private SummarisationAdapter summarisationAdapter;
 
 	/**
+	 * Creates an instance of this class.
 	 * 
-	 * 
-	 * @param callback
 	 * @param m
 	 *            The number of Monte Carlo iterations for the estimation of the
-	 *            conditional density.
+	 *            conditional density
 	 * @param alpha
 	 *            The fraction of data that should be selected in the estimation
-	 *            of the conditional density.
-	 * @param statisticalTest
+	 *            of the conditional density
+	 * @param summarisationAdapter
+	 *            The {@link SummarisationAdapter} providing access to the data
+	 *            stream summarisation structure
 	 */
 	public Contrast(int m, double alpha, SummarisationAdapter summarisationAdapter) {
 		this.m = m;
@@ -53,28 +62,36 @@ public class Contrast {
 	}
 
 	/**
-	 * Add an @link{Instance}.
+	 * Adds an @link{Instance} to the {@link SummarisationAdaper}.
 	 * 
 	 * @param instance
 	 *            The @link{Instance} to be added.
 	 */
-	public void add(Instance instance){
+	public void add(Instance instance) {
 		summarisationAdapter.add(instance);
 	}
 
 	/**
 	 * Clears all stored {@link Instance}s.
 	 */
-	public void clear(){
+	public void clear() {
 		summarisationAdapter.clear();
 	}
 
-	public int getNumberOfElements(){
+	/**
+	 * Returns the number of elements in the {@link SummarisationAdapter}.
+	 * 
+	 * @return the number of elements in the {@link SummarisationAdapter}.
+	 */
+	public int getNumberOfElements() {
 		return summarisationAdapter.getNumberOfElements();
 	}
 
 	/**
-	 * Calculates the contrast of the given @link{Subspace}.
+	 * Calculates the contrast of the given @link{Subspace} by slicing the
+	 * subspace and compairing the mariginal and slice samples using the
+	 * {@link StatisticalTest}. This process is carried out m times and the
+	 * average is returned.
 	 * 
 	 * @param subspace
 	 *            The @link{Subspace} the contrast is calculated of.
@@ -100,16 +117,18 @@ public class Contrast {
 			projectedData = summarisationAdapter.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
 			// Get the randomly sliced data
 			slicedData = summarisationAdapter.getSlicedData(shuffledDimensions, selectionAlpha);
-			if(slicedData.size() > 1){
+			if (slicedData.size() > 1) {
 				// Calculate the deviation and add it to the overall sum
 				deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
-				//deviation = statisticalTest.calculateDeviation(projectedData.getData(), slicedData.getData());
+				// deviation =
+				// statisticalTest.calculateDeviation(projectedData.getData(),
+				// slicedData.getData());
 				if (!Double.isNaN(deviation)) {
 					sum += deviation;
 					numberOfCorrectTests++;
 				}
-			}else{
-				//System.out.println("Slice too small: " + slicedData.size());
+			} else {
+				// System.out.println("Slice too small: " + slicedData.size());
 			}
 		}
 

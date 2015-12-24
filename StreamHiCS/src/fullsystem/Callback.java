@@ -1,4 +1,5 @@
 package fullsystem;
+
 /**
  * This class represents a callback.
  * 
@@ -8,8 +9,8 @@ package fullsystem;
 public interface Callback {
 
 	/**
-	 * If a change if noted, the implementing class can be notified by calling
-	 * this method.
+	 * If a change is detected, the implementing class can be notified by
+	 * calling this method.
 	 */
 	public void onAlarm();
 }

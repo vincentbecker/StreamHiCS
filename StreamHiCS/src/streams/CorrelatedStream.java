@@ -14,7 +14,7 @@ import moa.streams.generators.RandomRBFGenerator;
 public class CorrelatedStream implements InstanceStream {
 
 	/**
-	 * THe serial version ID.
+	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = 1L;
 	/**

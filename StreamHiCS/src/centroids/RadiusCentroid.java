@@ -1,6 +1,9 @@
 package centroids;
 
 /**
+ * This class implements a micro-clustering approach similar to DenStream, but
+ * without an extra pruning routine. The radius is adapted to the incoming
+ * {@link Instance}s.
  * 
  * @author Vincent
  *
@@ -11,6 +14,18 @@ public class RadiusCentroid extends Centroid {
 	private double[] SS;
 	private double maxRadius;
 
+	/**
+	 * Creates an instance of this class.
+	 * 
+	 * @param vector
+	 *            The initial centre of the new {@link Centroid}
+	 * @param negLambda
+	 *            The negative lambda for fading
+	 * @param currentTime
+	 *            The current time
+	 * @param maxRadius
+	 *            The maximum radius of a centroid
+	 */
 	public RadiusCentroid(double[] vector, double negLambda, int currentTime, double maxRadius) {
 		super(negLambda, currentTime);
 		this.LS = vector;
@@ -61,6 +76,7 @@ public class RadiusCentroid extends Centroid {
 		}
 	}
 
+	@Override
 	public double[] getCentre() {
 		int l = LS.length;
 		double[] centre = new double[l];
@@ -87,15 +103,4 @@ public class RadiusCentroid extends Centroid {
 
 		return RADIUS_FACTOR * max;
 	}
-
-	public void fade(int currentTime) {
-		double fadingFactor = Math.pow(2.0, negLambda * (currentTime - lastUpdate));
-		weight = weight * fadingFactor;
-		for (int i = 0; i < LS.length; i++) {
-			LS[i] = LS[i] * fadingFactor;
-			SS[i] = SS[i] * fadingFactor;
-		}
-		lastUpdate = currentTime;
-	}
-
 }
