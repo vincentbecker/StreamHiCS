@@ -5,11 +5,29 @@ import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import weka.core.Instance;
 
+/**
+ * This class represents an adapter to access data from a micro-clustering implementation.
+ * 
+ * @author Vincent
+ *
+ */
 public class MicroclusterAdapter extends SummarisationAdapter {
 
+	/**
+	 * The micro-clustering implementation instance. 
+	 */
 	private AbstractClusterer microclusterImplementation;
+	
+	/**
+	 * The current micro-clusters. 
+	 */
 	private Clustering microclusters;
 
+	/**
+	 * Creates an instance of this class. 
+	 * 
+	 * @param microclusterImplementation The micro-cluster implementation
+	 */
 	public MicroclusterAdapter(AbstractClusterer microclusterImplementation) {
 		this.microclusterImplementation = microclusterImplementation;
 	}
@@ -76,6 +94,11 @@ public class MicroclusterAdapter extends SummarisationAdapter {
 		return microclusters.size();
 	}
 
+	/**
+	 * Returns the current micro-clusters. 
+	 * 
+	 * @return The current micro-clusters. 
+	 */
 	public Clustering getMicroclusters() {
 		if (microclusters == null) {
 			microclusters = microclusterImplementation.getMicroClusteringResult();

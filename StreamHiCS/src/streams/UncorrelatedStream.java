@@ -16,15 +16,34 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+/**
+ * This class represents a stream generator where the values for each dimension
+ * of an {@link Instance} is created randomly and independently from each other.
+ * 
+ * @author Vincent
+ *
+ */
 public class UncorrelatedStream extends AbstractOptionHandler implements InstanceStream {
 
 	/**
-	 * 
+	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -97884374978899603L;
 
+	/**
+	 * The number of dimensions.
+	 */
 	private int numberOfDimensions;
+
+	/**
+	 * The random generator.
+	 */
 	private Random random;
+
+	/**
+	 * The standard range for the random numbers generated is -0.5 to 0.5. This
+	 * range can be scaled by a factor.
+	 */
 	private double scale;
 
 	/**
@@ -32,12 +51,21 @@ public class UncorrelatedStream extends AbstractOptionHandler implements Instanc
 	 */
 	private InstancesHeader streamHeader;
 
+	/**
+	 * The option determining the seed of the random generator.
+	 */
 	public IntOption randomSeedOption = new IntOption("randomSeed", 'r', "Seed for random generator.", 1, 1,
 			Integer.MAX_VALUE);
 
+	/**
+	 * The option determining the number of dimensions of the stream.
+	 */
 	public IntOption dimensionsOption = new IntOption("numberOfDimensions", 'd', "Number of Dimensions.", 1, 1,
 			Integer.MAX_VALUE);
 
+	/**
+	 * The option determining the scale of the range of the stream.
+	 */
 	public FloatOption scaleOption = new FloatOption("scale", 's', "Scale.", 1, 0, Double.MAX_VALUE);
 
 	@Override

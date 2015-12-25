@@ -52,17 +52,30 @@ public class Selection {
 	 * Returns the index at the given position.
 	 * 
 	 * @param i
-	 *            The position.
+	 *            The position
 	 * @return The index at the given position.
 	 */
 	public int getIndex(int i) {
 		return (int) indexes[i];
 	}
-	
-	public double[] getIndexes(){
+
+	/**
+	 * Returns the index array.
+	 * 
+	 * @return The index array.
+	 */
+	public double[] getIndexes() {
 		return indexes;
 	}
 
+	/**
+	 * Checks whether this {@link Selection} contains the given index.
+	 * 
+	 * @param i
+	 *            The index to searh for
+	 * @return True, if this {@link Selection} contains the index, false
+	 *         otherwise.
+	 */
 	public boolean contains(int i) {
 		for (Double d : indexes) {
 			if (d == i) {
@@ -107,7 +120,8 @@ public class Selection {
 			if (data[startingPoint] == data[endPoint]) {
 				// The special case that all the data values selected are the
 				// same. This case needs special handling.
-				// System.out.println("Selection.selectRange(): Special handling!");
+				// System.out.println("Selection.selectRange(): Special
+				// handling!");
 				// Broadening the range if possible, until data values on the
 				// outside of the range differ
 				while (data[startingPoint] == data[endPoint] && (endPoint - startingPoint) < indexes.length - 1) {
@@ -127,9 +141,18 @@ public class Selection {
 			// Set the indexes to the new range of indexes
 			indexes = newIndexes;
 		}
-		
+
 	}
 
+	/**
+	 * Selects a random range where the total weight of the range is a fraction
+	 * (selectionAlpha) of the total weight.
+	 * 
+	 * @param data
+	 *            The data
+	 * @param weights
+	 *            The weights
+	 */
 	public void selectWithWeights(double[] data, double[] weights) {
 		double totalWeight = 0;
 		for (int i = 0; i < data.length; i++) {
@@ -142,7 +165,7 @@ public class Selection {
 
 		// Start at a random point and take the selectionSize
 		int startingPoint = generator.nextInt(data.length);
-		
+
 		// Select a block around the starting point
 		int lower = startingPoint;
 		int upper = startingPoint;
@@ -198,17 +221,20 @@ public class Selection {
 		}
 		indexes = newIndexes;
 	}
-	
+
 	/**
-	 * Works with sorted data. 
-	 * @param databundle
-	 * @return
+	 * Selects a random block of indexes where the data is sorted. The weight of
+	 * the selected points is a fraction (selectionAlpha) of the total weight.
+	 * 
+	 * @param databundle The {@link DataBundle} containing the data and the weights. 
+	 * 
+	 * @return A {@link BitSet} (i.e. boolean vector) where the entries are set true at the selected positions and false otherwise. 
 	 */
-	public BitSet selectRandomBlock(DataBundle databundle){
+	public BitSet selectRandomBlock(DataBundle databundle) {
 		double[] indexes = databundle.getSortedIndexes();
 		double[] data = databundle.getSortedData();
 		double[] weights = databundle.getSortedWeights();
-		
+
 		int n = data.length;
 		double totalWeight = 0;
 		for (int i = 0; i < n; i++) {
@@ -266,10 +292,10 @@ public class Selection {
 		BitSet selected = new BitSet(n);
 		for (int i = lower; i <= upper; i++) {
 			selected.set((int) indexes[i]);
-		}	
-		
+		}
+
 		return selected;
-		
+
 	}
 
 	/**

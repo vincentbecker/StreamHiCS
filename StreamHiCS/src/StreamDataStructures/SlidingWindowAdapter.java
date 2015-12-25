@@ -2,11 +2,31 @@ package streamdatastructures;
 
 import weka.core.Instance;
 
+/**
+ * This class represents an adapter to access data from a {@link SlidingWindow}s
+ * implementation.
+ * 
+ * @author Vincent
+ *
+ */
 public class SlidingWindowAdapter extends SummarisationAdapter {
-
+	
+	/**
+	 * The {@link SlidingWindow} instance. 
+	 */
 	private SlidingWindow slidingWindow;
+	
+	/**
+	 * The number of dimensions. 
+	 */
 	private int d;
 	
+	/**
+	 * Creates an instance of this class. 
+	 * 
+	 * @param numberOfDimensions The number of dimensions
+	 * @param windowLength The size of the sliding window
+	 */
 	public SlidingWindowAdapter(int numberOfDimensions, int windowLength) {
 		slidingWindow = new SlidingWindow(numberOfDimensions, windowLength);
 		this.d = numberOfDimensions;

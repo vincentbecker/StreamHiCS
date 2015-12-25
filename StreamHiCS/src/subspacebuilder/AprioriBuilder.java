@@ -4,32 +4,63 @@ import fullsystem.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 
+/**
+ * This class represents a {@link SubspaceBuilder} using an Apriori-like
+ * procedure.
+ * 
+ * @author Vincent
+ *
+ */
 public class AprioriBuilder extends SubspaceBuilder {
+
+	/**
+	 * A {@link SubspaceSet} containing the candidates for correlated
+	 * {@link Subspace}s.
+	 */
 	private SubspaceSet correlatedSubspaces;
+
 	/**
 	 * The number of dimensions of the full space.
 	 */
 	private int numberOfDimensions;
+
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
 	 * for the correlated subspaces. Note that, even if a subspace's contrast
 	 * exceeds the threshold it might not be chosen due to the cutoff.
 	 */
 	private double threshold;
+
 	/**
 	 * The number of subspace candidates should be kept after each apriori step.
 	 * The cutoff value must be positive. The threshold must be positive.
 	 */
 	private int cutoff;
+
 	/**
 	 * The difference in contrast allowed to prune a {@link Subspace}.
 	 */
 	private double pruningDifference;
+
 	/**
 	 * The @link{Contrast} evaluator.
 	 */
 	private Contrast contrastEvaluator;
 
+	/**
+	 * Creates an instance of this class.
+	 * 
+	 * @param numberOfDimensions
+	 *            The number of dimensions of the full space
+	 * @param threshold
+	 *            The thereshold
+	 * @param cutoff
+	 *            The cutoff
+	 * @param pruningDifference
+	 *            The pruning difference
+	 * @param contrastEvaluator
+	 *            The {@link Contrast} instance
+	 */
 	public AprioriBuilder(int numberOfDimensions, double threshold, int cutoff, double pruningDifference,
 			Contrast contrastEvaluator) {
 		this.correlatedSubspaces = new SubspaceSet();
@@ -117,9 +148,12 @@ public class AprioriBuilder extends SubspaceBuilder {
 	}
 
 	/**
-	 * Does not only check from the beginning of a set for overlap.
+	 * Does not only check from the beginning of a set for overlap of two
+	 * {@link Subspace}s in an iteration.
 	 * 
 	 * @param c_K
+	 *            The {@link SubspaceSet} containing the current candidates for
+	 *            correlated subspaces.
 	 */
 	private void aprioriFull(SubspaceSet c_K) {
 		SubspaceSet c_Kplus1 = new SubspaceSet();
@@ -129,13 +163,13 @@ public class AprioriBuilder extends SubspaceBuilder {
 		for (int i = 0; i < c_K.size() - 1; i++) {
 			for (int j = i + 1; j < c_K.size(); j++) {
 				// Creating new candidates
-				meanBaseContrasts = (c_K.getSubspace(i).getContrast() + c_K.getSubspace(j).getContrast())/2;
+				meanBaseContrasts = (c_K.getSubspace(i).getContrast() + c_K.getSubspace(j).getContrast()) / 2;
 				Subspace kPlus1Candidate = Subspace.mergeFull(c_K.getSubspace(i), c_K.getSubspace(j));
 				if (kPlus1Candidate != null && !c_Kplus1.contains(kPlus1Candidate)) {
 					// Calculate the contrast of the subspace
 					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
 					kPlus1Candidate.setContrast(contrast);
-					//contrast > meanBaseContrasts - 0.5*pruningDifference && 
+					// contrast > meanBaseContrasts - 0.5*pruningDifference &&
 					if (contrast >= threshold) {
 						c_Kplus1.addSubspace(kPlus1Candidate);
 					}

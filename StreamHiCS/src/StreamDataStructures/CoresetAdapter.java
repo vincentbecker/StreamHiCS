@@ -5,16 +5,58 @@ import coreset.Point;
 import moa.clusterers.streamkm.MTRandom;
 import weka.core.Instance;
 
+/**
+ * This class represents an adapter to access data from a Coreset implementation
+ * and directly holds the implementation.
+ * 
+ * @author Vincent
+ *
+ */
 public class CoresetAdapter extends SummarisationAdapter {
 
+	/**
+	 * The {@link BucketManager} creating the coresets.
+	 */
 	private BucketManager bucketManager;
+
+	/**
+	 * A flag showing whether the implementation was already initialised or not.
+	 */
 	private boolean initialized = false;
+
+	/**
+	 * The size of the stream.
+	 */
 	private int width = 0;
+
+	/**
+	 * The maximum size of the coreset.
+	 */
 	private int coresetSize = 0;
+
+	/**
+	 * The number of {@link Instance}s seen.
+	 */
 	private int numberInstances = 0;
+
+	/**
+	 * The number of dimensions.
+	 */
 	private int d = 0;
+
+	/**
+	 * The current coreset.
+	 */
 	private Point[] currentCoreset;
 
+	/**
+	 * Creates an instance of this class.
+	 * 
+	 * @param width
+	 *            The size of the stream
+	 * @param coresetSize
+	 *            The maximum size of a coreset.
+	 */
 	public CoresetAdapter(int width, int coresetSize) {
 		this.width = width;
 		this.coresetSize = coresetSize;

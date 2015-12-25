@@ -13,27 +13,54 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
+/**
+ * This class represents a stream generator where the {@link Instance} are drawn
+ * from a multinomial gaussian distribution. The class label is determined by
+ * calculating the euclidean distance of the created {@link Instance} to the
+ * mean of the distribution and comparing it to a fixed radius.
+ * 
+ * @author Vincent
+ *
+ */
 public class GaussianStream implements InstanceStream {
 
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = 1L;
+	
 	/**
 	 * The mean of the multivariate distribution.
 	 */
 	private double[] mean;
+	
 	/**
 	 * The underlying stream generator.
 	 */
 	private MultivariateNormalDistribution normalDistribution;
+	
 	/**
 	 * The header of the stream.
 	 */
 	private InstancesHeader streamHeader;
+	
+	/**
+	 * The {@link EuclideanDistance} instance. 
+	 */
 	private EuclideanDistance euclideanDistance;
+	
+	/**
+	 * The radius  to determine the label. 
+	 */
 	private double classRadius;
 
+	/**
+	 * Creates an instance of this class. 
+	 * 
+	 * @param mean The mean of the multinomial gaussian distribution
+	 * @param covarianceMatrix The covariance matrix of the distribution
+	 * @param classRadius The class radius
+	 */
 	public GaussianStream(double[] mean, double[][] covarianceMatrix, double classRadius) {
 		if (mean == null) {
 			// Mean will be initialised to be n x 0.0
@@ -46,10 +73,20 @@ public class GaussianStream implements InstanceStream {
 		this.classRadius = classRadius;
 	}
 
+	/**
+	 * Sets the covariance matrix. 
+	 * 
+	 * @param covarianceMatrix The new covariance matrix
+	 */
 	public void setCovarianceMatrix(double[][] covarianceMatrix) {
 		init(covarianceMatrix);
 	}
 
+	/**
+	 * Initialises the distribution. 
+	 * 
+	 * @param covarianceMatrix The covariance matrix
+	 */
 	private void init(double[][] covarianceMatrix) {
 		symmetryCheck(covarianceMatrix);
 		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
@@ -66,6 +103,11 @@ public class GaussianStream implements InstanceStream {
 		streamHeader.setClassIndex(n);
 	}
 
+	/**
+	 * Checks whether the covariance matrix is symmetric. 
+	 * 
+	 * @param covarianceMatrix THe covariance matrix
+	 */
 	private void symmetryCheck(double[][] covarianceMatrix) {
 		int m = covarianceMatrix.length;
 		int n = covarianceMatrix[0].length;

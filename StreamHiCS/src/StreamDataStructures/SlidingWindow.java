@@ -16,26 +16,22 @@ import weka.core.Instance;
 public class SlidingWindow {
 
 	/**
-	 * The number of instances currently contained in the
-	 * {@link SlidingWindow}.
+	 * The number of instances currently contained in the {@link SlidingWindow}.
 	 */
 	private int numberOfInstances;
-	
+
 	/**
 	 * The window length of the {@link SlidingWindow}.
 	 */
 	private int windowLength;
-	/**
-	 * The number of {@link Instance}s currently contained in the
-	 * {@link SlidingWindow}.
-	 */
-	// private int numberOfInstances = 0;
+
 	/**
 	 * An {@link ArrayList} containing one queue for {@link Double}s for each
 	 * dimension. An instance is stored by storing each attribute value in the
 	 * corresponding queue.
 	 */
 	private ArrayList<Queue<Double>> instanceQueue;
+
 	/**
 	 * The number of dimensions of the full space.
 	 */
@@ -65,6 +61,14 @@ public class SlidingWindow {
 		this.numberOfDimensions = numberOfDimensions;
 	}
 
+	/**
+	 * Adds an {@link Instance} to this {@link SlidingWindow}. If the window was
+	 * full, the oldest instance is removed to provide space for the new
+	 * {@link Instance}.
+	 * 
+	 * @param instance
+	 *            The {@link Instance} to be added.
+	 */
 	public void add(Instance instance) {
 		if (numberOfInstances >= windowLength) {
 			// Removing the oldest instance
@@ -80,6 +84,9 @@ public class SlidingWindow {
 		numberOfInstances++;
 	}
 
+	/**
+	 * Clear the window.
+	 */
 	public void clear() {
 		for (Queue<Double> q : instanceQueue) {
 			q.clear();
@@ -87,10 +94,23 @@ public class SlidingWindow {
 		numberOfInstances = 0;
 	}
 
+	/**
+	 * Returns the number of {@link Instance} currently contained in this
+	 * {@link SlidingWindow}.
+	 * 
+	 * @return The number of instance currently contained in the window.
+	 */
 	public int getNumberOfInstances() {
 		return numberOfInstances;
 	}
 
+	/**
+	 * Returns the one dimensional data from the given dimension.
+	 * 
+	 * @param dimension
+	 *            The dimension the data should be taken from
+	 * @return The data from the given dimension.
+	 */
 	public double[] getDimensionData(int dimension) {
 		double[] data = new double[numberOfInstances];
 		Double[] tempData = new Double[numberOfInstances];

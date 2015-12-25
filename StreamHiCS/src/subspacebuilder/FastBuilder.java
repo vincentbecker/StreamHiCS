@@ -6,27 +6,56 @@ import fullsystem.Contrast;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 
+/**
+ * This class represents a {@link SubspaceBuilder} with a polynomial worst-case.
+ * 
+ * @author Vincent
+ *
+ */
 public class FastBuilder extends SubspaceBuilder {
 
-	SubspaceSet correlatedSubspaces;
+	/**
+	 * A {@link SubspaceSet} containing the candidates for correlated
+	 * {@link Subspace}s.
+	 */
+	private SubspaceSet correlatedSubspaces;
+
 	/**
 	 * The number of dimensions of the full space.
 	 */
 	private int numberOfDimensions;
+
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
 	 * for the correlated subspaces. Note that, even if a subspace's contrast
 	 * exceeds the threshold it might not be chosen due to the cutoff.
 	 */
 	private double threshold;
-	private int cutoff;
+
 	/**
-	 * The @link{Contrast} evaluator.
+	 * The number of subspace candidates should be kept after each apriori step.
+	 * The cutoff value must be positive. The threshold must be positive.
+	 */
+	private int cutoff;
+
+	/**
+	 * The @link{Contrast} instance.
 	 */
 	private Contrast contrastEvaluator;
 
-	public FastBuilder(int numberOfDimensions, double threshold, int cutoff,
-			Contrast contrastEvaluator) {
+	/**
+	 * Creates an instance of this class.
+	 * 
+	 * @param numberOfDimensions
+	 *            THe number of dimensions of the full space
+	 * @param threshold
+	 *            The threshold
+	 * @param cutoff
+	 *            The cutoff
+	 * @param contrastEvaluator
+	 *            The {@link Contrast} instance
+	 */
+	public FastBuilder(int numberOfDimensions, double threshold, int cutoff, Contrast contrastEvaluator) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;

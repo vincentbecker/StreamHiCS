@@ -1,14 +1,26 @@
 package streamdatastructures;
 
 import java.util.BitSet;
-
 import subspace.Subspace;
 import weka.core.Instance;
 
+/**
+ * This class represents an adapter to an underlying summarisation structure and
+ * holds the necessary emthods.
+ * 
+ * @author Vincent
+ *
+ */
 public abstract class SummarisationAdapter {
 
+	/**
+	 * Flag to set which method to use to create the slice.
+	 */
 	private boolean fast = true;
 
+	/**
+	 * An array of {@link DataBundle}s, one for each dimension.
+	 */
 	protected DataBundle[] data;
 
 	/**
@@ -22,6 +34,12 @@ public abstract class SummarisationAdapter {
 		data = null;
 	}
 
+	/**
+	 * This method is implemented by the subclass to add an {@link Instance}.
+	 * 
+	 * @param instance
+	 *            The {@link Instance} to be added.
+	 */
 	public abstract void addImpl(Instance instance);
 
 	/**
@@ -32,6 +50,10 @@ public abstract class SummarisationAdapter {
 		data = null;
 	}
 
+	/**
+	 * This method is implemented by the subclass to clear the underlying
+	 * summarisation structure.
+	 */
 	public abstract void clearImpl();
 
 	/**
@@ -39,7 +61,7 @@ public abstract class SummarisationAdapter {
 	 * structure.
 	 * 
 	 * @return Data and weights from the stream summarisation structure in form
-	 *         of an {@link ArrayList} of {@link DataBundles}
+	 *         of an {@link ArrayList} of {@link DataBundle}s.
 	 */
 	public abstract DataBundle[] getData();
 
@@ -54,29 +76,29 @@ public abstract class SummarisationAdapter {
 	 * Returns the data contained projected to the given reference dimension.
 	 * 
 	 * @param referenceDimension
-	 *            The dimension the data is projected to.
+	 *            The dimension the data is projected to
 	 * @return The data projected to teh reference dimension.
 	 */
 	public DataBundle getProjectedData(int referenceDimension) {
 		if (data == null) {
 			getAndSortData();
 		}
-		
+
 		int n = getNumberOfElements();
 		if (n == 0) {
 			return new DataBundle(new double[0], new double[0]);
 		}
-		
-		//Copying the dimension data
+
+		// Copying the dimension data
 		double[] dimData = data[referenceDimension].getData();
 		double[] dimWeights = data[referenceDimension].getWeights();
 		double[] dataCopy = new double[n];
 		double[] weightsCopy = new double[n];
-		for(int i = 0; i < n; i++){
+		for (int i = 0; i < n; i++) {
 			dataCopy[i] = dimData[i];
 			weightsCopy[i] = dimWeights[i];
 		}
-		
+
 		return new DataBundle(dataCopy, weightsCopy);
 	}
 
@@ -95,8 +117,8 @@ public abstract class SummarisationAdapter {
 	 *            The fraction of instances that should be selected per
 	 *            dimension (i.e. the number of selected instances becomes
 	 *            smaller per selection step).
-	 * @return A double[] containing a random conditional sample corresponding
-	 *         to the given dimension.
+	 * @return A {@link DataBundle} containing the random conditional sample
+	 *         corresponding to the given dimension.
 	 */
 	public DataBundle getSlicedData(int[] shuffledDimensions, double selectionAlpha) {
 		if (data == null) {
@@ -161,7 +183,9 @@ public abstract class SummarisationAdapter {
 	}
 
 	/**
-	 * This method is mainly for the visualization. It contains dupliacted code from above. 
+	 * This method is mainly for the visualisation. It contains duplicated code
+	 * from above.
+	 * 
 	 * @param shuffledDimensions
 	 * @param selectionAlpha
 	 * @return
@@ -207,7 +231,7 @@ public abstract class SummarisationAdapter {
 
 			double[] dimData;
 			double[] weights;
-			
+
 			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
 				// Get all the data for the specific dimension that is selected
 				dimData = getSelectedData(shuffledDimensions[i], selectedIndexes);
@@ -230,11 +254,15 @@ public abstract class SummarisationAdapter {
 	}
 
 	/**
-	 * Databundles should not be sorted!
+	 * Returns the selected data, indicated by the indexes. The Databundles
+	 * should not be sorted!
 	 * 
 	 * @param dimension
+	 *            The dimension the data should be taken from
 	 * @param selectedIndexes
-	 * @return
+	 *            The {@link Selection}
+	 * @return The data from the given dimension with the given indexes in form
+	 *         of a {@link DataBundle}.
 	 */
 	public double[] getSelectedData(int dimension, Selection selectedIndexes) {
 		double[] origData = data[dimension].getData();
@@ -248,10 +276,13 @@ public abstract class SummarisationAdapter {
 	}
 
 	/**
-	 * Databundles should not be sorted!
+	 * Returns the selected weights, indicated by the indexes. The Databundles
+	 * should not be sorted!
 	 * 
 	 * @param selectedIndexes
-	 * @return
+	 *            The {@link Selection}
+	 * @return The weights with the given indexes in form
+	 *         of a {@link DataBundle}.
 	 */
 	public double[] getSelectedWeights(Selection selectedIndexes) {
 		double[] origWeights = data[0].getWeights();

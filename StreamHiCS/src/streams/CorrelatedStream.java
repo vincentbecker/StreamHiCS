@@ -1,4 +1,5 @@
 package streams;
+
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -11,27 +12,38 @@ import moa.core.InstancesHeader;
 import moa.streams.InstanceStream;
 import moa.streams.generators.RandomRBFGenerator;
 
+/**
+ * This class is a stream generator built from a {@link RandomRBFGenerator} and
+ * adds one attribute which is exactly the same as the first attribute from the
+ * {@link RandomRBFGenerator}'s {@link Instance}.
+ * 
+ * @author Vincent
+ *
+ */
 public class CorrelatedStream implements InstanceStream {
 
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = 1L;
+	
 	/**
-	 * The underlying stream generator.
+	 * The underlying {@link RandomRBFGenerator} stream generator.
 	 */
 	private RandomRBFGenerator rbfGen;
+	
 	/**
 	 * The number of dimensions stored in the underlying stream generator.
 	 */
 	private int numberRBFDimensions;
+	
 	/**
 	 * The header of the stream.
 	 */
 	private InstancesHeader streamHeader;
 
 	/**
-	 * Constructs an object of this class.
+	 * Creates an instance of this class.
 	 */
 	public CorrelatedStream() {
 		rbfGen = new RandomRBFGenerator();

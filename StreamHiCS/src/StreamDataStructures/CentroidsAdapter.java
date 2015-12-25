@@ -1,17 +1,37 @@
 package streamdatastructures;
 
 import centroids.FadingCentroids;
-import centroids.AdaptingCentroid;
 import centroids.Centroid;
 import weka.core.Instance;
 
+/**
+ * This class represents an adapter to access data from a {@link Centroid}s
+ * implementation.
+ * 
+ * @author Vincent
+ *
+ */
 public class CentroidsAdapter extends SummarisationAdapter {
 
 	/**
-	 * The {@link CentroidsContainer} holding the {@link AdaptingCentroid}s.
+	 * The {@link FadingCentroids} instance holding the {@link Centroid}s.
 	 */
 	private FadingCentroids centroidsImplementation;
 
+	/**
+	 * Creates an instance of this class. The horizon is the amount of time a
+	 * single {@link Centroid} would "survive" (not being faded away) without
+	 * any reinforcement through added points. The learning rate determines how
+	 * fast a {@link Centroid} adapts to a new point in its environment (depends
+	 * on the {@link Centroid} implementation).
+	 * 
+	 * @param horizon
+	 *            The horizon
+	 * @param radius
+	 *            The radius of a {@link Centroid}
+	 * @param learningRate
+	 *            The learning rate
+	 */
 	public CentroidsAdapter(int horizon, double radius, double learningRate) {
 		centroidsImplementation = new FadingCentroids();
 		centroidsImplementation.horizonOption.setValue(horizon);
@@ -72,10 +92,22 @@ public class CentroidsAdapter extends SummarisationAdapter {
 		return centroidsImplementation.getNumberOfInstances();
 	}
 
+	/**
+	 * Returns the array of {@link Centroid}s.
+	 * 
+	 * @return The {@link Centroid}s array.
+	 */
 	public Centroid[] getCentroids() {
 		return centroidsImplementation.getCentroids();
 	}
 
+	/**
+	 * Returns the number of faded {@link Centroid}s throughout the streaming
+	 * process.
+	 * 
+	 * @return The number of faded {@link Centroid}s throughout the streaming
+	 *         process.
+	 */
 	public int getFadedCount() {
 		return centroidsImplementation.faded;
 	}
