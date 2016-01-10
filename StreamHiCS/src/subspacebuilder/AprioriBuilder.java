@@ -1,6 +1,8 @@
 package subspacebuilder;
 
+import environment.Stopwatch;
 import fullsystem.Contrast;
+import streamdatastructures.CorrelationSummary;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 
@@ -27,13 +29,14 @@ public class AprioriBuilder extends SubspaceBuilder {
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
 	 * for the correlated subspaces. Note that, even if a subspace's contrast
-	 * exceeds the threshold it might not be chosen due to the cutoff.
+	 * exceeds the threshold it might not be chosen due to the cutoff. The
+	 * threshold must be positive.
 	 */
 	private double threshold;
 
 	/**
 	 * The number of subspace candidates should be kept after each apriori step.
-	 * The cutoff value must be positive. The threshold must be positive.
+	 * The cutoff value must be positive.
 	 */
 	private int cutoff;
 
@@ -43,9 +46,16 @@ public class AprioriBuilder extends SubspaceBuilder {
 	private double pruningDifference;
 
 	/**
-	 * The @link{Contrast} evaluator.
+	 * The {@link Contrast} evaluator.
 	 */
 	private Contrast contrastEvaluator;
+
+	/**
+	 * The {@link CorrelationSummary} to calculate the Pearsons's correlation
+	 * coefficient for pairs of dimensions.
+	 */
+	private CorrelationSummary correlationSummary;
+	private Stopwatch stopwatch;
 
 	/**
 	 * Creates an instance of this class.
@@ -53,22 +63,26 @@ public class AprioriBuilder extends SubspaceBuilder {
 	 * @param numberOfDimensions
 	 *            The number of dimensions of the full space
 	 * @param threshold
-	 *            The thereshold
+	 *            The threshold
 	 * @param cutoff
 	 *            The cutoff
 	 * @param pruningDifference
 	 *            The pruning difference
 	 * @param contrastEvaluator
 	 *            The {@link Contrast} instance
+	 * @param correlationSummary
+	 *            The {@link CorrelationSummary}
 	 */
 	public AprioriBuilder(int numberOfDimensions, double threshold, int cutoff, double pruningDifference,
-			Contrast contrastEvaluator) {
+			Contrast contrastEvaluator, CorrelationSummary correlationSummary, Stopwatch stopwatch) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
 		this.pruningDifference = pruningDifference;
 		this.contrastEvaluator = contrastEvaluator;
+		this.correlationSummary = correlationSummary;
+		this.stopwatch = stopwatch;
 	}
 
 	@Override
@@ -77,20 +91,28 @@ public class AprioriBuilder extends SubspaceBuilder {
 		SubspaceSet c_K = new SubspaceSet();
 		double contrast = 0;
 		// Create all 2-dimensional candidates
+		stopwatch.start("2D-contrast");
+		/*
+		 * for (int i = 0; i < numberOfDimensions - 1; i++) { for (int j = i +
+		 * 1; j < numberOfDimensions; j++) { Subspace s = new Subspace();
+		 * s.addDimension(i); s.addDimension(j); // Only use subspaces for the
+		 * further process which are // correlated contrast =
+		 * contrastEvaluator.evaluateSubspaceContrast(s);
+		 * s.setContrast(contrast); if (contrast >= threshold) {
+		 * c_K.addSubspace(s); } } }
+		 */
+		double[][] coefficientMatrix = correlationSummary.getCorrelationMatrix();
 		for (int i = 0; i < numberOfDimensions - 1; i++) {
 			for (int j = i + 1; j < numberOfDimensions; j++) {
-				Subspace s = new Subspace();
-				s.addDimension(i);
-				s.addDimension(j);
-				// Only use subspaces for the further process which are
-				// correlated
-				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
-				s.setContrast(contrast);
-				if (contrast >= threshold) {
+				if (coefficientMatrix[i][j] >= threshold) {
+					Subspace s = new Subspace();
+					s.addDimension(i);
+					s.addDimension(j);
 					c_K.addSubspace(s);
 				}
 			}
 		}
+		stopwatch.stop("2D-contrast");
 
 		// Select cutoff subspaces
 		c_K.selectTopK(cutoff);
@@ -159,11 +181,12 @@ public class AprioriBuilder extends SubspaceBuilder {
 		SubspaceSet c_Kplus1 = new SubspaceSet();
 		c_K.sort();
 		double contrast = 0;
-		double meanBaseContrasts = 0;
+		// double meanBaseContrasts = 0;
 		for (int i = 0; i < c_K.size() - 1; i++) {
 			for (int j = i + 1; j < c_K.size(); j++) {
 				// Creating new candidates
-				meanBaseContrasts = (c_K.getSubspace(i).getContrast() + c_K.getSubspace(j).getContrast()) / 2;
+				// meanBaseContrasts = (c_K.getSubspace(i).getContrast() +
+				// c_K.getSubspace(j).getContrast()) / 2;
 				Subspace kPlus1Candidate = Subspace.mergeFull(c_K.getSubspace(i), c_K.getSubspace(j));
 				if (kPlus1Candidate != null && !c_Kplus1.contains(kPlus1Candidate)) {
 					// Calculate the contrast of the subspace

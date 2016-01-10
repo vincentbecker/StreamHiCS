@@ -20,11 +20,13 @@ import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.HierarchicalBuilder;
+import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustream.Clustream;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -54,6 +56,7 @@ public class StreamHiCSTest {
 	};
 	private static double tpVSfpSum = 0;
 	private static double amjsSum = 0;
+	private static double amssSum = 0;
 	private static int testCounter = 0;
 	private static Stopwatch stopwatch;
 
@@ -67,6 +70,7 @@ public class StreamHiCSTest {
 	public static void calculateAverageScores() {
 		System.out.println("Average TPvsFP-score: " + tpVSfpSum / testCounter);
 		System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println("Average AMSS-score: " + amssSum / testCounter);
 		System.out.println(stopwatch.toString());
 	}
 
@@ -452,9 +456,12 @@ public class StreamHiCSTest {
 
 		System.out.println(method);
 
+		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
-				pruningDifference, contrastEvaluator);
+				pruningDifference, contrastEvaluator, correlationSummary, stopwatch);
 
+		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff, contrastEvaluator, true);
+		
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
 		// contrastEvaluator);
@@ -467,7 +474,7 @@ public class StreamHiCSTest {
 
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, stopwatch);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		// System.out.println("StreamHiCSTest. m = " + m + ", alpha = " + alpha
@@ -491,6 +498,8 @@ public class StreamHiCSTest {
 		tpVSfpSum += tpVSfp;
 		double amjs = Evaluator.evaluateJaccardIndex(result, correctResult);
 		amjsSum += amjs;
+		double amss = Evaluator.evaluateStructuralSimilarity(result, correctResult);
+		amssSum += amss;
 		testCounter++;
 		System.out.println();
 

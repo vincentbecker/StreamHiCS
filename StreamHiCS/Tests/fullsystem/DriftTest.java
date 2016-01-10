@@ -12,8 +12,6 @@ import moa.classifiers.trees.DecisionStump;
 import moa.classifiers.trees.HoeffdingAdaptiveTree;
 import moa.streams.ConceptDriftStream;
 import streams.GaussianStream;
-import subspace.Subspace;
-import subspace.SubspaceSet;
 import weka.core.Instance;
 
 public class DriftTest {

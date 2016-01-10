@@ -164,7 +164,8 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	}
 
 	public boolean isWarningDetected() {
-		if (fullSpaceChangeDetector.isWarningDetected()) {
+		// The fullSpaceChangeDetector is only queried, if there are no subspace change detectors
+		if (subspaceChangeDetectors.size() == 0 &&  fullSpaceChangeDetector.isWarningDetected()) {
 			return true;
 		}
 		for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
@@ -177,18 +178,21 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	public boolean isChangeDetected() {
 		boolean res = false;
-		if (fullSpaceChangeDetector.isChangeDetected()) {
+		// The fullSpaceChangeDetector is only queried, if there are no subspace change detectors
+		if (subspaceChangeDetectors.size() == 0 && fullSpaceChangeDetector.isChangeDetected()) {
 			res = true;
 		}
 		for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
 			if (scd.isChangeDetected()) {
 				res = true;
+				System.out.println("CHANGE detected in subspace: " + scd.getSubspace().toString());
 			}
 		}
-
+		/*
 		if (res) {
 			streamHiCS.onAlarm();
 		}
+		*/
 		return res;
 	}
 
@@ -334,6 +338,14 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	public SubspaceSet getCurrentlyCorrelatedSubspaces() {
 		return streamHiCS.getCurrentlyCorrelatedSubspaces();
 	}
+	
+	@Override
+	public void resetLearningImpl() {
+		fullSpaceChangeDetector.resetLearning();
+		numberSamples = 0;
+		subspaceChangeDetectors.clear();
+		streamHiCS.clear();
+	}
 
 	@Override
 	public double[] getVotesForInstance(Instance arg0) {
@@ -358,13 +370,4 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public void resetLearningImpl() {
-		fullSpaceChangeDetector.resetLearning();
-		numberSamples = 0;
-		subspaceChangeDetectors.clear();
-		streamHiCS.clear();
-	}
-
 }

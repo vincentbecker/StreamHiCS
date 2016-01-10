@@ -4,6 +4,7 @@ import changechecker.ChangeChecker;
 import environment.Stopwatch;
 import pruning.AbstractPruner;
 import pruning.TopDownPruner;
+import streamdatastructures.CorrelationSummary;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.SubspaceBuilder;
@@ -31,12 +32,6 @@ public class StreamHiCS implements Callback {
 	private double threshold;
 
 	/**
-	 * The difference in contrast allowed to prune a {@link Subspace}, if a
-	 * correlated super-space exists.
-	 */
-	private double pruningDifference;
-
-	/**
 	 * The @link{Contrast} instance.
 	 */
 	private Contrast contrastEvaluator;
@@ -61,6 +56,11 @@ public class StreamHiCS implements Callback {
 	 */
 	private AbstractPruner pruner;
 
+	/**
+	 * The {@link CorrelationSummary} to calculate the Pearsons's correlation coefficient for pairs of dimensions. 
+	 */
+	private CorrelationSummary correlationSummary;
+	
 	/**
 	 * The {@link Stopwatch} instance.
 	 */
@@ -89,24 +89,26 @@ public class StreamHiCS implements Callback {
 	 *            The {@link ChangeChecker} instance
 	 * @param callback
 	 *            The {@link Callback} instance
+	 * @param correlationSummary
+	 *            The {@link CorrelationSummary}
 	 * @param stopwatch
 	 *            The {@link Stopwatch} instance
 	 */
 	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator,
-			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback, Stopwatch stopwatch) {
+			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback, CorrelationSummary correlationSummary, Stopwatch stopwatch) {
 		correlatedSubspaces = new SubspaceSet();
 		if (epsilon < 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
 		}
 		this.epsilon = epsilon;
 		this.threshold = threshold;
-		this.pruningDifference = pruningDifference;
 		this.contrastEvaluator = contrastEvaluator;
 		this.subspaceBuilder = subspaceBuilder;
 		this.changeChecker = changeChecker;
 		this.callback = callback;
 		// this.pruner = new SimplePruner(pruningDifference);
 		this.pruner = new TopDownPruner(pruningDifference);
+		this.correlationSummary = correlationSummary;
 		this.stopwatch = stopwatch;
 	}
 
@@ -160,6 +162,7 @@ public class StreamHiCS implements Callback {
 			instance = newInst;
 		}
 		contrastEvaluator.add(instance);
+		correlationSummary.addInstance(instance);
 		stopwatch.stop("Adding");
 		changeChecker.poll();
 	}

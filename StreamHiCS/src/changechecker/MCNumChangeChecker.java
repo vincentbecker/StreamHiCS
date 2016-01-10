@@ -76,7 +76,7 @@ public class MCNumChangeChecker extends ChangeChecker {
 	}
 
 	/**
-	 * Resets the registers of the Page-Hinkley-Test into the initial state. 
+	 * Resets the registers of the Page-Hinkley-Test into the initial state.
 	 */
 	private void reset() {
 		increasingMT = Double.MAX_VALUE;

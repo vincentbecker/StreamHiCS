@@ -18,6 +18,7 @@ import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -26,6 +27,8 @@ import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
+import subspacebuilder.HierarchicalBuilder;
+import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
@@ -87,7 +90,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-
+	
 	@Test
 	public void subspaceTest3() {
 		String testName = "Test3";
@@ -275,12 +278,15 @@ public class HighDimensionalStreamHiCSTest {
 		 */
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 
+		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
-				pruningDifference, contrastEvaluator);
+				pruningDifference, contrastEvaluator, correlationSummary, stopwatch);
 
+		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff, contrastEvaluator, true);
+		
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, stopwatch);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		int numberSamples = 0;
@@ -298,6 +304,7 @@ public class HighDimensionalStreamHiCSTest {
 		// Evaluation
 		Evaluator.displayResult(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		Evaluator.evaluateJaccardIndex(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
+		Evaluator.evaluateStructuralSimilarity(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		return Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75;
 	}
 }

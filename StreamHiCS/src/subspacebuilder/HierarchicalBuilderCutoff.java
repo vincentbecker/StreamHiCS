@@ -13,7 +13,7 @@ import subspace.SubspaceSet;
  * @author Vincent
  *
  */
-public class HierarchicalBuilder extends SubspaceBuilder {
+public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 
 	/**
 	 * A {@link SubspaceSet} containing the candidates for correlated
@@ -34,9 +34,15 @@ public class HierarchicalBuilder extends SubspaceBuilder {
 
 	/**
 	 * The minimum contrast value a {@link Subspace} must have to be a candidate
-	 * for the correlated subspaces.
+	 * for the correlated subspaces. THe threshold must be positive.
 	 */
 	private double threshold;
+
+	/**
+	 * The number of subspace candidates should be kept on each level of the
+	 * tree. The cutoff value must be positive.
+	 */
+	private int cutoff;
 
 	/**
 	 * The @link{Contrast} instance.
@@ -67,12 +73,13 @@ public class HierarchicalBuilder extends SubspaceBuilder {
 	 *            The flag determining whether to partition a {@link Subspace}
 	 *            in the splitting process
 	 */
-	public HierarchicalBuilder(int numberOfDimensions, double threshold, Contrast contrastEvaluator,
+	public HierarchicalBuilderCutoff(int numberOfDimensions, double threshold, int cutoff, Contrast contrastEvaluator,
 			boolean partition) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.notCorrelatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
+		this.cutoff = cutoff;
 		this.contrastEvaluator = contrastEvaluator;
 		this.partition = partition;
 	}
@@ -100,48 +107,64 @@ public class HierarchicalBuilder extends SubspaceBuilder {
 
 		// Create the full space
 		Subspace fullSpace = new Subspace();
+		boolean add = false;
+		// TODO
 		for (int i = 0; i < numberOfDimensions; i++) {
-			fullSpace.addDimension(i);
+			add = false;
+			for (int j = 0; j < numberOfDimensions && !add; j++) {
+				if (contrastMatrix[i][j] >= threshold) {
+					add = true;
+				}
+			}
+			if (add) {
+				fullSpace.addDimension(i);
+			}
 		}
+		System.out.println(fullSpace.toString());
+		
+		fullSpace.setContrast(contrastEvaluator.evaluateSubspaceContrast(fullSpace));
 
 		// Start the recursive procedure
-		hierarchicalBuildup(fullSpace);
+		SubspaceSet c_K = new SubspaceSet();
+		c_K.addSubspace(fullSpace);
+		hierarchicalBuildup(c_K);
 
 		return correlatedSubspaces;
 	}
 
-	private void hierarchicalBuildup(Subspace s) {
-		double contrast = 0;
-		int size = s.size();
-		boolean finished = false;
-		if (size < 2) {
-			finished = true;
-		} else if (size == 2) {
-			contrast = contrastMatrix[s.getDimension(0)][s.getDimension(1)];
-		} else {
-			if (correlatedSubspaces.contains(s) || notCorrelatedSubspaces.contains(s)) {
-				finished = true;
-			} else {
-				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
-			}
-		}
-		// System.out.println(s.toString() + " : " + contrast);
-
-		// If we have already checked the subspace in another branch of the tree
-		// we are finished, otherwise we carry on with calculating the contrast
-		if (!finished) {
-			s.setContrast(contrast);
-			if (contrast >= threshold) {
-				s.sort();
+	private void hierarchicalBuildup(SubspaceSet c_K) {
+		SubspaceSet c_Kplus1 = new SubspaceSet();
+		int size = 0;
+		for (Subspace s : c_K.getSubspaces()) {
+			if (s.getContrast() >= threshold) {
 				correlatedSubspaces.addSubspace(s);
-			} else {
-				notCorrelatedSubspaces.addSubspace(s);
-				if (size > 2) {
-					SubspaceSet splittingResult = split(s);
-					hierarchicalBuildup(splittingResult.getSubspace(0));
-					hierarchicalBuildup(splittingResult.getSubspace(1));
+			}
+			size = s.size();
+			if (size > 2) {
+				if (partition || !correlatedSubspaces.contains(s) && !notCorrelatedSubspaces.contains(s)) {
+
+					if (s.getContrast() >= threshold) {
+						correlatedSubspaces.addSubspace(s);
+					} else {
+						SubspaceSet splittingResult = split(s);
+						System.out.println(splittingResult.toString());
+						for (Subspace sr : splittingResult.getSubspaces()) {
+							sr.setContrast(contrastEvaluator.evaluateSubspaceContrast(sr));
+							if (sr.size() > 1) {
+								c_Kplus1.addSubspace(sr);
+							}
+						}
+					}
 				}
 			}
+		}
+
+		if (!c_Kplus1.isEmpty()) {
+			// Select the subspaces with highest contrast
+			c_Kplus1.selectTopK(cutoff);
+			// System.out.println(s.toString() + " : " + contrast);
+			// Recurse
+			hierarchicalBuildup(c_Kplus1);
 		}
 	}
 

@@ -23,6 +23,7 @@ import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
+import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
@@ -120,7 +121,9 @@ public class StreamTest {
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
 				pruningDifference, contrastEvaluator);
+		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrices[0].length, threshold, cutoff, contrastEvaluator, true);
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
+		stopwatch = new Stopwatch();
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
 				changeChecker, callback, stopwatch);
 		changeChecker.setCallback(streamHiCS);
@@ -191,6 +194,7 @@ public class StreamTest {
 
 		System.out.println("Number of elements: " + contrastEvaluator.getNumberOfElements());
 
+		Evaluator.displayResult(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
 		assertTrue(Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult) >= 0.75);
 	}
 }
