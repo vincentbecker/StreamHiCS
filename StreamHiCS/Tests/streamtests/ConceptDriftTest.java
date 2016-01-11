@@ -16,6 +16,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
@@ -67,7 +68,8 @@ public class ConceptDriftTest {
 
 		GaussianStream s5 = new GaussianStream(null, csvReader.read(path + "Test3.csv"), 1);
 
-		//GaussianStream s6 = new GaussianStream(csvReader.read(path + "Test4.csv"));
+		// GaussianStream s6 = new GaussianStream(csvReader.read(path +
+		// "Test4.csv"));
 		GaussianStream s6 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1);
 
 		ConceptDriftStream cds1 = new ConceptDriftStream();
@@ -130,7 +132,7 @@ public class ConceptDriftTest {
 		cr35000.addSubspace(new Subspace(0, 1));
 		cr35000.addSubspace(new Subspace(2, 3, 4));
 		correctResults.add(cr35000);
-		
+
 		SubspaceSet cr40000 = new SubspaceSet();
 		cr40000.addSubspace(new Subspace(0, 1));
 		cr40000.addSubspace(new Subspace(2, 3, 4));
@@ -153,7 +155,7 @@ public class ConceptDriftTest {
 		cr60000.addSubspace(new Subspace(0, 1));
 		cr60000.addSubspace(new Subspace(2, 3, 4));
 		correctResults.add(cr60000);
-		
+
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
@@ -166,18 +168,20 @@ public class ConceptDriftTest {
 		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(5, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
-		//SubspaceBuilder subspaceBuilder = new FastBuilder(5, threshold, pruningDifference, contrastEvaluator);
-		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker,
-				callback, null);
+		CorrelationSummary correlationSummary = new CorrelationSummary(5);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(5, threshold, cutoff, contrastEvaluator,
+				correlationSummary);
+		// SubspaceBuilder subspaceBuilder = new FastBuilder(5, threshold,
+		// pruningDifference, contrastEvaluator);
+		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, callback, correlationSummary, null);
 		changeChecker.setCallback(streamHiCS);
 
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = conceptDriftStream.nextInstance();
 			streamHiCS.add(inst);
 			numberSamples++;
-			if(numberSamples % 1000 == 0){
+			if (numberSamples % 1000 == 0) {
 				System.out.println("Time: " + numberSamples);
 				System.out.println("Number of elements: " + streamHiCS.getNumberOfElements());
 			}

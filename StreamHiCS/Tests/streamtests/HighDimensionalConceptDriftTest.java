@@ -2,6 +2,8 @@ package streamtests;
 
 import static org.junit.Assert.*;
 import java.util.ArrayList;
+
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +17,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
@@ -45,6 +48,14 @@ public class HighDimensionalConceptDriftTest {
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		stopwatch = new Stopwatch();
+	}
+	
+	@AfterClass
+	public static void calculateAverageScores() {
+		// System.out.println("Average TPvsFP-score: " + tpVSfpSum /
+		// testCounter);
+		// System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println(stopwatch.toString());
 	}
 	
 	@Before
@@ -135,11 +146,12 @@ public class HighDimensionalConceptDriftTest {
 		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(5000);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
+				contrastEvaluator, correlationSummary);
 		//SubspaceBuilder subspaceBuilder = new FastBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker,
-				callback, stopwatch);
+				callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {

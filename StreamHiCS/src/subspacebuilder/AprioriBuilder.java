@@ -1,6 +1,5 @@
 package subspacebuilder;
 
-import environment.Stopwatch;
 import fullsystem.Contrast;
 import streamdatastructures.CorrelationSummary;
 import subspace.Subspace;
@@ -41,11 +40,6 @@ public class AprioriBuilder extends SubspaceBuilder {
 	private int cutoff;
 
 	/**
-	 * The difference in contrast allowed to prune a {@link Subspace}.
-	 */
-	private double pruningDifference;
-
-	/**
 	 * The {@link Contrast} evaluator.
 	 */
 	private Contrast contrastEvaluator;
@@ -55,7 +49,7 @@ public class AprioriBuilder extends SubspaceBuilder {
 	 * coefficient for pairs of dimensions.
 	 */
 	private CorrelationSummary correlationSummary;
-	private Stopwatch stopwatch;
+	//private Stopwatch stopwatch;
 
 	/**
 	 * Creates an instance of this class.
@@ -73,25 +67,23 @@ public class AprioriBuilder extends SubspaceBuilder {
 	 * @param correlationSummary
 	 *            The {@link CorrelationSummary}
 	 */
-	public AprioriBuilder(int numberOfDimensions, double threshold, int cutoff, double pruningDifference,
-			Contrast contrastEvaluator, CorrelationSummary correlationSummary, Stopwatch stopwatch) {
+	public AprioriBuilder(int numberOfDimensions, double threshold, int cutoff,
+			Contrast contrastEvaluator, CorrelationSummary correlationSummary) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
-		this.pruningDifference = pruningDifference;
 		this.contrastEvaluator = contrastEvaluator;
 		this.correlationSummary = correlationSummary;
-		this.stopwatch = stopwatch;
 	}
 
 	@Override
 	public SubspaceSet buildCorrelatedSubspaces() {
 		correlatedSubspaces.clear();
 		SubspaceSet c_K = new SubspaceSet();
-		double contrast = 0;
+		//double contrast = 0;
 		// Create all 2-dimensional candidates
-		stopwatch.start("2D-contrast");
+		//stopwatch.start("2D-contrast");
 		/*
 		 * for (int i = 0; i < numberOfDimensions - 1; i++) { for (int j = i +
 		 * 1; j < numberOfDimensions; j++) { Subspace s = new Subspace();
@@ -108,11 +100,12 @@ public class AprioriBuilder extends SubspaceBuilder {
 					Subspace s = new Subspace();
 					s.addDimension(i);
 					s.addDimension(j);
+					s.setContrast(contrastEvaluator.evaluateSubspaceContrast(s));
 					c_K.addSubspace(s);
 				}
 			}
 		}
-		stopwatch.stop("2D-contrast");
+		//stopwatch.stop("2D-contrast");
 
 		// Select cutoff subspaces
 		c_K.selectTopK(cutoff);

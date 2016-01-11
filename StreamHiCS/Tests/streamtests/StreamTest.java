@@ -2,6 +2,7 @@ package streamtests;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -66,6 +68,7 @@ public class StreamTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		stopwatch = new Stopwatch();
 		stream = new GaussianStream(null, covarianceMatrices[0], 1);
 
 		if (method.equals("slidingWindow")) {
@@ -119,18 +122,27 @@ public class StreamTest {
 		}
 
 		contrastEvaluator = new Contrast(m, alpha, adapter);
+		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrices[0].length);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
-				pruningDifference, contrastEvaluator);
+				contrastEvaluator, correlationSummary);
 		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrices[0].length, threshold, cutoff, contrastEvaluator, true);
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		stopwatch = new Stopwatch();
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, stopwatch);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		correctResult = new SubspaceSet();
 	}
 
+	@AfterClass
+	public static void calculateAverageScores() {
+		// System.out.println("Average TPvsFP-score: " + tpVSfpSum /
+		// testCounter);
+		// System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println(stopwatch.toString());
+	}
+	
 	@Before
 	public void setUp() {
 		correctResult.clear();

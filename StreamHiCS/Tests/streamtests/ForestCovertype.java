@@ -14,6 +14,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ArffFileStream;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
@@ -68,8 +69,9 @@ public class ForestCovertype {
 		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
+				contrastEvaluator, correlationSummary);
 
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
@@ -77,7 +79,7 @@ public class ForestCovertype {
 
 		ChangeChecker changeChecker = new TimeCountChecker(10000);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, stopwatch);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		while (stream.hasMoreInstances()) {

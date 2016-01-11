@@ -90,7 +90,7 @@ public class HighDimensionalStreamHiCSTest {
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(numberOfDimensions, blockSize, horizon, correctResult));
 	}
-	
+
 	@Test
 	public void subspaceTest3() {
 		String testName = "Test3";
@@ -279,11 +279,12 @@ public class HighDimensionalStreamHiCSTest {
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 
 		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
-				pruningDifference, contrastEvaluator, correlationSummary, stopwatch);
+		//SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
+		//		contrastEvaluator, correlationSummary);
 
-		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff, contrastEvaluator, true);
-		
+		SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff,
+		contrastEvaluator, correlationSummary, true);
+
 		ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
 				changeChecker, callback, correlationSummary, stopwatch);

@@ -1,6 +1,7 @@
 package subspacebuilder;
 
 import fullsystem.Contrast;
+import streamdatastructures.CorrelationSummary;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 
@@ -50,6 +51,12 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 	private Contrast contrastEvaluator;
 
 	/**
+	 * The {@link CorrelationSummary} to calculate the Pearsons's correlation
+	 * coefficient for pairs of dimensions.
+	 */
+	private CorrelationSummary correlationSummary;
+
+	/**
 	 * Holds the contrast of all two-dimensional {@link Subspace}s.
 	 */
 	private double[][] contrastMatrix;
@@ -74,13 +81,14 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 	 *            in the splitting process
 	 */
 	public HierarchicalBuilderCutoff(int numberOfDimensions, double threshold, int cutoff, Contrast contrastEvaluator,
-			boolean partition) {
+			CorrelationSummary correlationSummary, boolean partition) {
 		this.correlatedSubspaces = new SubspaceSet();
 		this.notCorrelatedSubspaces = new SubspaceSet();
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
 		this.cutoff = cutoff;
 		this.contrastEvaluator = contrastEvaluator;
+		this.correlationSummary = correlationSummary;
 		this.partition = partition;
 	}
 
@@ -88,22 +96,19 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 	public SubspaceSet buildCorrelatedSubspaces() {
 		correlatedSubspaces.clear();
 		notCorrelatedSubspaces.clear();
-		contrastMatrix = new double[numberOfDimensions][numberOfDimensions];
-		double contrast = 0;
-		// Calculate the contrast for all two dimensional subspaces and store
-		// them in a lookup matrix since they are needed for splitting.
-		Subspace s;
-		for (int i = 0; i < numberOfDimensions - 1; i++) {
-			for (int j = i + 1; j < numberOfDimensions; j++) {
-				s = new Subspace();
-				s.addDimension(i);
-				s.addDimension(j);
-				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
-				s.setContrast(contrast);
-				contrastMatrix[i][j] = contrast;
-				contrastMatrix[j][i] = contrast;
-			}
-		}
+		/*
+		 * contrastMatrix = new double[numberOfDimensions][numberOfDimensions];
+		 * double contrast = 0; // Calculate the contrast for all two
+		 * dimensional subspaces and store // them in a lookup matrix since they
+		 * are needed for splitting. Subspace s; for (int i = 0; i <
+		 * numberOfDimensions - 1; i++) { for (int j = i + 1; j <
+		 * numberOfDimensions; j++) { s = new Subspace(); s.addDimension(i);
+		 * s.addDimension(j); contrast =
+		 * contrastEvaluator.evaluateSubspaceContrast(s);
+		 * s.setContrast(contrast); contrastMatrix[i][j] = contrast;
+		 * contrastMatrix[j][i] = contrast; } }
+		 */
+		contrastMatrix = correlationSummary.getCorrelationMatrix();
 
 		// Create the full space
 		Subspace fullSpace = new Subspace();
@@ -120,8 +125,8 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 				fullSpace.addDimension(i);
 			}
 		}
-		System.out.println(fullSpace.toString());
-		
+		//System.out.println(fullSpace.toString());
+
 		fullSpace.setContrast(contrastEvaluator.evaluateSubspaceContrast(fullSpace));
 
 		// Start the recursive procedure

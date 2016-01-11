@@ -458,10 +458,12 @@ public class StreamHiCSTest {
 
 		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
-				pruningDifference, contrastEvaluator, correlationSummary, stopwatch);
+				contrastEvaluator, correlationSummary);
 
-		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff, contrastEvaluator, true);
-		
+		// SubspaceBuilder subspaceBuilder = new
+		// HierarchicalBuilderCutoff(covarianceMatrix.length, threshold, cutoff,
+		// contrastEvaluator, true);
+
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
 		// contrastEvaluator);

@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
@@ -19,10 +21,12 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import clustree.ClusTree;
+import environment.Stopwatch;
 import moa.clusterers.AbstractClusterer;
 import moa.clusterers.clustream.Clustream;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CoresetAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
@@ -48,6 +52,17 @@ public class Waveform40_sorted {
 		}
 	};
 	private StreamHiCS streamHiCS;
+	private static Stopwatch stopwatch;
+	
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		stopwatch = new Stopwatch();
+	}
+	
+	@AfterClass
+	public static void afterClass() {
+		System.out.println(stopwatch.toString());
+	}
 	
 	@Test
 	public void WaveformSorted() {
@@ -106,8 +121,9 @@ public class Waveform40_sorted {
 		//SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
 		SummarisationAdapter adapter = new CoresetAdapter( 100000, 1000);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
+				contrastEvaluator, correlationSummary);
 		
 		// SubspaceBuilder subspaceBuilder = new
 		// FastBuilder(covarianceMatrix.length, threshold, pruningDifference,
@@ -115,7 +131,7 @@ public class Waveform40_sorted {
 
 		ChangeChecker changeChecker = new TimeCountChecker(checkCount);
 		//ChangeChecker changeChecker = new FullSpaceContrastChecker(checkCount, numberOfDimensions, contrastEvaluator, 0.2, 0.1);
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, null);
+		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 		
 		PearsonsCorrelation pc = new PearsonsCorrelation();

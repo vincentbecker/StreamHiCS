@@ -178,6 +178,8 @@ public class StreamHiCS implements Callback {
 	/**
 	 * Carries out an evaluation of the stored correlated {@link Subspace}s and
 	 * searches for new ones.
+	 * 
+	 * @return 
 	 */
 	private boolean evaluateCorrelatedSubspaces() {
 		boolean update = false;

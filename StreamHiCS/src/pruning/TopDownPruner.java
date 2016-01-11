@@ -78,5 +78,4 @@ public class TopDownPruner extends AbstractPruner {
 
 		return resultSet;
 	}
-
 }

@@ -2,17 +2,21 @@ package streamtests;
 
 import static org.junit.Assert.*;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.generators.RandomRBFGeneratorDrift;
 import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusterAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -37,7 +41,21 @@ public class RBFDriftTest {
 
 		}
 	};
+	private static Stopwatch stopwatch;
 
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		stopwatch = new Stopwatch();
+	}
+	
+	@AfterClass
+	public static void calculateAverageScores() {
+		// System.out.println("Average TPvsFP-score: " + tpVSfpSum /
+		// testCounter);
+		// System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println(stopwatch.toString());
+	}
+	
 	@Before
 	public void setUp() throws Exception {
 		stream = new RandomRBFGeneratorDrift();
@@ -101,10 +119,11 @@ public class RBFDriftTest {
 		}
 
 		contrastEvaluator = new Contrast(m, alpha, adapter);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, pruningDifference,
-				contrastEvaluator);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
+				contrastEvaluator, correlationSummary);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, null);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 	}
 
