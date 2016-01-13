@@ -162,7 +162,9 @@ public class StreamHiCS implements Callback {
 			instance = newInst;
 		}
 		contrastEvaluator.add(instance);
-		correlationSummary.addInstance(instance);
+		if(correlationSummary != null){
+			correlationSummary.addInstance(instance);
+		}
 		stopwatch.stop("Adding");
 		changeChecker.poll();
 	}
@@ -179,7 +181,7 @@ public class StreamHiCS implements Callback {
 	 * Carries out an evaluation of the stored correlated {@link Subspace}s and
 	 * searches for new ones.
 	 * 
-	 * @return 
+	 * @return True, if the correlated subspaces were updated, false otherwise.
 	 */
 	private boolean evaluateCorrelatedSubspaces() {
 		boolean update = false;
@@ -248,10 +250,13 @@ public class StreamHiCS implements Callback {
 	@Override
 	public void onAlarm() {
 		stopwatch.start("Evaluation");
-		if (evaluateCorrelatedSubspaces()) {
+		boolean updated = evaluateCorrelatedSubspaces();
+		stopwatch.stop("Evaluation");
+		if (updated) {
+			//System.out.println(correlatedSubspaces.toString());
 			// Notify the callback
 			callback.onAlarm();
 		}
-		stopwatch.stop("Evaluation");
+
 	}
 }

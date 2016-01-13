@@ -15,7 +15,7 @@ import moa.options.FloatOption;
 import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -336,7 +336,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		 * mcs.lambdaOption.setValue(0.05); mcs.prepareForUse();
 		 */
 		// StreamHiCS
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);

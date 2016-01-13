@@ -26,7 +26,7 @@ import moa.streams.ConceptDriftStream;
 import statisticaltests.KolmogorovSmirnov;
 import statisticaltests.StatisticalTest;
 import streamdatastructures.DataBundle;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.Selection;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
@@ -86,7 +86,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
 
-		adapter = new MicroclusterAdapter(mcs);
+		adapter = new MicroclusteringAdapter(mcs);
 		this.contrast = new Contrast(20, 0.2, adapter);
 		this.statTest = new KolmogorovSmirnov();
 		initTimer();
@@ -123,7 +123,7 @@ class MicroclusterSurface extends JPanel implements ActionListener {
 
 		// Draw each centroid
 		int weight = 0;
-		Clustering microclusters = ((MicroclusterAdapter) adapter).getMicroclusters();
+		Clustering microclusters = ((MicroclusteringAdapter) adapter).getMicroclusters();
 		Cluster c;
 		drawSlice = (count % 500 == 0);
 		Selection s = null;

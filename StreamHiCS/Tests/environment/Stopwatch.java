@@ -20,6 +20,19 @@ public class Stopwatch {
 			watches.get(name).stop();
 		}
 	}
+	
+	public double getTime(String name){
+		if (watches.containsKey(name)) {
+			return watches.get(name).getTotalTime();
+		}
+		return -1;
+	}
+	
+	public void reset(){
+		for(NamedWatch w : watches.values()){
+			w.reset();
+		}
+	}
 
 	@Override
 	public String toString() {
@@ -32,7 +45,7 @@ public class Stopwatch {
 		return res;
 	}
 
-	private class NamedWatch {
+	private static class NamedWatch {
 		private String name;
 		private Duration totalTime;
 		private Instant beginning;
@@ -41,10 +54,6 @@ public class Stopwatch {
 
 		private NamedWatch(String name){
 			this.name = name;
-		}
-		
-		private String getName() {
-			return name;
 		}
 
 		private double getTotalTime() {
@@ -67,6 +76,13 @@ public class Stopwatch {
 				}
 				running = false;
 			}
+		}
+		
+		private void reset(){
+			running = false;
+			beginning = null;
+			end = null;
+			totalTime = null;
 		}
 
 		@Override

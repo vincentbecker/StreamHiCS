@@ -17,7 +17,7 @@ import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
@@ -104,7 +104,7 @@ public class StreamTest {
 			mcs.betaOption.setValue(0.005);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
@@ -115,7 +115,7 @@ public class StreamTest {
 
 			ClusTree mcs = new ClusTree();
 			mcs.resetLearningImpl();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 
 		} else {
 			adapter = null;

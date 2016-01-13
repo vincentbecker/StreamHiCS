@@ -6,7 +6,7 @@ import weka.core.Instance;
 
 /**
  * This class represents an adapter to an underlying summarisation structure and
- * holds the necessary emthods.
+ * holds the necessary methods.
  * 
  * @author Vincent
  *

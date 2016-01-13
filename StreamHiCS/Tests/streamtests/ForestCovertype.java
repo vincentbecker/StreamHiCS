@@ -15,7 +15,7 @@ import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
@@ -66,7 +66,7 @@ public class ForestCovertype {
 
 		ClusTree mcs = new ClusTree();
 		mcs.resetLearningImpl();
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 
 		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);

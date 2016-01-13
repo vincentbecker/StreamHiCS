@@ -17,7 +17,7 @@ import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import streams.UncorrelatedStream;
@@ -165,7 +165,7 @@ public class ConceptDriftTest {
 		int cutoff = 8;
 		double pruningDifference = 0.2;
 
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
 		CorrelationSummary correlationSummary = new CorrelationSummary(5);

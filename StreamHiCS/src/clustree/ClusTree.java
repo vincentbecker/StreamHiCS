@@ -55,7 +55,7 @@ public class ClusTree extends AbstractClusterer {
 	private long timestamp;
 
 	// TODO: Add Option for that
-	protected boolean breadthFirstStrat = false;
+	protected boolean breadthFirstStrat = true;
 
 	// TODO: cleanup
 	private Entry alsoUpdate;

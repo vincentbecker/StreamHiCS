@@ -27,7 +27,7 @@ import moa.clusterers.clustream.Clustream;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;

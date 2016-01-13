@@ -6,6 +6,7 @@ import moa.core.ObjectRepository;
 import moa.options.AbstractOptionHandler;
 import moa.options.FloatOption;
 import moa.options.IntOption;
+import moa.options.StringOption;
 import moa.tasks.TaskMonitor;
 import weka.core.Instance;
 
@@ -19,7 +20,7 @@ import weka.core.Instance;
  */
 public class FadingCentroids extends AbstractOptionHandler {
 	/**
-	 * 
+	 * Serial version ID.
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -76,6 +77,11 @@ public class FadingCentroids extends AbstractOptionHandler {
 	public int faded = 0;
 
 	/**
+	 * Determines which version of the centroids to use.
+	 */
+	private String centroidVersion;
+
+	/**
 	 * The option determining the horizon for fading.
 	 */
 	public IntOption horizonOption = new IntOption("horizon", 'h', "Horizon", 1000, 1, Integer.MAX_VALUE);
@@ -91,6 +97,9 @@ public class FadingCentroids extends AbstractOptionHandler {
 	 * {@link Centroid}s.
 	 */
 	public FloatOption learningRateOption = new FloatOption("scale", 's', "Scale.", 1, 0, Double.MAX_VALUE);
+
+	public StringOption centroidVersionOption = new StringOption("centroidVersion", 'c', "Select the centroid version",
+			"adapting");
 
 	/**
 	 * An array containing all the currently held {@link Centroid}s.
@@ -144,8 +153,18 @@ public class FadingCentroids extends AbstractOptionHandler {
 	 *            The vector
 	 */
 	private void createCentroid(double[] vector) {
-		centroids.add(new AdaptingCentroid(vector, negLambda, time, radius, learningRate));
-		// centroids.add(new RadiusCentroid(vector, negLambda, time, radius));
+		Centroid c;
+		switch (centroidVersion) {
+		case "adapting":
+			c = new AdaptingCentroid(vector, negLambda, time, radius, learningRate);
+			break;
+		case "radius":
+			c = new RadiusCentroid(vector, negLambda, time, radius);
+			break;
+		default:
+			c = new AdaptingCentroid(vector, negLambda, time, radius, learningRate);
+		}
+		centroids.add(c);
 	}
 
 	/**
@@ -237,6 +256,7 @@ public class FadingCentroids extends AbstractOptionHandler {
 		this.negLambda = -2.0 / horizonOption.getValue();
 		this.radius = radiusOption.getValue();
 		this.learningRate = learningRateOption.getValue();
+		this.centroidVersion = centroidVersionOption.getValue();
 		initialized = false;
 		time = 0;
 	}

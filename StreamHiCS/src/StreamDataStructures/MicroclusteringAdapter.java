@@ -11,7 +11,7 @@ import weka.core.Instance;
  * @author Vincent
  *
  */
-public class MicroclusterAdapter extends SummarisationAdapter {
+public class MicroclusteringAdapter extends SummarisationAdapter {
 
 	/**
 	 * The micro-clustering implementation instance. 
@@ -28,7 +28,7 @@ public class MicroclusterAdapter extends SummarisationAdapter {
 	 * 
 	 * @param microclusterImplementation The micro-cluster implementation
 	 */
-	public MicroclusterAdapter(AbstractClusterer microclusterImplementation) {
+	public MicroclusteringAdapter(AbstractClusterer microclusterImplementation) {
 		this.microclusterImplementation = microclusterImplementation;
 	}
 

@@ -6,10 +6,12 @@ import org.apache.commons.math3.util.MathArrays;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import environment.Stopwatch;
 import fullsystem.Contrast;
-import moa.clusterers.clustree.ClusTree;
+import clustree.ClusTree;
 import streamdatastructures.CentroidsAdapter;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindow;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -47,7 +49,7 @@ public class ContrastTest {
 	 */
 	private static Subspace subspace;
 
-	private final static String method = "ClusTreeMC";
+	private final static String method = "centroids";
 
 	private static final int m = 100;
 	private static double alpha;
@@ -66,15 +68,15 @@ public class ContrastTest {
 			adapter = new SlidingWindowAdapter(2, numInstances);
 
 			targetLowContrast = 0;
-			targetMiddleContrast = 0.2;
+			targetMiddleContrast = 0.1;
 			targetHighContrast = 0.5;
 
-		} else if (method.equals("adaptiveCentroids")) {
+		} else if (method.equals("centroids")) {
 			alpha = 0.1;
-			int horizon = 1000;
-			double radius = 0.2;
+			int horizon = 5000;
+			double radius = 0.001;
 			double learningRate = 0.1;
-			
+
 			adapter = new CentroidsAdapter(horizon, radius, learningRate);
 			contrastEvaluator = new Contrast(m, alpha, adapter);
 
@@ -91,22 +93,23 @@ public class ContrastTest {
 			mcs.muOption.setValue(10);
 			mcs.lambdaOption.setValue(0.005);
 			mcs.resetLearningImpl();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 
 			targetLowContrast = 0.2;
 			targetMiddleContrast = 0.4;
 			targetHighContrast = 0.6;
-			
+
 		} else if (method.equals("ClusTreeMC")) {
-			alpha = 0.1;
+			alpha = 0.2;
 			ClusTree mcs = new ClusTree();
-			mcs.resetLearningImpl();
-			adapter = new MicroclusterAdapter(mcs);
+			mcs.horizonOption.setValue(5000);
+			mcs.resetLearning();
+			adapter = new MicroclusteringAdapter(mcs);
 
 			targetLowContrast = 0.15;
 			targetMiddleContrast = 0.35;
 			targetHighContrast = 0.7;
-			
+
 		} else {
 			adapter = null;
 		}
@@ -241,7 +244,7 @@ public class ContrastTest {
 	public void contrastTest14() {
 		// Contrast should be high
 		DoubleFunction f = x -> Math.sin(x);
-		double contrast = carryOutTest(f, 0, 2*Math.PI);
+		double contrast = carryOutTest(f, 0, 2 * Math.PI);
 		System.out.println("Test 14 : " + contrast);
 		assertTrue(Math.abs(targetHighContrast - contrast) <= epsilon);
 	}
@@ -250,14 +253,13 @@ public class ContrastTest {
 	public void contrastTest15() {
 		// Contrast should be high
 		DoubleFunction f = x -> x + Math.sin(x);
-		double contrast = carryOutTest(f, 0, 2*Math.PI);
+		double contrast = carryOutTest(f, 0, 2 * Math.PI);
 		System.out.println("Test 15 : " + contrast);
 		assertTrue(Math.abs(targetHighContrast - contrast) <= epsilon);
 	}
 
 	@Test
 	public void contrastTest16() {
-		contrastEvaluator.clear();
 		// Contrast should be 0
 		double x = 0;
 		double y = 0;
@@ -299,8 +301,34 @@ public class ContrastTest {
 		assertTrue(Math.abs(targetMiddleContrast - contrast) <= epsilon);
 	}
 
+	@Test
+	public void contrastTest19() {
+		Stopwatch stopwatch = new Stopwatch();
+		for (int numberDims = 100; numberDims <= 100; numberDims++) {
+			contrastEvaluator.clear();
+			subspace.clear();
+			stopwatch.reset();
+			for(int i = 0; i < numberDims; i++){
+				subspace.addDimension(i);
+			}
+			for (int i = 0; i < numInstances; i++) {
+				double[] values = new double[numberDims];
+				double x = Math.random();
+				for (int j = 0; j < numberDims; j++) {
+					values[j] = x*x;
+				}
+				addInstance(values);
+			}
+			//System.out.println(contrastEvaluator.getNumberOfElements());
+			stopwatch.start("Evaluation");
+			double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
+			stopwatch.stop("Evaluation");
+			System.out.println(numberDims + "," + contrast + "," + stopwatch.getTime("Evaluation"));
+		}
+		fail();
+	}
+
 	private double carryOutTest(DoubleFunction f, double lowerBound, double upperBound) {
-		contrastEvaluator.clear();
 		double step = (upperBound - lowerBound) / numInstances;
 		int[] indexes = new int[numInstances];
 		for (int i = 0; i < numInstances; i++) {
@@ -321,6 +349,14 @@ public class ContrastTest {
 		Instance inst = new DenseInstance(2);
 		inst.setValue(0, x);
 		inst.setValue(1, y);
+		contrastEvaluator.add(inst);
+	}
+
+	private void addInstance(double[] values) {
+		Instance inst = new DenseInstance(values.length);
+		for (int i = 0; i < values.length; i++) {
+			inst.setValue(i, values[i]);
+		}
 		contrastEvaluator.add(inst);
 	}
 }

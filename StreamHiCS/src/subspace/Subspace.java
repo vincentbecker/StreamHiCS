@@ -70,6 +70,13 @@ public class Subspace {
 			dimensions.add(dimension);
 		}
 	}
+	
+	/**
+	 * Clear all dimensions.
+	 */
+	public void clear(){
+		dimensions = new ArrayList<Integer>();
+	}
 
 	/**
 	 * Returns the number of dimensions in the {@link Subspace}.

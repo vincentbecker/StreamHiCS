@@ -109,6 +109,7 @@ public class Contrast {
 		DataBundle slicedData;
 		double deviation;
 		// Do Monte Carlo iterations
+		int sumSliceWeight = 0;
 		for (int i = 0; i < m; i++) {
 			shuffledDimensions = subspace.getDimensions();
 			// Shuffle dimensions
@@ -117,6 +118,10 @@ public class Contrast {
 			projectedData = summarisationAdapter.getProjectedData(shuffledDimensions[shuffledDimensions.length - 1]);
 			// Get the randomly sliced data
 			slicedData = summarisationAdapter.getSlicedData(shuffledDimensions, selectionAlpha);
+			double[] weights = slicedData.getWeights();
+			for(int j = 0; j < weights.length; j++){
+				sumSliceWeight += weights[j];
+			}
 			if (slicedData.size() > 1) {
 				// Calculate the deviation and add it to the overall sum
 				deviation = statisticalTest.calculateWeightedDeviation(projectedData, slicedData);
@@ -131,7 +136,8 @@ public class Contrast {
 				// System.out.println("Slice too small: " + slicedData.size());
 			}
 		}
-
+		System.out.println(((double)sumSliceWeight)/m);
+		
 		// Return the mean of the intermediate results. If all results were NaN,
 		// 0 is returned.
 		double mean = 0;

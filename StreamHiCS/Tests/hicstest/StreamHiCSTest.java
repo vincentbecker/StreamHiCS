@@ -27,7 +27,7 @@ import moa.clusterers.clustream.Clustream;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
@@ -415,7 +415,7 @@ public class StreamHiCSTest {
 			mcs.muOption.setValue(10);
 			mcs.lambdaOption.setValue(0.05);
 			mcs.resetLearning();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
 			alpha = 0.1;
@@ -427,7 +427,7 @@ public class StreamHiCSTest {
 			ClusTree mcs = new ClusTree();
 			mcs.horizonOption.setValue(1000);
 			mcs.resetLearning();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 
 		} else if (method.equals("ClustreamMC")) {
 			alpha = 0.1;
@@ -440,7 +440,7 @@ public class StreamHiCSTest {
 			mcs.kernelRadiFactorOption.setValue(2);
 			mcs.maxNumKernelsOption.setValue(500);
 			mcs.prepareForUse();
-			adapter = new MicroclusterAdapter(mcs);
+			adapter = new MicroclusteringAdapter(mcs);
 		} else if (method.equals("Coreset")) {
 			alpha = 0.1;
 			epsilon = 0;

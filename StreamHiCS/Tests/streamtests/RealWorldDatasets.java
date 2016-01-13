@@ -24,7 +24,7 @@ import clustree.ClusTree;
 import environment.Stopwatch;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
@@ -363,7 +363,7 @@ public class RealWorldDatasets {
 		mcs.prepareForUse();
 		
 		
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);

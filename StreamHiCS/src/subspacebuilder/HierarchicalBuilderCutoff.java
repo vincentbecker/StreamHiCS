@@ -96,19 +96,28 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 	public SubspaceSet buildCorrelatedSubspaces() {
 		correlatedSubspaces.clear();
 		notCorrelatedSubspaces.clear();
-		/*
-		 * contrastMatrix = new double[numberOfDimensions][numberOfDimensions];
-		 * double contrast = 0; // Calculate the contrast for all two
-		 * dimensional subspaces and store // them in a lookup matrix since they
-		 * are needed for splitting. Subspace s; for (int i = 0; i <
-		 * numberOfDimensions - 1; i++) { for (int j = i + 1; j <
-		 * numberOfDimensions; j++) { s = new Subspace(); s.addDimension(i);
-		 * s.addDimension(j); contrast =
-		 * contrastEvaluator.evaluateSubspaceContrast(s);
-		 * s.setContrast(contrast); contrastMatrix[i][j] = contrast;
-		 * contrastMatrix[j][i] = contrast; } }
-		 */
-		contrastMatrix = correlationSummary.getCorrelationMatrix();
+
+		if (correlationSummary != null) {
+			contrastMatrix = correlationSummary.getCorrelationMatrix();
+		} else {
+			contrastMatrix = new double[numberOfDimensions][numberOfDimensions];
+			double contrast = 0;
+			// Calculate the contrast for all two dimensional subspaces and
+			// store them in a lookup matrix since they are needed for
+			// splitting.
+			Subspace s;
+			for (int i = 0; i < numberOfDimensions - 1; i++) {
+				for (int j = i + 1; j < numberOfDimensions; j++) {
+					s = new Subspace();
+					s.addDimension(i);
+					s.addDimension(j);
+					contrast = contrastEvaluator.evaluateSubspaceContrast(s);
+					s.setContrast(contrast);
+					contrastMatrix[i][j] = contrast;
+					contrastMatrix[j][i] = contrast;
+				}
+			}
+		}
 
 		// Create the full space
 		Subspace fullSpace = new Subspace();
@@ -125,7 +134,7 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 				fullSpace.addDimension(i);
 			}
 		}
-		//System.out.println(fullSpace.toString());
+		// System.out.println(fullSpace.toString());
 
 		fullSpace.setContrast(contrastEvaluator.evaluateSubspaceContrast(fullSpace));
 

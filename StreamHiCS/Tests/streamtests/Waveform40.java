@@ -16,7 +16,7 @@ import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
 import moa.streams.generators.WaveformGenerator;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusterAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
@@ -71,7 +71,7 @@ public class Waveform40 {
 		int cutoff = 8;
 		double pruningDifference = 0.15;
 
-		SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(checkInterval);
 		

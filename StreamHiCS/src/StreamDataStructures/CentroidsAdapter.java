@@ -37,6 +37,7 @@ public class CentroidsAdapter extends SummarisationAdapter {
 		centroidsImplementation.horizonOption.setValue(horizon);
 		centroidsImplementation.radiusOption.setValue(radius);
 		centroidsImplementation.learningRateOption.setValue(learningRate);
+		centroidsImplementation.centroidVersionOption.setValue("radius");
 		centroidsImplementation.prepareForUse();
 	}
 
