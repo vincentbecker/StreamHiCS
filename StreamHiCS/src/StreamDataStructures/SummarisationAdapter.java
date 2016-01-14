@@ -16,7 +16,7 @@ public abstract class SummarisationAdapter {
 	/**
 	 * Flag to set which method to use to create the slice.
 	 */
-	private boolean fast = true;
+	private boolean fast = false;
 
 	/**
 	 * An array of {@link DataBundle}s, one for each dimension.
@@ -141,10 +141,14 @@ public abstract class SummarisationAdapter {
 
 			BitSet dimSelected;
 			Selection selection = new Selection(n, selectionAlpha);
+			int card = 0;
+			int card2 = 0;
 			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
 				dimSelected = selection.selectRandomBlock(data[shuffledDimensions[i]]);
+				card = dimSelected.cardinality();
 				// boolean conjunction
 				selected.and(dimSelected);
+				card2 = selected.cardinality();
 			}
 
 			int l = selected.cardinality();

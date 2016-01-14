@@ -301,33 +301,6 @@ public class ContrastTest {
 		assertTrue(Math.abs(targetMiddleContrast - contrast) <= epsilon);
 	}
 
-	@Test
-	public void contrastTest19() {
-		Stopwatch stopwatch = new Stopwatch();
-		for (int numberDims = 100; numberDims <= 100; numberDims++) {
-			contrastEvaluator.clear();
-			subspace.clear();
-			stopwatch.reset();
-			for(int i = 0; i < numberDims; i++){
-				subspace.addDimension(i);
-			}
-			for (int i = 0; i < numInstances; i++) {
-				double[] values = new double[numberDims];
-				double x = Math.random();
-				for (int j = 0; j < numberDims; j++) {
-					values[j] = x*x;
-				}
-				addInstance(values);
-			}
-			//System.out.println(contrastEvaluator.getNumberOfElements());
-			stopwatch.start("Evaluation");
-			double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
-			stopwatch.stop("Evaluation");
-			System.out.println(numberDims + "," + contrast + "," + stopwatch.getTime("Evaluation"));
-		}
-		fail();
-	}
-
 	private double carryOutTest(DoubleFunction f, double lowerBound, double upperBound) {
 		double step = (upperBound - lowerBound) / numInstances;
 		int[] indexes = new int[numInstances];

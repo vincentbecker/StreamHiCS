@@ -1,7 +1,5 @@
 package environment;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 
 public class Stopwatch {
@@ -47,9 +45,9 @@ public class Stopwatch {
 
 	private static class NamedWatch {
 		private String name;
-		private Duration totalTime;
-		private Instant beginning;
-		private Instant end;
+		private long totalTime;
+		private long beginning;
+		private long end;
 		private boolean running = false;
 
 		private NamedWatch(String name){
@@ -57,37 +55,32 @@ public class Stopwatch {
 		}
 
 		private double getTotalTime() {
-			return totalTime.getSeconds() + ((double) totalTime.getNano())/1000000000;
+			return ((double) totalTime)/1000000000;
 		}
 
 		private void start() {
-			beginning = Instant.now();
+			beginning = System.nanoTime();
 			running = true;
 		}
 
 		private void stop() {
 			if (running) {
-				end = Instant.now();
-				Duration d = Duration.between(beginning, end);
-				if(totalTime == null){
-					totalTime = d;
-				}else{
-					totalTime = totalTime.plus(d);
-				}
+				end = System.nanoTime();
+				totalTime += (end - beginning);
 				running = false;
 			}
 		}
 		
 		private void reset(){
 			running = false;
-			beginning = null;
-			end = null;
-			totalTime = null;
+			beginning = 0;
+			end = 0;
+			totalTime = 0;
 		}
 
 		@Override
 		public String toString() {
-			return name + ": " + (totalTime.getSeconds() + ((double) totalTime.getNano())/1000000000) + "s";
+			return name + ": " + getTotalTime() + "s";
 		}
 	}
 }

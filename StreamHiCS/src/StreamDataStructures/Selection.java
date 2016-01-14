@@ -174,7 +174,7 @@ public class Selection {
 		double accumulatedWeight = weights[startingPoint];
 		double selectionPerSide = (selectionSize - weights[startingPoint]) / 2;
 		boolean searchOn = false;
-		while (accumulatedWeight < selectionSize) {
+		while (accumulatedWeight < selectionSize - 0.000001) {
 			while ((lowerWeight < selectionPerSide || (searchOn && accumulatedWeight < selectionSize)) && lower > 0) {
 				lower--;
 				lowerWeight += weights[lower];
