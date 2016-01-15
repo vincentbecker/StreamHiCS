@@ -1,4 +1,4 @@
-package streamtests;
+package streamhics_realworlddata;
 
 import static org.junit.Assert.*;
 
@@ -22,11 +22,11 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import clustree.ClusTree;
 import environment.Stopwatch;
+import moa.clusterers.denstream.WithDBSCAN;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;

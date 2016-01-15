@@ -37,9 +37,9 @@ public class Evaluator {
 			}
 		}
 
-		System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
+		//System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
 		double score = recall - fpRatio;
-		System.out.println("TPvsFP-score: " + score);
+		//System.out.println("TPvsFP-score: " + score);
 		return score;
 	}
 
@@ -76,7 +76,7 @@ public class Evaluator {
 			averageMaxJaccardIndex = sumMaxJaccardIndex / result.size();
 		}
 
-		System.out.println("Average max Jaccard-index: " + averageMaxJaccardIndex);
+		//System.out.println("Average max Jaccard-index: " + averageMaxJaccardIndex);
 
 		return averageMaxJaccardIndex;
 	}
@@ -114,7 +114,7 @@ public class Evaluator {
 			averageMaxSS = sumMaxSS / result.size();
 		}
 
-		System.out.println("Average max structural similarity: " + averageMaxSS);
+		//System.out.println("Average max structural similarity: " + averageMaxSS);
 
 		return averageMaxSS;
 	}

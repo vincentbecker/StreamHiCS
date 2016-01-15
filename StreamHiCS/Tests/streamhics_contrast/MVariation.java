@@ -1,16 +1,14 @@
-package contrast;
+package streamhics_contrast;
 
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import clustree.ClusTree;
 import environment.CSVReader;
 import environment.Stopwatch;
 import fullsystem.Contrast;
 import streamdatastructures.CentroidsAdapter;
-import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import subspace.Subspace;
@@ -47,7 +45,7 @@ public class MVariation {
 		double radius = 0.3;
 		double learningRate = 0.1;
 
-		adapter = new CentroidsAdapter(horizon, radius, learningRate);
+		adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
 		
 		subspace = new Subspace();
 		for(int i = 0; i < 5; i++){

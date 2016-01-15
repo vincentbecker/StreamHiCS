@@ -32,12 +32,12 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	 * @param learningRate
 	 *            The learning rate
 	 */
-	public CentroidsAdapter(int horizon, double radius, double learningRate) {
+	public CentroidsAdapter(int horizon, double radius, double learningRate, String version) {
 		centroidsImplementation = new FadingCentroids();
 		centroidsImplementation.horizonOption.setValue(horizon);
 		centroidsImplementation.radiusOption.setValue(radius);
 		centroidsImplementation.learningRateOption.setValue(learningRate);
-		centroidsImplementation.centroidVersionOption.setValue("radius");
+		centroidsImplementation.centroidVersionOption.setValue(version);
 		centroidsImplementation.prepareForUse();
 	}
 

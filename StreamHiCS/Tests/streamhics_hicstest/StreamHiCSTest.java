@@ -1,4 +1,4 @@
-package hicstest;
+package streamhics_hicstest;
 
 import static org.junit.Assert.*;
 
@@ -19,18 +19,16 @@ import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
-import subspacebuilder.HierarchicalBuilder;
-import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustream.Clustream;
+import moa.clusterers.denstream.WithDBSCAN;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 
 public class StreamHiCSTest {
 
@@ -389,7 +387,7 @@ public class StreamHiCSTest {
 			pruningDifference = 0.1;
 
 			adapter = new SlidingWindowAdapter(covarianceMatrix.length, numInstances);
-		} else if (method.equals("adaptiveCentroids")) {
+		} else if (method.equals("adaptingCentroids")) {
 			alpha = 0.1;
 			epsilon = 0;
 			threshold = 0.23;
@@ -400,7 +398,7 @@ public class StreamHiCSTest {
 			double radius = 0.2;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(horizon, radius, learningRate);
+			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

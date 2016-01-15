@@ -1,4 +1,4 @@
-package streamtests;
+package streamhics_streamtests;
 
 import static org.junit.Assert.*;
 
@@ -15,12 +15,12 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustree.ClusTree;
+import moa.clusterers.denstream.WithDBSCAN;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -90,7 +90,7 @@ public class StreamTest {
 			double radius = 0.2;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(horizon, radius, learningRate);
+			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

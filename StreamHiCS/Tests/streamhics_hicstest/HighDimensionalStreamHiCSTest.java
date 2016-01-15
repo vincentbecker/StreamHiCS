@@ -1,4 +1,4 @@
-package hicstest;
+package streamhics_hicstest;
 
 import static org.junit.Assert.*;
 
@@ -16,13 +16,13 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
 import moa.clusterers.clustree.ClusTree;
+import moa.clusterers.denstream.WithDBSCAN;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -216,7 +216,7 @@ public class HighDimensionalStreamHiCSTest {
 			double learningRate = 0.2;
 
 			horizon = 1000;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate);
+			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

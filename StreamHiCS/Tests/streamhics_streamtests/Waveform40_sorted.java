@@ -1,4 +1,4 @@
-package streamtests;
+package streamhics_streamtests;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +29,6 @@ import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;

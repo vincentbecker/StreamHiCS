@@ -1,4 +1,4 @@
-package streamtests;
+package streamhics_streamtests;
 
 import static org.junit.Assert.*;
 
@@ -18,7 +18,6 @@ import moa.streams.generators.WaveformGenerator;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;

@@ -1,4 +1,4 @@
-package fullsystem;
+package ccd;
 
 import static org.junit.Assert.*;
 
@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import environment.CSVReader;
+import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.FullSpaceChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.DecisionStump;

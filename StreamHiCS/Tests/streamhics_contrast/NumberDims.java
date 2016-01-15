@@ -1,4 +1,4 @@
-package contrast;
+package streamhics_contrast;
 
 import static org.junit.Assert.*;
 
@@ -36,7 +36,7 @@ public class NumberDims {
 		double radius = 0.001;
 		double learningRate = 0.1;
 
-		adapter = new CentroidsAdapter(horizon, radius, learningRate);
+		adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
 		
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 		subspace = new Subspace();

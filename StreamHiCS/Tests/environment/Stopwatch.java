@@ -18,16 +18,16 @@ public class Stopwatch {
 			watches.get(name).stop();
 		}
 	}
-	
-	public double getTime(String name){
+
+	public double getTime(String name) {
 		if (watches.containsKey(name)) {
 			return watches.get(name).getTotalTime();
 		}
 		return -1;
 	}
-	
-	public void reset(){
-		for(NamedWatch w : watches.values()){
+
+	public void reset() {
+		for (NamedWatch w : watches.values()) {
 			w.reset();
 		}
 	}
@@ -36,10 +36,10 @@ public class Stopwatch {
 	public String toString() {
 		String res = "";
 
-		for(NamedWatch w : watches.values()){
+		for (NamedWatch w : watches.values()) {
 			res += w.toString() + "; ";
 		}
-		
+
 		return res;
 	}
 
@@ -50,12 +50,12 @@ public class Stopwatch {
 		private long end;
 		private boolean running = false;
 
-		private NamedWatch(String name){
+		private NamedWatch(String name) {
 			this.name = name;
 		}
 
 		private double getTotalTime() {
-			return ((double) totalTime)/1000000000;
+			return ((double) totalTime) / 1000000000;
 		}
 
 		private void start() {
@@ -70,8 +70,8 @@ public class Stopwatch {
 				running = false;
 			}
 		}
-		
-		private void reset(){
+
+		private void reset() {
 			running = false;
 			beginning = 0;
 			end = 0;

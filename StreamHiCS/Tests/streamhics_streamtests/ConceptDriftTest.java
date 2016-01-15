@@ -1,4 +1,4 @@
-package streamtests;
+package streamhics_streamtests;
 
 import static org.junit.Assert.*;
 

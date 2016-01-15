@@ -1,4 +1,4 @@
-package contrast;
+package streamhics_contrast;
 
 import static org.junit.Assert.*;
 
@@ -47,7 +47,7 @@ public class AlphaVariation {
 		double radius = 0.3;
 		double learningRate = 0.1;
 
-		adapter = new CentroidsAdapter(horizon, radius, learningRate);
+		adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
 
 		subspace = new Subspace();
 		for (int i = 0; i < 5; i++) {

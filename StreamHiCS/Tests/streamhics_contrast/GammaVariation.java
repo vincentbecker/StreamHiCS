@@ -1,4 +1,4 @@
-package contrast;
+package streamhics_contrast;
 
 import static org.junit.Assert.*;
 
@@ -7,11 +7,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import clustree.ClusTree;
-import contrast.ContrastTest.DoubleFunction;
 import environment.Stopwatch;
 import fullsystem.Contrast;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
+import streamhics_contrast.ContrastTest.DoubleFunction;
 import subspace.Subspace;
 import weka.core.DenseInstance;
 import weka.core.Instance;

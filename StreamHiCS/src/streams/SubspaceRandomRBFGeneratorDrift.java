@@ -30,6 +30,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	private static final long serialVersionUID = 1L;
 
+	private int numberDimensions;
+
 	/**
 	 * Determines whether each centroid uses the same subspace.
 	 */
@@ -42,8 +44,12 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	public IntOption avgSubspaceSizeOption = new IntOption("avgSubspaceSize", 'p', "The average size of a subspace.",
 			50, 0, Integer.MAX_VALUE);
 
-	public FlagOption randomSubspaceSizeOption = new FlagOption("randomSubspaceSize", 'f', "Determines if the size of the subspaces is fixed or may vary.");
-	
+	/**
+	 * Determines whether the size of the subspaces is fixed or not.
+	 */
+	public FlagOption randomSubspaceSizeOption = new FlagOption("randomSubspaceSize", 'f',
+			"Determines if the size of the subspaces is fixed or may vary.");
+
 	/**
 	 * Determines how many centroids use subspaces.
 	 */
@@ -91,19 +97,18 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(this.centroidWeights, this.instanceRandom);
 		Centroid centroid = this.centroids[centroidIndex];
 		Subspace s = subspaces[centroidIndex];
-		int numAtts = this.numAttsOption.getValue();
-		double[] attVals = new double[numAtts + 1];
-		for (int i = 0; i < numAtts; i++) {
+		double[] attVals = new double[numberDimensions + 1];
+		for (int i = 0; i < numberDimensions; i++) {
 			attVals[i] = (this.instanceRandom.nextDouble() * 2.0) - 1.0;
 		}
 		double magnitude = 0.0;
-		for (int i = 0; i < numAtts; i++) {
+		for (int i = 0; i < numberDimensions; i++) {
 			magnitude += attVals[i] * attVals[i];
 		}
 		magnitude = Math.sqrt(magnitude);
 		double desiredMag = this.instanceRandom.nextGaussian() * centroid.stdDev;
 		double scale = desiredMag / magnitude;
-		for (int i = 0; i < numAtts; i++) {
+		for (int i = 0; i < numberDimensions; i++) {
 			if (s != null && !s.contains(i)) {
 				attVals[i] = ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
 			} else {
@@ -121,7 +126,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	@Override
 	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
 		super.prepareForUseImpl(monitor, repository);
-		
+
+		numberDimensions = numAttsOption.getValue();
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
 		// Get scale
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
@@ -139,18 +145,22 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 				subspaces[i] = createSubspace();
 			}
 		}
-		
+
 	}
 
 	private Subspace createSubspace() {
 		int numRelevantDims = 0;
-		if(randomSubspaceSizeOption.isSet()){
+		if (randomSubspaceSizeOption.isSet()) {
 			numRelevantDims = (int) (avgSubspaceSizeOption.getValue() + (instanceRandom.nextBoolean() ? -1 : 1)
 					* avgSubspaceSizeOption.getValue() * instanceRandom.nextDouble());
-			if (numRelevantDims < 2)
-				numRelevantDims = 2; // At least 2
-		}else{
+		} else {
 			numRelevantDims = avgSubspaceSizeOption.getValue();
+		}
+		if (numRelevantDims < 2) {
+			numRelevantDims = 2; // At least 2
+		}
+		if (numRelevantDims > numAttsOption.getValue()) {
+			numRelevantDims = numberDimensions;
 		}
 
 		Subspace s = new Subspace();
