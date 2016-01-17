@@ -23,7 +23,7 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
-import moa.clusterers.denstream.WithDBSCAN;
+import streamdatastructures.WithDBSCAN;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
@@ -41,11 +41,11 @@ public class SubspaceRBF {
 	private SubspaceRandomRBFGeneratorDrift stream;
 	private StreamHiCS streamHiCS;
 	private final int numInstances = 10000;
-	private final int horizon = 1000;
+	private final int horizon = 2000;
 	private final int m = 50;
 	private final double alpha = 0.05;
-	private double epsilon;
-	private double threshold = 0.23;
+	private double epsilon = 0;
+	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
@@ -79,8 +79,8 @@ public class SubspaceRBF {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if(summarisation == StreamSummarisation.CLUSTREE){
-					for (numberOfDimensions = 2; numberOfDimensions <= 50; numberOfDimensions++) {
+				if (summarisation == StreamSummarisation.RADIUSCENTROIDS) {
+					for (numberOfDimensions = 3; numberOfDimensions <= 50; numberOfDimensions++) {
 						stopwatch.reset();
 						double sumTPvsFP = 0;
 						double sumAMJS = 0;
@@ -139,7 +139,6 @@ public class SubspaceRBF {
 								+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime);
 					}
 				}
-
 			}
 		}
 
@@ -165,22 +164,25 @@ public class SubspaceRBF {
 		SummarisationAdapter adapter = null;
 		switch (ss) {
 		case SLIDINGWINDOW:
+			threshold = 0.23;
 			adapter = new SlidingWindowAdapter(numberOfDimensions, horizon);
 			summarisationDescription = "Sliding window, window size: " + horizon;
 			break;
 		case CLUSTREAM:
+			threshold = 0.23;
 			Clustream cluStream = new Clustream();
 			cluStream.kernelRadiFactorOption.setValue(2);
-			int numberKernels = 500;
+			int numberKernels = 700;
 			cluStream.maxNumKernelsOption.setValue(numberKernels);
 			cluStream.prepareForUse();
 			adapter = new MicroclusteringAdapter(cluStream);
 			summarisationDescription = "CluStream, maximum number kernels: " + numberKernels;
 			break;
 		case DENSTREAM:
+			threshold = 0.23;
 			WithDBSCAN denStream = new WithDBSCAN();
-			int speed = 100;
-			double epsilon = 0.5;
+			int speed = 1;
+			double epsilon = 2.5;
 			double beta = 0.2;
 			double mu = 10;
 			denStream.speedOption.setValue(speed);
@@ -189,28 +191,31 @@ public class SubspaceRBF {
 			denStream.muOption.setValue(mu);
 			// lambda calculated from horizon
 			double lambda = -Math.log(0.01) / Math.log(2) / (double) horizon;
-			denStream.lambdaOption.setValue(lambda);
+			denStream.lambdaOption.setValue(0.001);
 			denStream.prepareForUse();
 			adapter = new MicroclusteringAdapter(denStream);
 			summarisationDescription = "DenStream, speed: " + speed + ", epsilon: " + epsilon + ", beta" + beta + ", mu"
 					+ mu + ", lambda" + lambda;
 			break;
 		case CLUSTREE:
+			threshold = 0.23;
 			ClusTree clusTree = new ClusTree();
-			clusTree.horizonOption.setValue(2000);
+			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			double radius = 0.2;
+			threshold = 0.2;
+			double radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			double learningRate = 0.1;
-			adapter = new CentroidsAdapter(horizon, 0.2, 0.1, "adapting");
+			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			radius = 0.2;
+			threshold = 0.15;
+			radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -276,7 +281,7 @@ public class SubspaceRBF {
 		}
 		correctResult.sort();
 		double[] performanceMeasures = new double[4];
-		//Evaluator.displayResult(result, correctResult);
+		// Evaluator.displayResult(result, correctResult);
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
 		performanceMeasures[2] = Evaluator.evaluateStructuralSimilarity(result, correctResult);

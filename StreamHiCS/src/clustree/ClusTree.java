@@ -27,6 +27,7 @@ import moa.clusterers.clustree.util.*;
 import moa.cluster.Clustering;
 import moa.clusterers.AbstractClusterer;
 import moa.core.Measurement;
+import moa.options.FlagOption;
 import moa.options.IntOption;
 import weka.core.Instance;
 
@@ -37,6 +38,9 @@ public class ClusTree extends AbstractClusterer {
 
 	public IntOption maxHeightOption = new IntOption("maxHeight", 'H', "The maximal height of the tree",
 			getDefaultHeight());
+
+	public FlagOption breadthFirstSearchOption = new FlagOption("breadthFirstSearch", 'b',
+			"Determines whether breadth first search is used in the insertion process.");
 
 	protected int getDefaultHeight() {
 		return 8;
@@ -64,6 +68,7 @@ public class ClusTree extends AbstractClusterer {
 	public void resetLearningImpl() {
 		negLambda = (1.0 / (double) horizonOption.getValue()) * (Math.log(weightThreshold) / Math.log(2));
 		maxHeight = maxHeightOption.getValue();
+		breadthFirstStrat = breadthFirstSearchOption.isSet();
 		numberDimensions = -1;
 		root = null;
 		timestamp = 0;
