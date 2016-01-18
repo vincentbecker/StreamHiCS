@@ -157,7 +157,7 @@ public class Evaluator {
 		int t = trueChanges.size();
 		int d = detectedChanges.size();
 
-		//ArrayList<Double> falseAlarms = new ArrayList<Double>();
+		// ArrayList<Double> falseAlarms = new ArrayList<Double>();
 		int falseAlarms = 0;
 		double detectedChange = 0;
 		int i = 0;
@@ -169,14 +169,14 @@ public class Evaluator {
 				j++;
 			}
 			if (j == 0) {
-				//falseAlarms.add(detectedChange);
+				// falseAlarms.add(detectedChange);
 				falseAlarms++;
 			} else if (!trueChangesFound[j - 1]) {
 				trueChangesFound[j - 1] = true;
 				sumTimeToDetection += (detectedChange - trueChanges.get(j - 1));
 			} else {
 				falseAlarms++;
-				//falseAlarms.add(detectedChange);
+				// falseAlarms.add(detectedChange);
 			}
 		}
 
@@ -192,28 +192,22 @@ public class Evaluator {
 			mtd = sumTimeToDetection / (t - missedDetections);
 			mdr = ((double) missedDetections) / t;
 		}
-		double mtfa = streamLength / (falseAlarms+1);
+		double mtfa = ((double) streamLength) / (falseAlarms + 1);
 
 		/*
-			int f = falseAlarms.size();
-			double sumTimeBetweenFalseAlarms = 0;
-			double previousFalseAlarm = 0;
-			double falseAlarm = 0;
-			i = 0;
-			for (i = 0; i < f; i++) {
-				falseAlarm = falseAlarms.get(i);
-				sumTimeBetweenFalseAlarms += (falseAlarm - previousFalseAlarm);
-				previousFalseAlarm = falseAlarm;
-			}
-			sumTimeBetweenFalseAlarms += (streamLength - falseAlarm);
-			mtfa = sumTimeBetweenFalseAlarms / f;
-		*/
+		 * int f = falseAlarms.size(); double sumTimeBetweenFalseAlarms = 0;
+		 * double previousFalseAlarm = 0; double falseAlarm = 0; i = 0; for (i =
+		 * 0; i < f; i++) { falseAlarm = falseAlarms.get(i);
+		 * sumTimeBetweenFalseAlarms += (falseAlarm - previousFalseAlarm);
+		 * previousFalseAlarm = falseAlarm; } sumTimeBetweenFalseAlarms +=
+		 * (streamLength - falseAlarm); mtfa = sumTimeBetweenFalseAlarms / f;
+		 */
 
 		double mtr = 1;
-		if(mtd != 0){
+		if (mtd != 0) {
 			mtr = mtfa / mtd * (1 - mdr);
 		}
-		
+
 		double[] results = new double[4];
 		results[0] = mtfa;
 		results[1] = mtd;

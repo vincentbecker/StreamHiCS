@@ -40,10 +40,10 @@ public class ConceptChangeMeasures {
 		double mtr = results[3];
 		System.out.println("MTR: " + mtr);
 
-		assertEquals(mtfa, 2, 0.01);
+		assertEquals(mtfa, 2.5, 0.01);
 		assertEquals(mtd, 3.5 / 4, 0.01);
 		assertEquals(mdr, 1.0 / 5, 0.01);
-		assertEquals(mtr, 32 / 17.5, 0.01);
+		assertEquals(mtr, 16.0 / 7, 0.01);
 	}
 
 	@Test
@@ -97,9 +97,9 @@ public class ConceptChangeMeasures {
 		double mtr = results[3];
 		System.out.println("MTR: " + mtr);
 
-		assertEquals(mtfa, 2.0, 0.01);
-		assertEquals(mtd, 2/3, 0.01);
-		assertEquals(mdr, 0.25, 0.01);
-		assertEquals(mtr, 45/16, 0.01);
+		assertEquals(mtfa, 2.5, 0.01);
+		assertEquals(mtd, 1.125, 0.01);
+		assertEquals(mdr, 0.0, 0.01);
+		assertEquals(mtr, 20.0/9, 0.01);
 	}
 }
