@@ -1,5 +1,7 @@
 package environment;
 
+import java.util.ArrayList;
+
 import subspace.Subspace;
 import subspace.SubspaceSet;
 
@@ -37,9 +39,10 @@ public class Evaluator {
 			}
 		}
 
-		//System.out.println("True positives: " + tp + " out of " + correctResult.size() + "; False positives: " + fp);
+		// System.out.println("True positives: " + tp + " out of " +
+		// correctResult.size() + "; False positives: " + fp);
 		double score = recall - fpRatio;
-		//System.out.println("TPvsFP-score: " + score);
+		// System.out.println("TPvsFP-score: " + score);
 		return score;
 	}
 
@@ -76,7 +79,8 @@ public class Evaluator {
 			averageMaxJaccardIndex = sumMaxJaccardIndex / result.size();
 		}
 
-		//System.out.println("Average max Jaccard-index: " + averageMaxJaccardIndex);
+		// System.out.println("Average max Jaccard-index: " +
+		// averageMaxJaccardIndex);
 
 		return averageMaxJaccardIndex;
 	}
@@ -114,7 +118,8 @@ public class Evaluator {
 			averageMaxSS = sumMaxSS / result.size();
 		}
 
-		//System.out.println("Average max structural similarity: " + averageMaxSS);
+		// System.out.println("Average max structural similarity: " +
+		// averageMaxSS);
 
 		return averageMaxSS;
 	}
@@ -143,5 +148,78 @@ public class Evaluator {
 			ss = ((double) cut) / (Math.sqrt(s1.size() * s2.size()));
 		}
 		return ss;
+	}
+
+	public static double[] evaluateConceptChange(ArrayList<Double> trueChanges, ArrayList<Double> detectedChanges,
+			int streamLength) {
+		double sumTimeToDetection = 0;
+		int missedDetections = 0;
+		int t = trueChanges.size();
+		int d = detectedChanges.size();
+
+		//ArrayList<Double> falseAlarms = new ArrayList<Double>();
+		int falseAlarms = 0;
+		double detectedChange = 0;
+		int i = 0;
+		int j = 0;
+		boolean[] trueChangesFound = new boolean[t];
+		for (i = 0; i < d; i++) {
+			detectedChange = detectedChanges.get(i);
+			while (j < t && trueChanges.get(j) < detectedChange) {
+				j++;
+			}
+			if (j == 0) {
+				//falseAlarms.add(detectedChange);
+				falseAlarms++;
+			} else if (!trueChangesFound[j - 1]) {
+				trueChangesFound[j - 1] = true;
+				sumTimeToDetection += (detectedChange - trueChanges.get(j - 1));
+			} else {
+				falseAlarms++;
+				//falseAlarms.add(detectedChange);
+			}
+		}
+
+		for (j = 0; j < t; j++) {
+			if (!trueChangesFound[j]) {
+				missedDetections++;
+			}
+		}
+
+		double mtd = 0;
+		double mdr = 0;
+		if (t > 0) {
+			mtd = sumTimeToDetection / (t - missedDetections);
+			mdr = ((double) missedDetections) / t;
+		}
+		double mtfa = streamLength / (falseAlarms+1);
+
+		/*
+			int f = falseAlarms.size();
+			double sumTimeBetweenFalseAlarms = 0;
+			double previousFalseAlarm = 0;
+			double falseAlarm = 0;
+			i = 0;
+			for (i = 0; i < f; i++) {
+				falseAlarm = falseAlarms.get(i);
+				sumTimeBetweenFalseAlarms += (falseAlarm - previousFalseAlarm);
+				previousFalseAlarm = falseAlarm;
+			}
+			sumTimeBetweenFalseAlarms += (streamLength - falseAlarm);
+			mtfa = sumTimeBetweenFalseAlarms / f;
+		*/
+
+		double mtr = 1;
+		if(mtd != 0){
+			mtr = mtfa / mtd * (1 - mdr);
+		}
+		
+		double[] results = new double[4];
+		results[0] = mtfa;
+		results[1] = mtd;
+		results[2] = mdr;
+		results[3] = mtr;
+
+		return results;
 	}
 }

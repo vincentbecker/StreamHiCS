@@ -172,7 +172,7 @@ public class SubspaceRBF {
 			threshold = 0.23;
 			Clustream cluStream = new Clustream();
 			cluStream.kernelRadiFactorOption.setValue(2);
-			int numberKernels = 700;
+			int numberKernels = 750;
 			cluStream.maxNumKernelsOption.setValue(numberKernels);
 			cluStream.prepareForUse();
 			adapter = new MicroclusteringAdapter(cluStream);
@@ -197,7 +197,7 @@ public class SubspaceRBF {
 			summarisationDescription = "DenStream, speed: " + speed + ", epsilon: " + epsilon + ", beta" + beta + ", mu"
 					+ mu + ", lambda" + lambda;
 			break;
-		case CLUSTREE:
+		case CLUSTREE_DEPTHFIRST:
 			threshold = 0.23;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
@@ -205,9 +205,20 @@ public class SubspaceRBF {
 			adapter = new MicroclusteringAdapter(clusTree);
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
+		case CLUSTREE_BREADTHFIRST:
+			threshold = 0.23;
+			clusTree = new ClusTree();
+			clusTree.horizonOption.setValue(horizon);
+			clusTree.prepareForUse();
+			adapter = new MicroclusteringAdapter(clusTree);
+			summarisationDescription = "ClusTree, horizon: " + horizon;
+			break;
 		case ADAPTINGCENTROIDS:
 			threshold = 0.2;
-			double radius = 7 * Math.log(numberOfDimensions) - 0.5;
+			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
+			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
+			double radius = 5 * Math.sqrt(numberOfDimensions) - 1;
+			// double radius = 27;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
@@ -215,7 +226,7 @@ public class SubspaceRBF {
 			break;
 		case RADIUSCENTROIDS:
 			threshold = 0.15;
-			radius = 7 * Math.log(numberOfDimensions) - 0.5;
+			radius = 5 * Math.sqrt(numberOfDimensions) - 1;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -230,7 +241,7 @@ public class SubspaceRBF {
 	}
 
 	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb) {
-		cutoff = 10;
+		cutoff = 15;
 		pruningDifference = 0.15;
 		boolean addDescription = false;
 		if (builderDescription == null) {
