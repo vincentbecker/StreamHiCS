@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import environment.Stopwatch;
 import fullsystem.Contrast;
 import moa.clusterers.denstream.WithDBSCAN;
 import clustree.ClusTree;

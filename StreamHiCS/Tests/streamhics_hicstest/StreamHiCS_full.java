@@ -1,4 +1,4 @@
-package streamhics_streamtests;
+package streamhics_hicstest;
 
 import static org.junit.Assert.*;
 
@@ -8,26 +8,29 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import clustree.ClusTree;
+import environment.CSVReader;
 import environment.Evaluator;
+import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
-import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
 import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streams.SubspaceRandomRBFGeneratorDrift;
+import streamdatastructures.WithDBSCAN;
+import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
@@ -35,16 +38,11 @@ import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
-public class SubspaceRBF {
-
-	private static final boolean DRIFT = false;
-	private static final boolean SAME_SUBSPACES = true;
-	private int numberSubspaceCentroids = 10;
-
-	private SubspaceRandomRBFGeneratorDrift stream;
+public class StreamHiCS_full {
+	private GaussianStream stream;
 	private StreamHiCS streamHiCS;
 	private final int numInstances = 10000;
-	private final int horizon = 2000;
+	private final int horizon = 1000;
 	private final int m = 50;
 	private final double alpha = 0.05;
 	private double epsilon = 0;
@@ -59,33 +57,35 @@ public class SubspaceRBF {
 			// System.out.println("StreamHiCS: onAlarm()");
 		}
 	};
-	private static Random random;
 	private static Stopwatch stopwatch;
 	private Contrast contrastEvaluator;
 	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
+	private static CSVReader csvReader;
+	private static final String path = "Tests/CovarianceMatrices/";
+	private double[] resultSummary;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		stopwatch = new Stopwatch();
-		random = new Random();
+		csvReader = new CSVReader();
 	}
 
 	@Test
 	public void test() {
 		// Output
 		results = new LinkedList<String>();
-		results.add("Number subspace centroids: " + numberSubspaceCentroids);
 		SummarisationAdapter adapter;
 		SubspaceBuilder subspaceBuilder;
 		for (StreamSummarisation summarisation : StreamSummarisation.values()) {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.SLIDINGWINDOW && buildup == SubspaceBuildup.HIERARCHICAL) {
-					for (numberOfDimensions = 3; numberOfDimensions <= 40; numberOfDimensions++) {
+				//if (summarisation == StreamSummarisation.DENSTREAM && buildup == SubspaceBuildup.APRIORI) {
+					resultSummary = new double[7];
+					for (int test = 1; test <= 29; test++) {
 						stopwatch.reset();
 						double sumTPvsFP = 0;
 						double sumAMJS = 0;
@@ -102,35 +102,125 @@ public class SubspaceRBF {
 							break;
 						}
 
-						// Creating the stream
-						stream = new SubspaceRandomRBFGeneratorDrift();
-						stream.numAttsOption.setValue(numberOfDimensions);
-						stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
-						stream.numCentroidsOption.setValue(10);
-						stream.numSubspaceCentroidsOption.setValue(numberSubspaceCentroids);
-						if (SAME_SUBSPACES) {
-							stream.sameSubspaceOption.setValue(true);
-						} else {
-							stream.sameSubspaceOption.setValue(false);
+						// Create the stream
+						double[][] covarianceMatrix = csvReader.read(path + "Test" + test + ".csv");
+						numberOfDimensions = covarianceMatrix.length;
+						stream = new GaussianStream(null, covarianceMatrix, 1);
+
+						SubspaceSet correctResult = new SubspaceSet();
+
+						switch (test) {
+						case 1:
+							break;
+						case 2:
+							correctResult.addSubspace(new Subspace(0, 1));
+							correctResult.addSubspace(new Subspace(2, 3, 4));
+							break;
+						case 3:
+							correctResult.addSubspace(new Subspace(0, 1, 2, 3, 4));
+							break;
+						case 4:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(2, 3, 4));
+							break;
+						case 5:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							break;
+						case 6:
+							correctResult.addSubspace(new Subspace(0, 1));
+							correctResult.addSubspace(new Subspace(1, 2));
+							correctResult.addSubspace(new Subspace(2, 3));
+							correctResult.addSubspace(new Subspace(3, 4));
+							break;
+						case 7:
+							correctResult.addSubspace(new Subspace(0, 1));
+							correctResult.addSubspace(new Subspace(1, 2));
+							break;
+						case 8:
+							break;
+						case 9:
+							correctResult.addSubspace(new Subspace(0, 1));
+							correctResult.addSubspace(new Subspace(1, 2));
+							break;
+						case 10:
+							break;
+						case 11:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							break;
+						case 12:
+							correctResult.addSubspace(new Subspace(1, 3));
+							correctResult.addSubspace(new Subspace(0, 2, 4));
+							break;
+						case 13:
+							correctResult.addSubspace(new Subspace(1, 3));
+							correctResult.addSubspace(new Subspace(0, 2, 4));
+							break;
+						case 14:
+							break;
+						case 15:
+							correctResult.addSubspace(new Subspace(0, 2));
+							break;
+						case 16:
+							correctResult.addSubspace(new Subspace(0, 1, 3));
+							break;
+						case 17:
+							correctResult.addSubspace(new Subspace(0, 1));
+							break;
+						case 18:
+							break;
+						case 19:
+							correctResult.addSubspace(new Subspace(0, 1));
+							break;
+						case 20:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(2, 3, 4));
+							break;
+						case 21:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(2, 3, 4));
+							break;
+						case 22:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(2, 3, 4));
+							break;
+						case 23:
+							correctResult.addSubspace(new Subspace(0, 1));
+							break;
+						case 24:
+							break;
+						case 25:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(3, 4, 5));
+							correctResult.addSubspace(new Subspace(7, 8, 9));
+							break;
+						case 26:
+							correctResult.addSubspace(new Subspace(0, 1));
+							correctResult.addSubspace(new Subspace(2, 3));
+							correctResult.addSubspace(new Subspace(1, 9));
+							break;
+						case 27:
+							break;
+						case 28:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							correctResult.addSubspace(new Subspace(7, 8, 9));
+							break;
+						case 29:
+							correctResult.addSubspace(new Subspace(0, 1, 2));
+							break;
 						}
-						stream.randomSubspaceSizeOption.setValue(false);
-						if (DRIFT) {
-							stream.numDriftCentroidsOption.setValue(10);
-							stream.speedChangeOption.setValue(0.1);
-						}
-						stream.prepareForUse();
 
 						// Creating the StreamHiCS system
 						adapter = createSummarisationAdapter(summarisation);
 						contrastEvaluator = new Contrast(m, alpha, adapter);
-						subspaceBuilder = createSubspaceBuilder(buildup);
+						CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
 						ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-								subspaceBuilder, changeChecker, callback, null, stopwatch);
+								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
 						changeChecker.setCallback(streamHiCS);
 
 						for (int i = 0; i < numberTestRuns; i++) {
-							double[] performanceMeasures = testRun();
+							double[] performanceMeasures = testRun(correctResult);
 							sumTPvsFP += performanceMeasures[0];
 							sumAMJS += performanceMeasures[1];
 							sumAMSS += performanceMeasures[2];
@@ -150,22 +240,29 @@ public class SubspaceRBF {
 						double avgAddingTime = sumAddingTime / numberTestRuns;
 						double avgTotalTime = sumTotalTime / numberTestRuns;
 
-						String measures = numberOfDimensions + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", "
+						String measures = test + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", "
 								+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
 						System.out.println(measures);
+
+						resultSummary[0] += avgTPvsFP;
+						resultSummary[1] += avgAMJS;
+						resultSummary[2] += avgAMSS;
+						resultSummary[3] += avgNumElements;
+						resultSummary[4] += avgEvalTime;
+						resultSummary[5] += avgAddingTime;
+						resultSummary[6] += avgTotalTime;
+
 						results.add(measures);
 					}
+					System.out.println(resultSummary[0] / 29 + ", " + resultSummary[1] / 29 + ", "
+							+ resultSummary[2] / 29 + ", " + resultSummary[3] / 29 + ", " + resultSummary[4] / 29 + ", "
+							+ resultSummary[5] / 29 + ", " + resultSummary[6] / 29);
 				}
-			}
+			//}
 		}
 
 		// Write the results
-		String filePath = null;
-		if (DRIFT) {
-			filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/SubspaceRandomRBF/same_drift.txt";
-		} else {
-			filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/SubspaceRandomRBF/same_noDrift.txt";
-		}
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/GaussianStreams/Standard/Results.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
@@ -185,45 +282,45 @@ public class SubspaceRBF {
 		SummarisationAdapter adapter = null;
 		switch (ss) {
 		case SLIDINGWINDOW:
-			aprioriThreshold = 0.25;
+			aprioriThreshold = 0.2;
 			hierarchicalThreshold = 0.25;
 			adapter = new SlidingWindowAdapter(numberOfDimensions, horizon);
 			summarisationDescription = "Sliding window, window size: " + horizon;
 			break;
 		case CLUSTREAM:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.35;
 			Clustream cluStream = new Clustream();
 			cluStream.kernelRadiFactorOption.setValue(2);
-			int numberKernels = 0;
-			if (numberSubspaceCentroids == 10) {
-				numberKernels = 750;
-			} else if (numberSubspaceCentroids == 5) {
-				numberKernels = 400;
-			}
+			int numberKernels = 400;
 			cluStream.maxNumKernelsOption.setValue(numberKernels);
 			cluStream.prepareForUse();
 			adapter = new MicroclusteringAdapter(cluStream);
 			summarisationDescription = "CluStream, maximum number kernels: " + numberKernels;
 			break;
-		/*
-		 * case DENSTREAM: WithDBSCAN denStream = new WithDBSCAN(); int speed =
-		 * 100; //double epsilon = 1 * Math.sqrt(numberOfDimensions) - 1; double
-		 * epsilon = 2.9; double beta = 0.2; double mu = 10;
-		 * denStream.speedOption.setValue(speed);
-		 * denStream.epsilonOption.setValue(epsilon);
-		 * denStream.betaOption.setValue(beta); denStream.muOption.setValue(mu);
-		 * // lambda calculated from horizon double lambda = -Math.log(0.01) /
-		 * Math.log(2) / (double) horizon;
-		 * denStream.lambdaOption.setValue(0.001); denStream.prepareForUse();
-		 * adapter = new MicroclusteringAdapter(denStream);
-		 * summarisationDescription = "DenStream, speed: " + speed +
-		 * ", epsilon: " + epsilon + ", beta" + beta + ", mu" + mu + ", lambda"
-		 * + lambda; break;
-		 */
+		case DENSTREAM:
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.35;
+			WithDBSCAN denStream = new WithDBSCAN();
+			int speed = 100;
+			double epsilon = 0.5;
+			double beta = 0.2;
+			double mu = 10;
+			denStream.speedOption.setValue(speed);
+			denStream.epsilonOption.setValue(epsilon);
+			denStream.betaOption.setValue(beta);
+			denStream.muOption.setValue(mu);
+			// lambda calculated from horizon
+			double lambda = -Math.log(0.01) / Math.log(2) / (double) horizon;
+			denStream.lambdaOption.setValue(lambda);
+			denStream.prepareForUse();
+			adapter = new MicroclusteringAdapter(denStream);
+			summarisationDescription = "DenStream, speed: " + speed + ", epsilon: " + epsilon + ", beta" + beta + ", mu"
+					+ mu + ", lambda" + lambda;
+			break;
 		case CLUSTREE_DEPTHFIRST:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.35;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
@@ -231,7 +328,7 @@ public class SubspaceRBF {
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
 		case CLUSTREE_BREADTHFIRST:
-			aprioriThreshold = 0.25;
+			aprioriThreshold = 0.2;
 			hierarchicalThreshold = 0.25;
 			clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
@@ -242,16 +339,8 @@ public class SubspaceRBF {
 			break;
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
-			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
-			// double radius = 6 * Math.sqrt(numberOfDimensions) - 1;
-			double radius = 0;
-			if (numberSubspaceCentroids == 10) {
-				radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			} else if (numberSubspaceCentroids == 5) {
-				radius = 7 * Math.sqrt(numberOfDimensions) - 1;
-			}
+			hierarchicalThreshold = 0.35;
+			double radius = 3.5;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
@@ -259,13 +348,8 @@ public class SubspaceRBF {
 			break;
 		case RADIUSCENTROIDS:
 			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			radius = 0;
-			if (numberSubspaceCentroids == 10) {
-				radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			} else if (numberSubspaceCentroids == 5) {
-				radius = 7 * Math.sqrt(numberOfDimensions) - 1;
-			}
+			hierarchicalThreshold = 0.35;
+			radius = 3.5;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -278,7 +362,8 @@ public class SubspaceRBF {
 		return adapter;
 	}
 
-	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb) {
+	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, CorrelationSummary correlationSummary) {
+		cutoff = 8;
 		pruningDifference = 0.15;
 		boolean addDescription = false;
 		if (builderDescription == null) {
@@ -287,14 +372,13 @@ public class SubspaceRBF {
 		SubspaceBuilder builder = null;
 		switch (sb) {
 		case APRIORI:
-			cutoff = 15;
-			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator, null);
-			builderDescription = "Apriori, threshold:" + aprioriThreshold + "cutoff: " + cutoff;
+			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator,
+					correlationSummary);
+			builderDescription = "Apriori, threshold: " + aprioriThreshold + ", cutoff: " + cutoff;
 			break;
 		case HIERARCHICAL:
-			cutoff = 1;
 			builder = new HierarchicalBuilderCutoff(numberOfDimensions, hierarchicalThreshold, cutoff,
-					contrastEvaluator, null, true);
+					contrastEvaluator, correlationSummary, true);
 			builderDescription = "Hierarchical, threshold: " + hierarchicalThreshold + ", cutoff: " + cutoff;
 			break;
 		default:
@@ -306,9 +390,7 @@ public class SubspaceRBF {
 		return builder;
 	}
 
-	private double[] testRun() {
-		stream.instanceRandomSeedOption.setValue(random.nextInt(1000000000));
-		stream.prepareForUse();
+	private double[] testRun(SubspaceSet correctResult) {
 		streamHiCS.clear();
 
 		int numberSamples = 0;
@@ -322,11 +404,6 @@ public class SubspaceRBF {
 		}
 
 		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
-		for (Subspace s : result.getSubspaces()) {
-			s.sort();
-		}
-		result.sort();
-		SubspaceSet correctResult = stream.getSubspaces();
 		for (Subspace s : correctResult.getSubspaces()) {
 			s.sort();
 		}

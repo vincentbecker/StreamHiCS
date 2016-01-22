@@ -21,7 +21,6 @@ import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
-import subspacebuilder.HierarchicalBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
@@ -60,8 +59,9 @@ public class Waveform40 {
 		stream.addNoiseOption.set();
 		stream.prepareForUse();
 		
+		int horizon = 1100;
 		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(1100);
+		mcs.horizonOption.setValue(horizon);
 		mcs.resetLearningImpl();
 		
 		double alpha = 0.25;
@@ -74,7 +74,7 @@ public class Waveform40 {
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(checkInterval);
 		
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator, correlationSummary);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
 				changeChecker, callback, correlationSummary, stopwatch);

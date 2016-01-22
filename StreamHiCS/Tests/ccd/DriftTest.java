@@ -5,15 +5,24 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import changechecker.ChangeChecker;
+import changechecker.TimeCountChecker;
+import clustree.ClusTree;
 import environment.CSVReader;
+import environment.Stopwatch;
+import fullsystem.Contrast;
 import fullsystem.CorrelatedSubspacesChangeDetector;
 import fullsystem.FullSpaceChangeDetector;
+import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
-import moa.classifiers.bayes.NaiveBayes;
-import moa.classifiers.trees.DecisionStump;
-import moa.classifiers.trees.HoeffdingAdaptiveTree;
+import moa.classifiers.trees.HoeffdingTree;
 import moa.streams.ConceptDriftStream;
+import streamdatastructures.CorrelationSummary;
+import streamdatastructures.MicroclusteringAdapter;
+import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
+import subspacebuilder.AprioriBuilder;
+import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
 public class DriftTest {
@@ -22,6 +31,7 @@ public class DriftTest {
 	private int numberSamples = 0;
 	private final int numInstances = 20000;
 	private final int numberOfDimensions = 5;
+	private int m = 50;
 	private double alpha;
 	private double epsilon;
 	private double threshold;
@@ -37,23 +47,38 @@ public class DriftTest {
 
 		csvReader = new CSVReader();
 		numberSamples = 0;
-
+		m = 50;
 		alpha = 0.15;
 		epsilon = 0.1;
 		threshold = 0.35;
 		cutoff = 8;
 		pruningDifference = 0.15;
 
-		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions);
-		cscd.alphaOption.setValue(alpha);
-		cscd.epsilonOption.setValue(epsilon);
-		cscd.thresholdOption.setValue(threshold);
-		cscd.cutoffOption.setValue(cutoff);
-		cscd.pruningDifferenceOption.setValue(pruningDifference);
+int horizon = 2000;
+		
+		ClusTree mcs = new ClusTree();
+		mcs.horizonOption.setValue(horizon);
+		// mcs.horizonOption.setValue(20000);
+		mcs.prepareForUse();
+
+		// StreamHiCS
+		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
+		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
+		ChangeChecker changeChecker = new TimeCountChecker(1000);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator,
+				correlationSummary);
+		Stopwatch stopwatch = new Stopwatch();
+		StreamHiCS streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+				changeChecker, null, correlationSummary, stopwatch);
+		changeChecker.setCallback(streamHiCS);
+		
+		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
 		cscd.prepareForUse();
+		streamHiCS.setCallback(cscd);
 
 		refDetector = new FullSpaceChangeDetector();
-		AbstractClassifier baseLearner = new HoeffdingAdaptiveTree();
+		AbstractClassifier baseLearner = new HoeffdingTree();
 		// AbstractClassifier baseLearner = new DecisionStump();
 		// AbstractClassifier baseLearner = new NaiveBayes();
 		baseLearner.prepareForUse();

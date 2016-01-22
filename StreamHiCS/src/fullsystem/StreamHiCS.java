@@ -175,6 +175,9 @@ public class StreamHiCS implements Callback {
 	public void clear() {
 		correlatedSubspaces.clear();
 		contrastEvaluator.clear();
+		if(correlationSummary != null){
+			correlationSummary.clear();
+		}
 	}
 
 	/**

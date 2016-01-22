@@ -8,7 +8,7 @@ import weka.core.Instance;
 
 /**
  * A sliding window implementation offering all the functionality to be used in
- * {@link StreamHiCS}.
+ * {@link StreamHiCS_full}.
  * 
  * @author Vincent
  *

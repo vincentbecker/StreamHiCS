@@ -367,7 +367,7 @@ public class RealWorldDatasets {
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 

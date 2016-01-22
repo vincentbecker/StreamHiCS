@@ -1,7 +1,5 @@
 package streamhics_contrast;
 
-import static org.junit.Assert.*;
-
 import org.apache.commons.math3.util.MathArrays;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,7 +9,6 @@ import environment.Stopwatch;
 import fullsystem.Contrast;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streamhics_contrast.ContrastTest.DoubleFunction;
 import subspace.Subspace;
 import weka.core.DenseInstance;
 import weka.core.Instance;

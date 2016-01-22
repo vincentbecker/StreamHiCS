@@ -69,6 +69,7 @@ public class RBFDriftTest {
 		int cutoff = 6;
 		double pruningDifference = 0.1;
 
+		int horizon = 0;
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;
@@ -84,7 +85,7 @@ public class RBFDriftTest {
 			cutoff = 8;
 			pruningDifference = 0.15;
 
-			int horizon = 1000;
+			horizon = 1000;
 			double radius = 0.2;
 			double learningRate = 0.1;
 
@@ -110,16 +111,18 @@ public class RBFDriftTest {
 			threshold = 0.2;
 			cutoff = 8;
 			pruningDifference = 0.15;
-
+			horizon = 1000;
+			
 			ClusTree mcs = new ClusTree();
-			mcs.resetLearningImpl();
+			mcs.horizonOption.setValue(horizon);
+			mcs.prepareForUse();
 			adapter = new MicroclusteringAdapter(mcs);
 		} else {
 			adapter = null;
 		}
 
 		contrastEvaluator = new Contrast(m, alpha, adapter);
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,

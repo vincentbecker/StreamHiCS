@@ -1,16 +1,17 @@
 package streamhics_streamtests;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import environment.CSVReader;
 import environment.Evaluator;
+import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
@@ -24,7 +25,6 @@ import streams.UncorrelatedStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
-import subspacebuilder.FastBuilder;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
@@ -41,14 +41,30 @@ public class ConceptDriftTest {
 	private ConceptDriftStream conceptDriftStream;
 	private StreamHiCS streamHiCS;
 	private ArrayList<SubspaceSet> correctResults;
-	private int testCounter = 0;
-	private double scoreSum = 0;
+	private static int testCounter = 0;
 	private final int numInstances = 60000;
 	private int numberSamples = 0;
+	private static Stopwatch stopwatch;
+	private static double tpVSfpSum = 0;
+	private static double amjsSum = 0;
+	private static double amssSum = 0;
+
+	@BeforeClass
+	public static void setUpBeforeClass() {
+		csvReader = new CSVReader();
+		stopwatch = new Stopwatch();
+	}
+
+	@AfterClass
+	public static void calculateAverageScores() {
+		System.out.println("Average TPvsFP-score: " + tpVSfpSum / testCounter);
+		System.out.println("Average AMJS-score: " + amjsSum / testCounter);
+		System.out.println("Average AMSS-score: " + amssSum / testCounter);
+		System.out.println(stopwatch.toString());
+	}
 
 	@Before
 	public void setUp() throws Exception {
-		csvReader = new CSVReader();
 		numberSamples = 0;
 	}
 
@@ -156,10 +172,12 @@ public class ConceptDriftTest {
 		cr60000.addSubspace(new Subspace(2, 3, 4));
 		correctResults.add(cr60000);
 
+		int horizon = 2000;
 		ClusTree mcs = new ClusTree();
-		mcs.resetLearningImpl();
+		mcs.horizonOption.setValue(2000);
+		mcs.prepareForUse();
 
-		double alpha = 0.15;
+		double alpha = 0.1;
 		double epsilon = 0;
 		double threshold = 0.35;
 		int cutoff = 8;
@@ -168,37 +186,43 @@ public class ConceptDriftTest {
 		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		Contrast contrastEvaluator = new Contrast(50, alpha, adapter);
 		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		CorrelationSummary correlationSummary = new CorrelationSummary(5);
+		CorrelationSummary correlationSummary = new CorrelationSummary(5, horizon);
+		//CorrelationSummary correlationSummary = null;
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(5, threshold, cutoff, contrastEvaluator,
 				correlationSummary);
 		// SubspaceBuilder subspaceBuilder = new FastBuilder(5, threshold,
 		// pruningDifference, contrastEvaluator);
 		this.streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, callback, correlationSummary, null);
+				changeChecker, callback, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = conceptDriftStream.nextInstance();
 			streamHiCS.add(inst);
 			numberSamples++;
-			if (numberSamples % 1000 == 0) {
-				System.out.println("Time: " + numberSamples);
-				System.out.println("Number of elements: " + streamHiCS.getNumberOfElements());
-			}
+			/*
+			 * if (numberSamples % 1000 == 0) { System.out.println("Time: " +
+			 * numberSamples); System.out.println("Number of elements: " +
+			 * streamHiCS.getNumberOfElements()); }
+			 */
 			if (numberSamples != 0 && numberSamples % 5000 == 0) {
 				evaluate();
 			}
 		}
-
-		double meanScore = scoreSum / testCounter;
-		System.out.println("Mean score: " + meanScore);
-		assertTrue(meanScore >= 0.75);
 	}
 
 	private void evaluate() {
 		System.out.println("Number of samples: " + numberSamples);
 		SubspaceSet correctResult = correctResults.get(testCounter);
-		scoreSum += Evaluator.evaluateTPvsFP(streamHiCS.getCurrentlyCorrelatedSubspaces(), correctResult);
+		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
+		Evaluator.displayResult(result, correctResult);
+		double tpVSfp = Evaluator.evaluateTPvsFP(result, correctResult);
+		tpVSfpSum += tpVSfp;
+		double amjs = Evaluator.evaluateJaccardIndex(result, correctResult);
+		amjsSum += amjs;
+		double amss = Evaluator.evaluateStructuralSimilarity(result, correctResult);
+		amssSum += amss;
+		System.out.println("TPvsFP: " + tpVSfp + "; AMJS: " + amjs + "; AMSS: " + amss);
 		testCounter++;
 	}
 

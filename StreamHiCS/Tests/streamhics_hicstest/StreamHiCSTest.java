@@ -275,7 +275,8 @@ public class StreamHiCSTest {
 		String testName = "Test20";
 		double[][] covarianceMatrix = csvReader.read(path + testName + ".csv");
 		SubspaceSet correctResult = new SubspaceSet();
-		correctResult.addSubspace(new Subspace(0, 1));
+		correctResult.addSubspace(new Subspace(0, 1, 2));
+		correctResult.addSubspace(new Subspace(2, 3, 4));
 		System.out.println(testName);
 		assertTrue(carryOutSubspaceTest(covarianceMatrix, correctResult));
 	}
@@ -378,6 +379,7 @@ public class StreamHiCSTest {
 	private boolean carryOutSubspaceTest(double[][] covarianceMatrix, SubspaceSet correctResult) {
 		method = "ClusTreeMC";
 
+		int horizon = 0;
 		stream = new GaussianStream(null, covarianceMatrix, 1);
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
@@ -394,7 +396,7 @@ public class StreamHiCSTest {
 			cutoff = 8;
 			pruningDifference = 0.15;
 
-			int horizon = 1000;
+			horizon = 1000;
 			double radius = 0.2;
 			double learningRate = 0.1;
 
@@ -416,14 +418,15 @@ public class StreamHiCSTest {
 			adapter = new MicroclusteringAdapter(mcs);
 
 		} else if (method.equals("ClusTreeMC")) {
-			alpha = 0.1;
+			alpha = 0.05;
 			epsilon = 0;
-			threshold = 0.28;
+			threshold = 0.3;
 			cutoff = 8;
 			pruningDifference = 0.15;
 
+			horizon = 1000;
 			ClusTree mcs = new ClusTree();
-			mcs.horizonOption.setValue(1000);
+			mcs.horizonOption.setValue(horizon);
 			mcs.resetLearning();
 			adapter = new MicroclusteringAdapter(mcs);
 
@@ -454,7 +457,7 @@ public class StreamHiCSTest {
 
 		System.out.println(method);
 
-		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length);
+		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrix.length, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrix.length, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 
@@ -501,7 +504,7 @@ public class StreamHiCSTest {
 		double amss = Evaluator.evaluateStructuralSimilarity(result, correctResult);
 		amssSum += amss;
 		testCounter++;
-		System.out.println();
+		System.out.println("TPvsFP: " + tpVSfp + "; AMJS: " + amjs + "; AMSS: " + amss);
 
 		return tpVSfp >= 0.75;
 	}

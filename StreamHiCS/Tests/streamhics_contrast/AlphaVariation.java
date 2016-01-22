@@ -5,12 +5,10 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import clustree.ClusTree;
 import environment.CSVReader;
 import environment.Stopwatch;
 import fullsystem.Contrast;
 import streamdatastructures.CentroidsAdapter;
-import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import subspace.Subspace;

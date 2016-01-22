@@ -25,7 +25,6 @@ import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
-import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 
@@ -71,6 +70,7 @@ public class StreamTest {
 		stopwatch = new Stopwatch();
 		stream = new GaussianStream(null, covarianceMatrices[0], 1);
 
+		int horizon = 0;
 		if (method.equals("slidingWindow")) {
 			alpha = 0.05;
 			epsilon = 0;
@@ -86,7 +86,7 @@ public class StreamTest {
 			cutoff = 8;
 			pruningDifference = 0.15;
 
-			int horizon = 1000;
+			horizon = 1000;
 			double radius = 0.2;
 			double learningRate = 0.1;
 
@@ -114,7 +114,8 @@ public class StreamTest {
 			pruningDifference = 0.1;
 
 			ClusTree mcs = new ClusTree();
-			mcs.resetLearningImpl();
+			mcs.horizonOption.setValue(horizon);
+			mcs.prepareForUse();
 			adapter = new MicroclusteringAdapter(mcs);
 
 		} else {
@@ -122,7 +123,7 @@ public class StreamTest {
 		}
 
 		contrastEvaluator = new Contrast(m, alpha, adapter);
-		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrices[0].length);
+		CorrelationSummary correlationSummary = new CorrelationSummary(covarianceMatrices[0].length, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(covarianceMatrices[0].length, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 		//SubspaceBuilder subspaceBuilder = new HierarchicalBuilderCutoff(covarianceMatrices[0].length, threshold, cutoff, contrastEvaluator, true);

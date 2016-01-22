@@ -40,60 +40,13 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	private static final long serialVersionUID = -686978424502737299L;
 
 	/**
-	 * The option determining the value of m, i.e. how many iterations are
-	 * carried out to calculate the contrast of a {@link Subspace}.
-	 */
-	public IntOption mOption = new IntOption("m", 'm', "The number of contrast evaluations which are then averaged.",
-			50, 1, Integer.MAX_VALUE);
-
-	/**
-	 * The option determining the value of alpha, i.e. how big the slice is as a
-	 * fraction of the full sample.
-	 */
-	public FloatOption alphaOption = new FloatOption("alpha", 'a',
-			"The fraction of the total weight selected for a slice.", 0.1, 0, 1);
-
-	/**
-	 * The option determining the value of epsilon, i.e. much the contrast of a
-	 * {@link Subspace} may change without signalling a change.
-	 */
-	public FloatOption epsilonOption = new FloatOption("epsilon", 'e',
-			"The deviation in contrast between subsequent evaluations of the correlated subspaces that is allowed for a subspace to stay correlated.",
-			0.1, 0, 1);
-
-	/**
-	 * The option determining the value of the threshold, i.e. how high the
-	 * contrast of a {@link Subspace} must be so that it is considered as
-	 * correlated. }.
-	 */
-	public FloatOption thresholdOption = new FloatOption("threshold", 't', "The threshold for the contrast.", 0.5, 0,
-			1);
-
-	/**
-	 * The option determining the value of the cutoff, i.e. how many solutions
-	 * are allowed per step in the buildup process of the correlated
-	 * {@link Subspace}.
-	 */
-	public IntOption cutoffOption = new IntOption("cutoff", 'c',
-			"The number of correlated subspaces that is used for the generation of the new candidates.", 8, 1,
-			Integer.MAX_VALUE);
-
-	/**
-	 * The option determining the value of the pruning difference, i.e. how
-	 * large the difference in contrast may be so that a subspace is pruned, is
-	 * a correlated superspace exists.
-	 */
-	public FloatOption pruningDifferenceOption = new FloatOption("pruningDifference", 'p',
-			"The allowed difference between the contrast between a space and a superspace for pruning.", 0.1, 0, 1);
-
-	/**
 	 * The option determining the value of initial point before the correlated
 	 * {@link Subspace}s are evaluated the first time.
 	 */
 	public IntOption initOption = new IntOption("init", 'i',
 			"The number of instances after which the correlated subspaces are evaluated the first time.", 500, 1,
 			Integer.MAX_VALUE);
-
+	
 	/**
 	 * The {@link StreamHiCS} instance.
 	 */
@@ -114,42 +67,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	 * The number of dimensions.
 	 */
 	private int numberOfDimensions;
-
-	/**
-	 * The number of how many iterations are carried out to calculate the
-	 * contrast of a {@link Subspace}.
-	 */
-	private int m;
-
-	/**
-	 * The size of the slice as a fraction of the size of the full sample.
-	 */
-	private double alpha;
-
-	/**
-	 * How much the contrast of a {@link Subspace} may change without signalling
-	 * a change.
-	 */
-	private double epsilon;
-
-	/**
-	 * How high the contrast of a {@link Subspace} must be so that it is
-	 * considered as correlated. }.
-	 */
-	private double threshold;
-
-	/**
-	 * How many solutions are allowed per step in the buildup process of the
-	 * correlated {@link Subspace}.
-	 */
-	private int cutoff;
-
-	/**
-	 * How large the difference in contrast may be so that a subspace is pruned,
-	 * is a correlated superspace exists.
-	 */
-	private double pruningDifference;
-
+	
 	/**
 	 * The number of samples seen.
 	 */
@@ -166,9 +84,12 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	 * 
 	 * @param numberOfDimensions
 	 *            The number of dimensions.
+	 * @param streamHiCS
+	 * 			The {@link StreamHiCS} instance.
 	 */
-	public CorrelatedSubspacesChangeDetector(int numberOfDimensions) {
+	public CorrelatedSubspacesChangeDetector(int numberOfDimensions, StreamHiCS streamHiCS) {
 		this.numberOfDimensions = numberOfDimensions;
+		this.streamHiCS = streamHiCS;
 	}
 
 	public boolean isWarningDetected() {
@@ -318,35 +239,6 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	@Override
 	public void prepareForUseImpl(TaskMonitor arg0, ObjectRepository arg1) {
-		m = mOption.getValue();
-		alpha = alphaOption.getValue();
-		epsilon = epsilonOption.getValue();
-		threshold = thresholdOption.getValue();
-		cutoff = cutoffOption.getValue();
-		pruningDifference = pruningDifferenceOption.getValue();
-
-		ClusTree mcs = new ClusTree();
-		mcs.horizonOption.setValue(2000);
-		// mcs.horizonOption.setValue(20000);
-		mcs.prepareForUse();
-
-		/*
-		 * WithDBSCAN mcs = new WithDBSCAN(); mcs.speedOption.setValue(100);
-		 * mcs.epsilonOption.setValue(0.4); mcs.betaOption.setValue(0.1);
-		 * mcs.lambdaOption.setValue(0.05); mcs.prepareForUse();
-		 */
-		// StreamHiCS
-		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
-		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
-		ChangeChecker changeChecker = new TimeCountChecker(1000);
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
-		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator,
-				correlationSummary);
-		Stopwatch stopwatch = new Stopwatch();
-		streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-				changeChecker, this, correlationSummary, stopwatch);
-		changeChecker.setCallback(streamHiCS);
-
 		// ChangeDetectors
 		this.fullSpaceChangeDetector = new FullSpaceChangeDetector();
 		AbstractClassifier baseLearner = new HoeffdingTree();

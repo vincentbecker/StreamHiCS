@@ -20,14 +20,10 @@ import changechecker.TimeCountChecker;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
-import clustree.ClusTree;
 import environment.Stopwatch;
-import moa.clusterers.AbstractClusterer;
-import moa.clusterers.clustream.Clustream;
 import moa.streams.ArffFileStream;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
@@ -120,7 +116,7 @@ public class Waveform40_sorted {
 		//SummarisationAdapter adapter = new MicroclusterAdapter(mcs);
 		SummarisationAdapter adapter = new CoresetAdapter( 100000, 1000);
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions);
+		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 		

@@ -4,7 +4,6 @@ import fullsystem.Contrast;
 import streamdatastructures.CorrelationSummary;
 import subspace.Subspace;
 import subspace.SubspaceSet;
-import weka.attributeSelection.CorrelationAttributeEval;
 
 /**
  * This class represents a {@link SubspaceBuilder} using an Apriori-like
@@ -94,8 +93,11 @@ public class AprioriBuilder extends SubspaceBuilder {
 						Subspace s = new Subspace();
 						s.addDimension(i);
 						s.addDimension(j);
-						s.setContrast(contrastEvaluator.evaluateSubspaceContrast(s));
-						c_K.addSubspace(s);
+						contrast = contrastEvaluator.evaluateSubspaceContrast(s);
+						if(contrast >= threshold){
+							s.setContrast(contrast);
+							c_K.addSubspace(s);
+						}
 					}
 				}
 			}

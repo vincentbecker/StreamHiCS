@@ -98,6 +98,9 @@ public class Contrast {
 	 * @return The contrast of the given @link{Subspace}.
 	 */
 	public double evaluateSubspaceContrast(Subspace subspace) {
+		if(subspace == null || subspace.size() < 2){
+			throw new IllegalArgumentException("Subspace too small or null.");
+		}
 		// Variable for collecting the intermediate results of the iterations
 		double sum = 0;
 		// A deviation could be NaN, so we wont count that calculation

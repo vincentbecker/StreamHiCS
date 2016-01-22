@@ -19,7 +19,7 @@ public class CorrelationSummary {
 	/**
 	 * The number of instances which have arrived.
 	 */
-	private int n;
+	private double n;
 
 	/**
 	 * The linear sum of the instances values for each dimension.
@@ -36,21 +36,26 @@ public class CorrelationSummary {
 	 */
 	private double[][] products;
 
+	private double fadingFactor;
+
 	/**
 	 * Creates an instance of this class.
 	 * 
 	 * @param numberOfDimensions
 	 *            The number of dimensions of the stream
 	 */
-	public CorrelationSummary(int numberOfDimensions) {
+	public CorrelationSummary(int numberOfDimensions, int horizon) {
 		this.numberOfDimensions = numberOfDimensions;
 		linearSums = new double[numberOfDimensions];
 		squaredSums = new double[numberOfDimensions];
 		products = new double[numberOfDimensions][numberOfDimensions];
+		double negLambda = Math.log(0.01) / Math.log(2) / (double) horizon;
+		fadingFactor = Math.pow(2, negLambda);
 	}
 
 	/**
-	 * Adds a stream instance's values to the summary.
+	 * Adds a stream instance's values to the summary. Before we fade the
+	 * summary.
 	 * 
 	 * @param instance
 	 *            The instance
@@ -58,12 +63,16 @@ public class CorrelationSummary {
 	public void addInstance(Instance instance) {
 		double[] vector = instance.toDoubleArray();
 		for (int i = 0; i < numberOfDimensions; i++) {
+			linearSums[i] *= fadingFactor;
 			linearSums[i] += vector[i];
+			squaredSums[i] *= fadingFactor;
 			squaredSums[i] += vector[i] * vector[i];
 			for (int j = i + 1; j < numberOfDimensions; j++) {
+				products[i][j] *= fadingFactor;
 				products[i][j] += vector[i] * vector[j];
 			}
 		}
+		n *= fadingFactor;
 		n++;
 	}
 
@@ -88,23 +97,38 @@ public class CorrelationSummary {
 		double a2 = squaredSums[dim1];
 		double b = linearSums[dim2];
 		double b2 = squaredSums[dim2];
-		return (products[dim1][dim2] - a * b / n) / (Math.sqrt(a2 - a / n) * Math.sqrt(b2 - b / n));
+		return (products[dim1][dim2] - a * b / n) / (Math.sqrt(a2 - a * a / n) * Math.sqrt(b2 - b * b / n));
 	}
-	
+
 	/**
-	 * Returns a matrix containing the correlation coefficients. 
-	 * @return A matrix containing the correlation coefficients. 
+	 * Returns a matrix containing the correlation coefficients.
+	 * 
+	 * @return A matrix containing the correlation coefficients.
 	 */
-	public double[][] getCorrelationMatrix(){
+	public double[][] getCorrelationMatrix() {
 		double[][] coefficientMatrix = new double[numberOfDimensions][numberOfDimensions];
 		double coefficient;
-		for(int i = 0; i < numberOfDimensions; i++){
-			for(int j = i + 1; j < numberOfDimensions; j++){
+		for (int i = 0; i < numberOfDimensions; i++) {
+			for (int j = i + 1; j < numberOfDimensions; j++) {
 				coefficient = calculateCorrelation(i, j);
 				coefficientMatrix[i][j] = coefficient;
 				coefficientMatrix[j][i] = coefficient;
 			}
 		}
 		return coefficientMatrix;
+	}
+
+	/**
+	 * Clears the correlation summary by resetting all values to 0.
+	 */
+	public void clear() {
+		for (int i = 0; i < numberOfDimensions; i++) {
+			linearSums[i] = 0;
+			squaredSums[i] = 0;
+			for (int j = i + 1; j < numberOfDimensions; j++) {
+				products[i][j] = 0;
+			}
+		}
+		n = 0;
 	}
 }

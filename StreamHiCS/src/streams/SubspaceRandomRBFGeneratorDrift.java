@@ -32,6 +32,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	private int numberDimensions;
 
+	private int numberSubspaceCentroids;
+
 	/**
 	 * Determines whether each centroid uses the same subspace.
 	 */
@@ -96,7 +98,6 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		// Create instance
 		int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(this.centroidWeights, this.instanceRandom);
 		Centroid centroid = this.centroids[centroidIndex];
-		Subspace s = subspaces[centroidIndex];
 		double[] attVals = new double[numberDimensions + 1];
 		for (int i = 0; i < numberDimensions; i++) {
 			attVals[i] = (this.instanceRandom.nextDouble() * 2.0) - 1.0;
@@ -108,10 +109,17 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		magnitude = Math.sqrt(magnitude);
 		double desiredMag = this.instanceRandom.nextGaussian() * centroid.stdDev;
 		double scale = desiredMag / magnitude;
-		for (int i = 0; i < numberDimensions; i++) {
-			if (s != null && !s.contains(i)) {
-				attVals[i] = ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
-			} else {
+		if (centroidIndex < numberSubspaceCentroids) {
+			Subspace s = subspaces[centroidIndex];
+			for (int i = 0; i < numberDimensions; i++) {
+				if (!s.contains(i)) {
+					attVals[i] = ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
+				} else {
+					attVals[i] = centroid.centre[i] + attVals[i] * scale;
+				}
+			}
+		} else {
+			for (int i = 0; i < numberDimensions; i++) {
 				attVals[i] = centroid.centre[i] + attVals[i] * scale;
 			}
 		}
@@ -132,7 +140,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		// Get scale
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
 		// Generate subspaces
-		subspaces = new Subspace[numCentroidsOption.getValue()];
+		numberSubspaceCentroids = numSubspaceCentroidsOption.getValue();
+		subspaces = new Subspace[numberSubspaceCentroids];
 
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
