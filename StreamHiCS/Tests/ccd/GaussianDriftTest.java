@@ -1,7 +1,5 @@
 package ccd;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -87,137 +85,336 @@ public class GaussianDriftTest {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				// if (summarisation == StreamSummarisation.DENSTREAM && buildup
-				// == SubspaceBuildup.APRIORI) {
-				resultSummary = new double[2][7];
-				for (int test = 1; test <= 1; test++) {
-					stopwatch.reset();
-					double threshold = 1;
-					switch (buildup) {
-					case APRIORI:
-						threshold = aprioriThreshold;
-						break;
-					case HIERARCHICAL:
-						threshold = hierarchicalThreshold;
-						break;
-					}
-
-					ArrayList<Double> trueChanges = new ArrayList<Double>();
-
-					switch (test) {
-					case 1:
-						numberOfDimensions = -1;
-						GaussianStream s1 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1);
-
-						// double[] mean2 = {5, 5, 5, 5, 5};
-						double[] mean2 = null;
-						GaussianStream s2 = new GaussianStream(mean2, csvReader.read(path + "Test2.csv"), 1.2);
-
-						conceptDriftStream = new ConceptDriftStream();
-						conceptDriftStream.streamOption.setCurrentObject(s1);
-						conceptDriftStream.driftstreamOption.setCurrentObject(s2);
-						conceptDriftStream.positionOption.setValue(10000);
-						conceptDriftStream.widthOption.setValue(1000);
-						conceptDriftStream.prepareForUse();
-
-						trueChanges.add(10000.0);
-
-						break;
-					case 2:
-
-						break;
-					case 3:
-
-						break;
-					case 4:
-
-						break;
-					case 5:
-
-						break;
-					case 6:
-
-						break;
-					case 7:
-
-						break;
-					case 8:
-						break;
-					case 9:
-
-						break;
-					case 10:
-						break;
-					}
-
-					// Creating the StreamHiCS system
-					adapter = createSummarisationAdapter(summarisation);
-					contrastEvaluator = new Contrast(m, alpha, adapter);
-					CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
-					subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
-					ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-					streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-							subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
-					changeChecker.setCallback(streamHiCS);
-
-					cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
-					cscd.prepareForUse();
-					streamHiCS.setCallback(cscd);
-					
-					double[] cscdSums = new double[4];
-					double[] refSums = new double[4];
-
-					for (int i = 0; i < numberTestRuns; i++) {
-						double[][] performanceMeasures = testRun(trueChanges);
-						for (int j = 0; j < 4; j++) {
-							cscdSums[j] += performanceMeasures[0][j];
-							refSums[j] += performanceMeasures[1][j];
+				if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST && buildup == SubspaceBuildup.APRIORI) {
+					resultSummary = new double[2][7];
+					for (int test = 1; test <= 4; test++) {
+						stopwatch.reset();
+						double threshold = 1;
+						switch (buildup) {
+						case APRIORI:
+							threshold = aprioriThreshold;
+							break;
+						case HIERARCHICAL:
+							threshold = hierarchicalThreshold;
+							break;
 						}
-					}
 
-					// Calculate results
-					cscdSums[4] = stopwatch.getTime("Evaluation");
-					cscdSums[5] = stopwatch.getTime("Adding");
-					cscdSums[6] = stopwatch.getTime("Total_CSCD");
-					refSums[6] = stopwatch.getTime("Total_REF");
-					
-					for (int j = 0; j < 7; j++) {
-						cscdSums[j] /= numberTestRuns;
-						refSums[j] /= numberTestRuns;
+						ArrayList<Double> trueChanges = new ArrayList<Double>();
+
+						switch (test) {
+						case 1:
+							numberOfDimensions = 5;
+							GaussianStream s1 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.0);
+
+							GaussianStream s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.2);
+
+							GaussianStream s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.4);
+
+							GaussianStream s4 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.2);
+
+							GaussianStream s5 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.0);
+
+							ConceptDriftStream conceptDriftStream1 = new ConceptDriftStream();
+							conceptDriftStream1.streamOption.setCurrentObject(s1);
+							conceptDriftStream1.driftstreamOption.setCurrentObject(s2);
+							conceptDriftStream1.positionOption.setValue(5000);
+							conceptDriftStream1.widthOption.setValue(1000);
+							conceptDriftStream1.prepareForUse();
+							trueChanges.add(5000.0);
+
+							ConceptDriftStream conceptDriftStream2 = new ConceptDriftStream();
+							conceptDriftStream2.streamOption.setCurrentObject(conceptDriftStream1);
+							conceptDriftStream2.driftstreamOption.setCurrentObject(s3);
+							conceptDriftStream2.positionOption.setValue(10000);
+							conceptDriftStream2.widthOption.setValue(1000);
+							conceptDriftStream2.prepareForUse();
+							trueChanges.add(10000.0);
+
+							ConceptDriftStream conceptDriftStream3 = new ConceptDriftStream();
+							conceptDriftStream2.streamOption.setCurrentObject(conceptDriftStream2);
+							conceptDriftStream2.driftstreamOption.setCurrentObject(s4);
+							conceptDriftStream2.positionOption.setValue(15000);
+							conceptDriftStream2.widthOption.setValue(1000);
+							conceptDriftStream2.prepareForUse();
+							trueChanges.add(15000.0);
+
+							conceptDriftStream = new ConceptDriftStream();
+							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream3);
+							conceptDriftStream.driftstreamOption.setCurrentObject(s5);
+							conceptDriftStream.positionOption.setValue(20000);
+							conceptDriftStream.widthOption.setValue(1000);
+							conceptDriftStream.prepareForUse();
+							trueChanges.add(20000.0);
+
+							break;
+						case 2:
+							numberOfDimensions = 5;
+							s1 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.0);
+
+							s2 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.2);
+
+							s3 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.4);
+
+							s4 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.2);
+
+							s5 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.0);
+
+							conceptDriftStream1 = new ConceptDriftStream();
+							conceptDriftStream1.streamOption.setCurrentObject(s1);
+							conceptDriftStream1.driftstreamOption.setCurrentObject(s2);
+							conceptDriftStream1.positionOption.setValue(5000);
+							conceptDriftStream1.widthOption.setValue(1000);
+							conceptDriftStream1.prepareForUse();
+							trueChanges.add(5000.0);
+
+							conceptDriftStream2 = new ConceptDriftStream();
+							conceptDriftStream2.streamOption.setCurrentObject(conceptDriftStream1);
+							conceptDriftStream2.driftstreamOption.setCurrentObject(s3);
+							conceptDriftStream2.positionOption.setValue(10000);
+							conceptDriftStream2.widthOption.setValue(1000);
+							conceptDriftStream2.prepareForUse();
+							trueChanges.add(10000.0);
+
+							conceptDriftStream3 = new ConceptDriftStream();
+							conceptDriftStream3.streamOption.setCurrentObject(conceptDriftStream2);
+							conceptDriftStream3.driftstreamOption.setCurrentObject(s4);
+							conceptDriftStream3.positionOption.setValue(15000);
+							conceptDriftStream3.widthOption.setValue(1000);
+							conceptDriftStream3.prepareForUse();
+							trueChanges.add(15000.0);
+
+							conceptDriftStream = new ConceptDriftStream();
+							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream3);
+							conceptDriftStream.driftstreamOption.setCurrentObject(s5);
+							conceptDriftStream.positionOption.setValue(20000);
+							conceptDriftStream.widthOption.setValue(1000);
+							conceptDriftStream.prepareForUse();
+							trueChanges.add(20000.0);
+							break;
+						case 3:
+							numberOfDimensions = 5;
+							s1 = new GaussianStream(null, csvReader.read(path + "Test1.csv"), 1.0);
+
+							s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.0);
+
+							s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.2);
+
+							s4 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 1.2);
+
+							s5 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 1.4);
+							
+							GaussianStream s6 = new GaussianStream(null, csvReader.read(path + "Test13.csv"), 1.6);
+							
+							GaussianStream s7 = new GaussianStream(null, csvReader.read(path + "Test13.csv"), 1.4);
+
+							conceptDriftStream1 = new ConceptDriftStream();
+							conceptDriftStream1.streamOption.setCurrentObject(s1);
+							conceptDriftStream1.driftstreamOption.setCurrentObject(s2);
+							conceptDriftStream1.positionOption.setValue(5000);
+							conceptDriftStream1.widthOption.setValue(1000);
+							conceptDriftStream1.prepareForUse();
+							trueChanges.add(5000.0);
+
+							conceptDriftStream2 = new ConceptDriftStream();
+							conceptDriftStream2.streamOption.setCurrentObject(conceptDriftStream1);
+							conceptDriftStream2.driftstreamOption.setCurrentObject(s3);
+							conceptDriftStream2.positionOption.setValue(10000);
+							conceptDriftStream2.widthOption.setValue(1000);
+							conceptDriftStream2.prepareForUse();
+							trueChanges.add(10000.0);
+
+							conceptDriftStream3 = new ConceptDriftStream();
+							conceptDriftStream3.streamOption.setCurrentObject(conceptDriftStream2);
+							conceptDriftStream3.driftstreamOption.setCurrentObject(s4);
+							conceptDriftStream3.positionOption.setValue(15000);
+							conceptDriftStream3.widthOption.setValue(1000);
+							conceptDriftStream3.prepareForUse();
+							trueChanges.add(15000.0);
+							
+							ConceptDriftStream conceptDriftStream4 = new ConceptDriftStream();
+							conceptDriftStream4.streamOption.setCurrentObject(conceptDriftStream3);
+							conceptDriftStream4.driftstreamOption.setCurrentObject(s5);
+							conceptDriftStream4.positionOption.setValue(20000);
+							conceptDriftStream4.widthOption.setValue(1000);
+							conceptDriftStream4.prepareForUse();
+							trueChanges.add(20000.0);
+							
+							ConceptDriftStream conceptDriftStream5 = new ConceptDriftStream();
+							conceptDriftStream5.streamOption.setCurrentObject(conceptDriftStream4);
+							conceptDriftStream5.driftstreamOption.setCurrentObject(s6);
+							conceptDriftStream5.positionOption.setValue(25000);
+							conceptDriftStream5.widthOption.setValue(1000);
+							conceptDriftStream5.prepareForUse();
+							trueChanges.add(25000.0);
+
+							conceptDriftStream = new ConceptDriftStream();
+							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream5);
+							conceptDriftStream.driftstreamOption.setCurrentObject(s7);
+							conceptDriftStream.positionOption.setValue(30000);
+							conceptDriftStream.widthOption.setValue(1000);
+							conceptDriftStream.prepareForUse();
+							trueChanges.add(30000.0);
+							break;
+						case 4:
+							numberOfDimensions = 10;
+							s1 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 1.0);
+
+							s2 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 1.2);
+
+							s3 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.2);
+
+							s4 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.4);
+
+							s5 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.2);
+							
+							s6 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 1.2);
+							
+							s7 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 1.4);
+							
+							GaussianStream s8 = new GaussianStream(null, csvReader.read(path + "Test28.csv"), 1.4);
+
+							conceptDriftStream1 = new ConceptDriftStream();
+							conceptDriftStream1.streamOption.setCurrentObject(s1);
+							conceptDriftStream1.driftstreamOption.setCurrentObject(s2);
+							conceptDriftStream1.positionOption.setValue(5000);
+							conceptDriftStream1.widthOption.setValue(1000);
+							conceptDriftStream1.prepareForUse();
+							trueChanges.add(5000.0);
+
+							conceptDriftStream2 = new ConceptDriftStream();
+							conceptDriftStream2.streamOption.setCurrentObject(conceptDriftStream1);
+							conceptDriftStream2.driftstreamOption.setCurrentObject(s3);
+							conceptDriftStream2.positionOption.setValue(10000);
+							conceptDriftStream2.widthOption.setValue(1000);
+							conceptDriftStream2.prepareForUse();
+							trueChanges.add(10000.0);
+
+							conceptDriftStream3 = new ConceptDriftStream();
+							conceptDriftStream3.streamOption.setCurrentObject(conceptDriftStream2);
+							conceptDriftStream3.driftstreamOption.setCurrentObject(s4);
+							conceptDriftStream3.positionOption.setValue(15000);
+							conceptDriftStream3.widthOption.setValue(1000);
+							conceptDriftStream3.prepareForUse();
+							trueChanges.add(15000.0);
+							
+							conceptDriftStream4 = new ConceptDriftStream();
+							conceptDriftStream4.streamOption.setCurrentObject(conceptDriftStream3);
+							conceptDriftStream4.driftstreamOption.setCurrentObject(s5);
+							conceptDriftStream4.positionOption.setValue(20000);
+							conceptDriftStream4.widthOption.setValue(1000);
+							conceptDriftStream4.prepareForUse();
+							trueChanges.add(20000.0);
+							
+							conceptDriftStream5 = new ConceptDriftStream();
+							conceptDriftStream5.streamOption.setCurrentObject(conceptDriftStream4);
+							conceptDriftStream5.driftstreamOption.setCurrentObject(s6);
+							conceptDriftStream5.positionOption.setValue(25000);
+							conceptDriftStream5.widthOption.setValue(1000);
+							conceptDriftStream5.prepareForUse();
+							trueChanges.add(25000.0);
+							
+							ConceptDriftStream conceptDriftStream6 = new ConceptDriftStream();
+							conceptDriftStream6.streamOption.setCurrentObject(conceptDriftStream4);
+							conceptDriftStream6.driftstreamOption.setCurrentObject(s7);
+							conceptDriftStream6.positionOption.setValue(30000);
+							conceptDriftStream6.widthOption.setValue(1000);
+							conceptDriftStream6.prepareForUse();
+							trueChanges.add(30000.0);
+
+							conceptDriftStream = new ConceptDriftStream();
+							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream6);
+							conceptDriftStream.driftstreamOption.setCurrentObject(s8);
+							conceptDriftStream.positionOption.setValue(35000);
+							conceptDriftStream.widthOption.setValue(1000);
+							conceptDriftStream.prepareForUse();
+							trueChanges.add(35000.0);
+							break;
+						case 5:
+
+							break;
+						case 6:
+
+							break;
+						case 7:
+
+							break;
+						case 8:
+							break;
+						case 9:
+
+							break;
+						case 10:
+							break;
+						}
+
+						// Creating the StreamHiCS system
+						adapter = createSummarisationAdapter(summarisation);
+						contrastEvaluator = new Contrast(m, alpha, adapter);
+						CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
+						ChangeChecker changeChecker = new TimeCountChecker(numInstances);
+						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
+								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
+						changeChecker.setCallback(streamHiCS);
+
+						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
+						cscd.prepareForUse();
+						streamHiCS.setCallback(cscd);
+
+						double[] cscdSums = new double[4];
+						double[] refSums = new double[4];
+
+						for (int i = 0; i < numberTestRuns; i++) {
+							double[][] performanceMeasures = testRun(trueChanges);
+							for (int j = 0; j < 4; j++) {
+								cscdSums[j] += performanceMeasures[0][j];
+								refSums[j] += performanceMeasures[1][j];
+							}
+						}
+
+						// Calculate results
+						cscdSums[4] = stopwatch.getTime("Evaluation");
+						cscdSums[5] = stopwatch.getTime("Adding");
+						cscdSums[6] = stopwatch.getTime("Total_CSCD");
+						refSums[6] = stopwatch.getTime("Total_REF");
+
+						for (int j = 0; j < 7; j++) {
+							cscdSums[j] /= numberTestRuns;
+							refSums[j] /= numberTestRuns;
+						}
+
+						String cscdMeasures = "CSCD, " + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
+								+ cscdSums[2] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", " + cscdSums[6];
+						String refMeasures = "REF, " + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
+								+ ", " + refSums[4] + ", " + refSums[5] + ", " + refSums[6];
+						System.out.println(cscdMeasures);
+						System.out.println(refMeasures);
+
+						for (int i = 0; i < 7; i++) {
+							resultSummary[1][i] += cscdSums[i];
+							resultSummary[2][i] += refSums[i];
+						}
+
+						results.add(cscdMeasures);
+						results.add(refMeasures);
 					}
-					
-					String cscdMeasures = "CSCD, " + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", " + cscdSums[2]
-							+ ", " + cscdSums[4] + ", " + cscdSums[5] + ", " + cscdSums[6];
-					String refMeasures = "REF, " + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
-							+ ", " + refSums[4] + ", " + refSums[5] + ", " + refSums[6];
-					System.out.println(cscdMeasures);
-					System.out.println(refMeasures);
 
 					for (int i = 0; i < 7; i++) {
-						resultSummary[1][i] += cscdSums[i];
-						resultSummary[2][i] += refSums[i];
+						resultSummary[0][i] /= 10;
+						resultSummary[1][i] /= 10;
 					}
-
-					results.add(cscdMeasures);
-					results.add(refMeasures);
+					String avgCSCD = "CSCD, ";
+					String avgREF = "REF, ";
+					for (int i = 0; i < 6; i++) {
+						avgCSCD += resultSummary[1][i] + ",";
+						avgREF += resultSummary[1][i] + ",";
+					}
+					avgCSCD += resultSummary[0][6];
+					avgREF += resultSummary[1][6];
+					System.out.println(avgCSCD);
+					System.out.print(avgREF);
 				}
-
-				for (int i = 0; i < 7; i++) {
-					resultSummary[0][i] /= 10;
-					resultSummary[1][i] /= 10;
-				}
-				String avgCSCD = "CSCD, ";
-				String avgREF = "REF, ";
-				for (int i = 0; i < 6; i++) {
-					avgCSCD += resultSummary[1][i] + ",";
-					avgREF += resultSummary[1][i] + ",";
-				}
-				avgCSCD += resultSummary[0][6];
-				avgREF += resultSummary[1][6];
-				System.out.println(avgCSCD);
-				System.out.print(avgREF);
 			}
-			// }
 		}
 
 		// Write the results
@@ -229,8 +426,6 @@ public class GaussianDriftTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		fail("No condition");
 	}
 
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss) {

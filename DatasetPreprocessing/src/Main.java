@@ -17,7 +17,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.WAVEFORM;
+		Dataset set = Dataset.INTRUSION_DETECTION;
 
 		String headerPath = null;
 		String inputPath = null;
@@ -44,7 +44,9 @@ public class Main {
 		case INTRUSION_DETECTION:
 			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddHeader.txt";
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
+			//outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.arff";
+
 			// inputPath = "D:/Informatik/MSc/IV/Masterarbeit
 			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99.txt";
 			// outputPath = "D:/Informatik/MSc/IV/Masterarbeit
@@ -63,7 +65,8 @@ public class Main {
 		case INTRUSION_DETECTION_FILTERED:
 			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddHeader_filtered.txt";
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted_filtered.arff";
+			//outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_sorted_filtered.arff";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_10_percent_filtered.arff";
 			// inputPath = "D:/Informatik/MSc/IV/Masterarbeit
 			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99.txt";
 			// outputPath = "D:/Informatik/MSc/IV/Masterarbeit

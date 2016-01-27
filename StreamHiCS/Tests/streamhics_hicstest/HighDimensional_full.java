@@ -1,7 +1,5 @@
 package streamhics_hicstest;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,6 +26,7 @@ import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
+import streamdatastructures.WithDBSCAN;
 import streams.GaussianStream;
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -44,7 +43,8 @@ public class HighDimensional_full {
 	private final int m = 50;
 	private final double alpha = 0.05;
 	private double epsilon = 0;
-	private double threshold = 0.2;
+	private double aprioriThreshold;
+	private double hierarchicalThreshold;
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
@@ -76,7 +76,7 @@ public class HighDimensional_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS || summarisation == StreamSummarisation.RADIUSCENTROIDS) {
 					for (int test = 1; test <= 10; test++) {
 						stopwatch.reset();
 						double sumTPvsFP = 0;
@@ -173,8 +173,10 @@ public class HighDimensional_full {
 							blockSizes[1] = 20;
 							horizon = 4000;
 							correctResult = new SubspaceSet();
-							correctResult.addSubspace(new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
-							correctResult.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39));
+							correctResult.addSubspace(
+									new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
+							correctResult.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+									33, 34, 35, 36, 37, 38, 39));
 							break;
 						case 8:
 							numberOfDimensions = 100;
@@ -212,13 +214,25 @@ public class HighDimensional_full {
 							blockSizes[1] = 20;
 							horizon = 6000;
 							correctResult = new SubspaceSet();
-							correctResult.addSubspace(new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
-							correctResult.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39));
+							correctResult.addSubspace(
+									new Subspace(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
+							correctResult.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+									33, 34, 35, 36, 37, 38, 39));
 							break;
 						}
 						double[][] covarianceMatrix = CovarianceMatrixGenerator
 								.generateCovarianceMatrix(numberOfDimensions, blockBeginnings, blockSizes, 0.9);
 						stream = new GaussianStream(null, covarianceMatrix, 1);
+
+						double threshold = 1;
+						switch (buildup) {
+						case APRIORI:
+							threshold = aprioriThreshold;
+							break;
+						case HIERARCHICAL:
+							threshold = hierarchicalThreshold;
+							break;
+						}
 
 						// Creating the StreamHiCS system
 						adapter = createSummarisationAdapter(summarisation);
@@ -261,7 +275,7 @@ public class HighDimensional_full {
 		}
 
 		// Write the results
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/GaussianStreams/Standard/results.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/GaussianStreams/HighDimensional/results.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
@@ -269,8 +283,6 @@ public class HighDimensional_full {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		fail("No condition");
 	}
 
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss) {
@@ -281,10 +293,14 @@ public class HighDimensional_full {
 		SummarisationAdapter adapter = null;
 		switch (ss) {
 		case SLIDINGWINDOW:
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.35;
 			adapter = new SlidingWindowAdapter(numberOfDimensions, horizon);
 			summarisationDescription = "Sliding window, window size: " + horizon;
 			break;
 		case CLUSTREAM:
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.4;
 			Clustream cluStream = new Clustream();
 			cluStream.kernelRadiFactorOption.setValue(2);
 			int numberKernels = 400;
@@ -293,45 +309,62 @@ public class HighDimensional_full {
 			adapter = new MicroclusteringAdapter(cluStream);
 			summarisationDescription = "CluStream, maximum number kernels: " + numberKernels;
 			break;
-		/*
-		 * case DENSTREAM: WithDBSCAN denStream = new WithDBSCAN(); int speed =
-		 * 100; //double epsilon = 1 * Math.sqrt(numberOfDimensions) - 1; double
-		 * epsilon = 2.9; double beta = 0.2; double mu = 10;
-		 * denStream.speedOption.setValue(speed);
-		 * denStream.epsilonOption.setValue(epsilon);
-		 * denStream.betaOption.setValue(beta); denStream.muOption.setValue(mu);
-		 * // lambda calculated from horizon double lambda = -Math.log(0.01) /
-		 * Math.log(2) / (double) horizon;
-		 * denStream.lambdaOption.setValue(0.001); denStream.prepareForUse();
-		 * adapter = new MicroclusteringAdapter(denStream);
-		 * summarisationDescription = "DenStream, speed: " + speed +
-		 * ", epsilon: " + epsilon + ", beta" + beta + ", mu" + mu + ", lambda"
-		 * + lambda; break;
-		 */
+		case DENSTREAM:
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.35;
+			WithDBSCAN denStream = new WithDBSCAN();
+			int speed = 100;
+			// double epsilon = 1 * Math.sqrt(numberOfDimensions) - 1; double
+			epsilon = 1;
+			double beta = 0.2;
+			double mu = 10;
+			denStream.speedOption.setValue(speed);
+			denStream.epsilonOption.setValue(epsilon);
+			denStream.betaOption.setValue(beta);
+			denStream.muOption.setValue(mu);
+			// lambda calculated from horizon double lambda = -Math.log(0.01) /
+			// Math.log(2) / (double) horizon;
+			double lambda = 0.001;
+			denStream.lambdaOption.setValue(lambda);
+			denStream.prepareForUse();
+			adapter = new MicroclusteringAdapter(denStream);
+			summarisationDescription = "DenStream, speed: " + speed + ", epsilon: " + epsilon + ", beta" + beta + ", mu"
+					+ mu + ", lambda" + lambda;
+			break;
 		case CLUSTREE_DEPTHFIRST:
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.4;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree depthFirst, horizon: " + horizon;
 			break;
 		case CLUSTREE_BREADTHFIRST:
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.3;
 			clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.breadthFirstSearchOption.set();
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			double radius = 5;
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.4;
+			// double radius = 5;
+			double radius = 5 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
+			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			radius = 5;
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.4;
+			radius = 5 * Math.sqrt(numberOfDimensions) - 1;
+			// radius = 5;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -339,10 +372,9 @@ public class HighDimensional_full {
 			adapter = null;
 		}
 		if (addDescription) {
-			results.add(builderDescription);
+			results.add(summarisationDescription);
 			addDescription = false;
 		}
-		results.add(summarisationDescription);
 		return adapter;
 	}
 
@@ -356,14 +388,15 @@ public class HighDimensional_full {
 		switch (sb) {
 		case APRIORI:
 			cutoff = 20;
-			builder = new AprioriBuilder(numberOfDimensions, threshold, cutoff, contrastEvaluator, correlationSummary);
-			builderDescription = "Apriori, threshold:" + threshold + "cutoff: " + cutoff;
+			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator,
+					correlationSummary);
+			builderDescription = "Apriori, threshold:" + aprioriThreshold + "cutoff: " + cutoff;
 			break;
 		case HIERARCHICAL:
 			cutoff = 2;
-			builder = new HierarchicalBuilderCutoff(numberOfDimensions, threshold, cutoff, contrastEvaluator,
-					correlationSummary, true);
-			builderDescription = "Hierarchical, threshold: " + threshold + ", cutoff: " + cutoff;
+			builder = new HierarchicalBuilderCutoff(numberOfDimensions, hierarchicalThreshold, cutoff,
+					contrastEvaluator, correlationSummary, true);
+			builderDescription = "Hierarchical, threshold: " + hierarchicalThreshold + ", cutoff: " + cutoff;
 			break;
 		default:
 			builder = null;

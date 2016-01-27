@@ -325,7 +325,7 @@ public class StreamHiCS_full {
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree depthFirst, horizon: " + horizon;
 			break;
 		case CLUSTREE_BREADTHFIRST:
 			aprioriThreshold = 0.2;
@@ -335,7 +335,7 @@ public class StreamHiCS_full {
 			clusTree.breadthFirstSearchOption.set();
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.25;
@@ -343,7 +343,7 @@ public class StreamHiCS_full {
 			double radius = 3.5;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
+			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:

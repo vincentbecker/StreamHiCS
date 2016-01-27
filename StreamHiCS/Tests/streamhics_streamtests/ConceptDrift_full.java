@@ -1,5 +1,9 @@
 package streamhics_streamtests;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -90,7 +94,7 @@ public class ConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.CLUSTREAM && buildup == SubspaceBuildup.HIERARCHICAL) {
+				//if (summarisation == StreamSummarisation.CLUSTREAM && buildup == SubspaceBuildup.HIERARCHICAL) {
 					stopwatch.reset();
 					double sumTPvsFP = 0;
 					double sumAMJS = 0;
@@ -142,8 +146,17 @@ public class ConceptDrift_full {
 							+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
 					System.out.println(measures);
 					results.add(measures);
-				}
-			}
+				//}
+			}	
+		}
+		// Write the results
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/GaussianStreams/Drift/Results.txt";
+
+		try {
+			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -295,7 +308,7 @@ public class ConceptDrift_full {
 			s.sort();
 		}
 		correctResult.sort();
-		Evaluator.displayResult(result, correctResult);
+		//Evaluator.displayResult(result, correctResult);
 		double[] performanceMeasures = new double[4];
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
@@ -358,7 +371,7 @@ public class ConceptDrift_full {
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree depthFirst, horizon: " + horizon;
 			break;
 		case CLUSTREE_BREADTHFIRST:
 			aprioriThreshold = 0.2;
@@ -368,7 +381,7 @@ public class ConceptDrift_full {
 			clusTree.breadthFirstSearchOption.set();
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.3;
@@ -379,7 +392,7 @@ public class ConceptDrift_full {
 			double radius = 10;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
+			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:

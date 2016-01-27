@@ -48,7 +48,7 @@ public class ContrastTest {
 	 */
 	private static Subspace subspace;
 
-	private final static String method = "centroids";
+	private final static String method = "ClusTreeMC";
 
 	private static final int m = 100;
 	private static double alpha;
@@ -99,7 +99,7 @@ public class ContrastTest {
 			targetHighContrast = 0.6;
 
 		} else if (method.equals("ClusTreeMC")) {
-			alpha = 0.2;
+			alpha = 0.1;
 			ClusTree mcs = new ClusTree();
 			mcs.horizonOption.setValue(5000);
 			mcs.resetLearning();

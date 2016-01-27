@@ -165,6 +165,31 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
+	@Test
+	public void intrusionDetection10Percent() {
+		// The change points in the data are: 2203, 2233, 2241, 2294, 2306,
+		// 3553, 3574, 3583, 3590, 110791, 111042, 208300, 208307, 208571,
+		// 209611, 209621, 211210, 492000, 492001, 492981, 494001
+		// Normal is in the range of 111042 to 208299
+		// Smurf is in the range of 211210 to 491999
+		path = "Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 34;
+		int m = 20;
+		double alpha = 0.15;
+		double epsilon = 0;
+		double threshold = 0.4;
+		int cutoff = 8;
+		double pruningDifference = 0.15;
+		int horizon = 5000;
+		int checkCount = 10000;
+
+		System.out.println("Intrusion Detection 10%");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
+		System.out.println();
+		}
 	/*
 	@Test
 	public void intrusionDetection10Percent() {
@@ -190,9 +215,6 @@ public class RealWorldDatasets {
 		System.out.println("Intrusion Detection 10%");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
-		
-		fail("Not yet implemented");
-		
 		}
 		*/
 	
@@ -220,9 +242,6 @@ public class RealWorldDatasets {
 		System.out.println("Intrusion Detection 10% filtered");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
-		
-		fail("Not yet implemented");
-		
 		}
 	
 		/*
@@ -246,8 +265,6 @@ public class RealWorldDatasets {
 		System.out.println("Intrusion Detection full");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, checkCount);
 		System.out.println();
-		
-		fail("Not yet implemented");
 	}
 	*/
 	/*

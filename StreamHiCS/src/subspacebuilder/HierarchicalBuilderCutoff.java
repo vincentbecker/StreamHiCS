@@ -104,13 +104,12 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 			boolean add = false;
 			for (int i = 0; i < numberOfDimensions; i++) {
 				add = false;
-				for (int j = 0; j < numberOfDimensions && !add; j++) {
+				for (int j = i + 1; j < numberOfDimensions && !add; j++) {
 					if (contrastMatrix[i][j] >= threshold) {
+						fullSpace.addDimension(i);
+						fullSpace.addDimension(j);
 						add = true;
 					}
-				}
-				if (add) {
-					fullSpace.addDimension(i);
 				}
 			}
 			/*

@@ -1,7 +1,5 @@
 package streamhics_streamtests;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -80,80 +78,84 @@ public class SubspaceRBF {
 		results.add("Number subspace centroids: " + numberSubspaceCentroids);
 		SummarisationAdapter adapter;
 		SubspaceBuilder subspaceBuilder;
-		for (StreamSummarisation summarisation : StreamSummarisation.values()) {
-			summarisationDescription = null;
-			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
-				builderDescription = null;
-				if (summarisation == StreamSummarisation.SLIDINGWINDOW && buildup == SubspaceBuildup.HIERARCHICAL) {
-					for (numberOfDimensions = 3; numberOfDimensions <= 40; numberOfDimensions++) {
-						stopwatch.reset();
-						double sumTPvsFP = 0;
-						double sumAMJS = 0;
-						double sumAMSS = 0;
-						int sumElements = 0;
+		for (numberSubspaceCentroids = 5; numberSubspaceCentroids <= 10; numberSubspaceCentroids += 5) {
+			for (StreamSummarisation summarisation : StreamSummarisation.values()) {
+				summarisationDescription = null;
+				for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
+					builderDescription = null;
+					if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST
+							|| summarisation == StreamSummarisation.RADIUSCENTROIDS) {
+						for (numberOfDimensions = 3; numberOfDimensions <= 40; numberOfDimensions++) {
+							stopwatch.reset();
+							double sumTPvsFP = 0;
+							double sumAMJS = 0;
+							double sumAMSS = 0;
+							int sumElements = 0;
 
-						double threshold = 1;
-						switch (buildup) {
-						case APRIORI:
-							threshold = aprioriThreshold;
-							break;
-						case HIERARCHICAL:
-							threshold = hierarchicalThreshold;
-							break;
+							double threshold = 1;
+							switch (buildup) {
+							case APRIORI:
+								threshold = aprioriThreshold;
+								break;
+							case HIERARCHICAL:
+								threshold = hierarchicalThreshold;
+								break;
+							}
+
+							// Creating the stream
+							stream = new SubspaceRandomRBFGeneratorDrift();
+							stream.numAttsOption.setValue(numberOfDimensions);
+							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
+							stream.numCentroidsOption.setValue(10);
+							stream.numSubspaceCentroidsOption.setValue(numberSubspaceCentroids);
+							if (SAME_SUBSPACES) {
+								stream.sameSubspaceOption.setValue(true);
+							} else {
+								stream.sameSubspaceOption.setValue(false);
+							}
+							stream.randomSubspaceSizeOption.setValue(false);
+							if (DRIFT) {
+								stream.numDriftCentroidsOption.setValue(10);
+								stream.speedChangeOption.setValue(0.1);
+							}
+							stream.prepareForUse();
+
+							// Creating the StreamHiCS system
+							adapter = createSummarisationAdapter(summarisation);
+							contrastEvaluator = new Contrast(m, alpha, adapter);
+							subspaceBuilder = createSubspaceBuilder(buildup);
+							ChangeChecker changeChecker = new TimeCountChecker(numInstances);
+							streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
+									subspaceBuilder, changeChecker, callback, null, stopwatch);
+							changeChecker.setCallback(streamHiCS);
+
+							for (int i = 0; i < numberTestRuns; i++) {
+								double[] performanceMeasures = testRun();
+								sumTPvsFP += performanceMeasures[0];
+								sumAMJS += performanceMeasures[1];
+								sumAMSS += performanceMeasures[2];
+								sumElements += performanceMeasures[3];
+							}
+
+							// Calculate results
+							double sumEvaluationTime = stopwatch.getTime("Evaluation");
+							double sumAddingTime = stopwatch.getTime("Adding");
+							double sumTotalTime = stopwatch.getTime("Total");
+
+							double avgTPvsFP = sumTPvsFP / numberTestRuns;
+							double avgAMJS = sumAMJS / numberTestRuns;
+							double avgAMSS = sumAMSS / numberTestRuns;
+							double avgNumElements = sumElements / numberTestRuns;
+							double avgEvalTime = sumEvaluationTime / numberTestRuns;
+							double avgAddingTime = sumAddingTime / numberTestRuns;
+							double avgTotalTime = sumTotalTime / numberTestRuns;
+
+							String measures = numberOfDimensions + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS
+									+ ", " + avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", "
+									+ avgTotalTime;
+							System.out.println(measures);
+							results.add(measures);
 						}
-
-						// Creating the stream
-						stream = new SubspaceRandomRBFGeneratorDrift();
-						stream.numAttsOption.setValue(numberOfDimensions);
-						stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
-						stream.numCentroidsOption.setValue(10);
-						stream.numSubspaceCentroidsOption.setValue(numberSubspaceCentroids);
-						if (SAME_SUBSPACES) {
-							stream.sameSubspaceOption.setValue(true);
-						} else {
-							stream.sameSubspaceOption.setValue(false);
-						}
-						stream.randomSubspaceSizeOption.setValue(false);
-						if (DRIFT) {
-							stream.numDriftCentroidsOption.setValue(10);
-							stream.speedChangeOption.setValue(0.1);
-						}
-						stream.prepareForUse();
-
-						// Creating the StreamHiCS system
-						adapter = createSummarisationAdapter(summarisation);
-						contrastEvaluator = new Contrast(m, alpha, adapter);
-						subspaceBuilder = createSubspaceBuilder(buildup);
-						ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-								subspaceBuilder, changeChecker, callback, null, stopwatch);
-						changeChecker.setCallback(streamHiCS);
-
-						for (int i = 0; i < numberTestRuns; i++) {
-							double[] performanceMeasures = testRun();
-							sumTPvsFP += performanceMeasures[0];
-							sumAMJS += performanceMeasures[1];
-							sumAMSS += performanceMeasures[2];
-							sumElements += performanceMeasures[3];
-						}
-
-						// Calculate results
-						double sumEvaluationTime = stopwatch.getTime("Evaluation");
-						double sumAddingTime = stopwatch.getTime("Adding");
-						double sumTotalTime = stopwatch.getTime("Total");
-
-						double avgTPvsFP = sumTPvsFP / numberTestRuns;
-						double avgAMJS = sumAMJS / numberTestRuns;
-						double avgAMSS = sumAMSS / numberTestRuns;
-						double avgNumElements = sumElements / numberTestRuns;
-						double avgEvalTime = sumEvaluationTime / numberTestRuns;
-						double avgAddingTime = sumAddingTime / numberTestRuns;
-						double avgTotalTime = sumTotalTime / numberTestRuns;
-
-						String measures = numberOfDimensions + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", "
-								+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
-						System.out.println(measures);
-						results.add(measures);
 					}
 				}
 			}
@@ -173,8 +175,6 @@ public class SubspaceRBF {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		fail("No condition");
 	}
 
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss) {
@@ -206,21 +206,6 @@ public class SubspaceRBF {
 			adapter = new MicroclusteringAdapter(cluStream);
 			summarisationDescription = "CluStream, maximum number kernels: " + numberKernels;
 			break;
-		/*
-		 * case DENSTREAM: WithDBSCAN denStream = new WithDBSCAN(); int speed =
-		 * 100; //double epsilon = 1 * Math.sqrt(numberOfDimensions) - 1; double
-		 * epsilon = 2.9; double beta = 0.2; double mu = 10;
-		 * denStream.speedOption.setValue(speed);
-		 * denStream.epsilonOption.setValue(epsilon);
-		 * denStream.betaOption.setValue(beta); denStream.muOption.setValue(mu);
-		 * // lambda calculated from horizon double lambda = -Math.log(0.01) /
-		 * Math.log(2) / (double) horizon;
-		 * denStream.lambdaOption.setValue(0.001); denStream.prepareForUse();
-		 * adapter = new MicroclusteringAdapter(denStream);
-		 * summarisationDescription = "DenStream, speed: " + speed +
-		 * ", epsilon: " + epsilon + ", beta" + beta + ", mu" + mu + ", lambda"
-		 * + lambda; break;
-		 */
 		case CLUSTREE_DEPTHFIRST:
 			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.25;

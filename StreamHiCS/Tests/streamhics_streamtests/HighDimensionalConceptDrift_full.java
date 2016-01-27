@@ -1,5 +1,9 @@
 package streamhics_streamtests;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,21 +68,21 @@ public class HighDimensionalConceptDrift_full {
 	private ArrayList<SubspaceSet> correctResults;
 	private int testCounter = 0;
 	private final int numInstances = 40000;
-	private int numberSamples = 0;	
-	
+	private int numberSamples = 0;
+
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		stopwatch = new Stopwatch();
 	}
-	
+
 	@AfterClass
 	public static void calculateAverageScores() {
 		// System.out.println("Average TPvsFP-score: " + tpVSfpSum /
 		// testCounter);
 		// System.out.println("Average AMJS-score: " + amjsSum / testCounter);
-		//System.out.println(stopwatch.toString());
+		// System.out.println(stopwatch.toString());
 	}
-	
+
 	@Before
 	public void setUp() throws Exception {
 		numberSamples = 0;
@@ -94,63 +98,73 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.CLUSTREAM && buildup == SubspaceBuildup.APRIORI) {
-					stopwatch.reset();
-					double sumTPvsFP = 0;
-					double sumAMJS = 0;
-					double sumAMSS = 0;
-					double sumElements = 0;
+				if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST && buildup == SubspaceBuildup.APRIORI && summarisation != StreamSummarisation.DENSTREAM && summarisation != StreamSummarisation.SLIDINGWINDOW && summarisation != StreamSummarisation.CLUSTREAM) {
+				stopwatch.reset();
+				double sumTPvsFP = 0;
+				double sumAMJS = 0;
+				double sumAMSS = 0;
+				double sumElements = 0;
 
-					double threshold = 1;
-					switch (buildup) {
-					case APRIORI:
-						threshold = aprioriThreshold;
-						break;
-					case HIERARCHICAL:
-						threshold = hierarchicalThreshold;
-						break;
-					}
-					
-					// Creating the StreamHiCS system
-					adapter = createSummarisationAdapter(summarisation);
-					contrastEvaluator = new Contrast(m, alpha, adapter);
-					correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
-					subspaceBuilder = createSubspaceBuilder(buildup);
-					ChangeChecker changeChecker = new TimeCountChecker(5000);
-					streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-							subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
-					changeChecker.setCallback(streamHiCS);
-
-					for (int i = 0; i < numberTestRuns; i++) {
-						double[] performanceMeasures = testRun();
-						sumTPvsFP += performanceMeasures[0];
-						sumAMJS += performanceMeasures[1];
-						sumAMSS += performanceMeasures[2];
-						sumElements += performanceMeasures[3];
-					}
-
-					// Calculate results
-					double sumEvaluationTime = stopwatch.getTime("Evaluation");
-					double sumAddingTime = stopwatch.getTime("Adding");
-					double sumTotalTime = stopwatch.getTime("Total");
-
-					double avgTPvsFP = sumTPvsFP / numberTestRuns;
-					double avgAMJS = sumAMJS / numberTestRuns;
-					double avgAMSS = sumAMSS / numberTestRuns;
-					double avgNumElements = sumElements / numberTestRuns;
-					double avgEvalTime = sumEvaluationTime / numberTestRuns;
-					double avgAddingTime = sumAddingTime / numberTestRuns;
-					double avgTotalTime = sumTotalTime / numberTestRuns;
-
-					String measures = avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", "
-							+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
-					System.out.println(measures);
-					results.add(measures);
+				double threshold = 1;
+				switch (buildup) {
+				case APRIORI:
+					threshold = aprioriThreshold;
+					break;
+				case HIERARCHICAL:
+					threshold = hierarchicalThreshold;
+					break;
 				}
+
+				// Creating the StreamHiCS system
+				adapter = createSummarisationAdapter(summarisation);
+				contrastEvaluator = new Contrast(m, alpha, adapter);
+				correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+				subspaceBuilder = createSubspaceBuilder(buildup);
+				ChangeChecker changeChecker = new TimeCountChecker(5000);
+				streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
+						changeChecker, callback, correlationSummary, stopwatch);
+				changeChecker.setCallback(streamHiCS);
+
+				for (int i = 0; i < numberTestRuns; i++) {
+					double[] performanceMeasures = testRun();
+					sumTPvsFP += performanceMeasures[0];
+					sumAMJS += performanceMeasures[1];
+					sumAMSS += performanceMeasures[2];
+					sumElements += performanceMeasures[3];
+				}
+
+				// Calculate results
+				double sumEvaluationTime = stopwatch.getTime("Evaluation");
+				double sumAddingTime = stopwatch.getTime("Adding");
+				double sumTotalTime = stopwatch.getTime("Total");
+
+				double avgTPvsFP = sumTPvsFP / numberTestRuns;
+				double avgAMJS = sumAMJS / numberTestRuns;
+				double avgAMSS = sumAMSS / numberTestRuns;
+				double avgNumElements = sumElements / numberTestRuns;
+				double avgEvalTime = sumEvaluationTime / numberTestRuns;
+				double avgAddingTime = sumAddingTime / numberTestRuns;
+				double avgTotalTime = sumTotalTime / numberTestRuns;
+
+				String measures = avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", " + avgNumElements + ", "
+						+ avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
+				System.out.println(measures);
+				results.add(measures);
+				 }
 			}
 		}
+
+		// Write the results
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/GaussianStreams/HighDimensionalDrift/Results.txt";
+
+		try {
+			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	
+
 	private double[] testRun() {
 		correctResults = new ArrayList<SubspaceSet>();
 		UncorrelatedStream s1 = new UncorrelatedStream();
@@ -158,20 +172,20 @@ public class HighDimensionalConceptDrift_full {
 		s1.scaleOption.setValue(10);
 		s1.prepareForUse();
 
-		double[][] covarianceMatrix2 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, null, null,
-				0.9);
+		double[][] covarianceMatrix2 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, null,
+				null, 0.9);
 		GaussianStream s2 = new GaussianStream(null, covarianceMatrix2, 1);
 
-		int[] blockBeginnings3 = {0, 10};
-		int[] blockSizes3 = {10, 10};
-		double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings3, blockSizes3,
-				0.9);
+		int[] blockBeginnings3 = { 0, 10 };
+		int[] blockSizes3 = { 10, 10 };
+		double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions,
+				blockBeginnings3, blockSizes3, 0.9);
 		GaussianStream s3 = new GaussianStream(null, covarianceMatrix3, 1);
-		
-		int[] blockBeginnings4 = {20, 30};
-		int[] blockSizes4 = {10, 10};
-		double[][] covarianceMatrix4 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings4, blockSizes4,
-				0.9);
+
+		int[] blockBeginnings4 = { 20, 30 };
+		int[] blockSizes4 = { 10, 10 };
+		double[][] covarianceMatrix4 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions,
+				blockBeginnings4, blockSizes4, 0.9);
 		GaussianStream s4 = new GaussianStream(null, covarianceMatrix4, 1);
 
 		ConceptDriftStream cds1 = new ConceptDriftStream();
@@ -222,12 +236,12 @@ public class HighDimensionalConceptDrift_full {
 		cr35000.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29));
 		cr35000.addSubspace(new Subspace(30, 31, 32, 33, 34, 35, 36, 37, 38, 39));
 		correctResults.add(cr35000);
-		
+
 		SubspaceSet cr40000 = new SubspaceSet();
 		cr40000.addSubspace(new Subspace(20, 21, 22, 23, 24, 25, 26, 27, 28, 29));
 		cr40000.addSubspace(new Subspace(30, 31, 32, 33, 34, 35, 36, 37, 38, 39));
 		correctResults.add(cr40000);
-		
+
 		numberSamples = 0;
 		testCounter = 0;
 		double[] performanceMeasures;
@@ -246,16 +260,16 @@ public class HighDimensionalConceptDrift_full {
 				testCounter++;
 			}
 		}
-		
+
 		for (int i = 0; i < performanceMeasureSums.length; i++) {
 			performanceMeasureSums[i] /= 8;
 		}
 
 		return performanceMeasureSums;
 	}
-	
+
 	private double[] evaluate() {
-		//System.out.println("Number of samples: " + numberSamples);
+		// System.out.println("Number of samples: " + numberSamples);
 		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		SubspaceSet correctResult = correctResults.get(testCounter);
 		for (Subspace s : correctResult.getSubspaces()) {
@@ -271,7 +285,7 @@ public class HighDimensionalConceptDrift_full {
 
 		return performanceMeasures;
 	}
-	
+
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss) {
 		boolean addDescription = false;
 		if (summarisationDescription == null) {
@@ -301,7 +315,7 @@ public class HighDimensionalConceptDrift_full {
 			hierarchicalThreshold = 0.5;
 			WithDBSCAN denStream = new WithDBSCAN();
 			int speed = 100;
-			double epsilon = 1;
+			double epsilon = 2;
 			double beta = 0.2;
 			double mu = 10;
 			denStream.speedOption.setValue(speed);
@@ -317,13 +331,13 @@ public class HighDimensionalConceptDrift_full {
 					+ mu + ", lambda" + lambda;
 			break;
 		case CLUSTREE_DEPTHFIRST:
-			aprioriThreshold = 0.25;
+			aprioriThreshold = 0.2;
 			hierarchicalThreshold = 0.3;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree depthFirst, horizon: " + horizon;
 			break;
 		case CLUSTREE_BREADTHFIRST:
 			aprioriThreshold = 0.2;
@@ -333,24 +347,21 @@ public class HighDimensionalConceptDrift_full {
 			clusTree.breadthFirstSearchOption.set();
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.2;
+			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.25;
-			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
-			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
-			// double radius = 6 * Math.sqrt(numberOfDimensions) - 1;
-			double radius = 7 * Math.sqrt(numberOfDimensions) - 1;
+			double radius = 45;
 			double learningRate = 0.1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
+			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			aprioriThreshold = 0.2;
+			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.25;
-			radius = 7 * Math.sqrt(numberOfDimensions) - 1;
+			radius = 45;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -374,12 +385,13 @@ public class HighDimensionalConceptDrift_full {
 		SubspaceBuilder builder = null;
 		switch (sb) {
 		case APRIORI:
-			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator, correlationSummary);
+			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator,
+					correlationSummary);
 			builderDescription = "Apriori, threshold:" + aprioriThreshold + "cutoff: " + cutoff;
 			break;
 		case HIERARCHICAL:
-			builder = new HierarchicalBuilderCutoff(numberOfDimensions, hierarchicalThreshold, cutoff, contrastEvaluator,
-					correlationSummary, true);
+			builder = new HierarchicalBuilderCutoff(numberOfDimensions, hierarchicalThreshold, cutoff,
+					contrastEvaluator, correlationSummary, true);
 			builderDescription = "Hierarchical, threshold: " + hierarchicalThreshold + ", cutoff: " + cutoff;
 			break;
 		default:
