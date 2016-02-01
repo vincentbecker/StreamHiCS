@@ -187,9 +187,11 @@ public class Evaluator {
 		}
 
 		double mtd = 0;
-		double mdr = 0;
+		double mdr = 1;
 		if (t > 0) {
-			mtd = sumTimeToDetection / (t - missedDetections);
+			if (t - missedDetections > 0) {
+				mtd = sumTimeToDetection / (t - missedDetections);
+			}
 			mdr = ((double) missedDetections) / t;
 		}
 		double mtfa = ((double) streamLength) / (falseAlarms + 1);
@@ -203,7 +205,7 @@ public class Evaluator {
 		 * (streamLength - falseAlarm); mtfa = sumTimeBetweenFalseAlarms / f;
 		 */
 
-		double mtr = 1;
+		double mtr = 0;
 		if (mtd != 0) {
 			mtr = mtfa / mtd * (1 - mdr);
 		}

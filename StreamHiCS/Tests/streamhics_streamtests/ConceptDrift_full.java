@@ -399,7 +399,7 @@ public class ConceptDrift_full {
 			aprioriThreshold = 0.3;
 			hierarchicalThreshold = 0.5;
 			radius = 10;
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
+			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

@@ -186,7 +186,7 @@ public class StreamHiCS implements Callback {
 	 * 
 	 * @return True, if the correlated subspaces were updated, false otherwise.
 	 */
-	private boolean evaluateCorrelatedSubspaces() {
+	public boolean evaluateCorrelatedSubspaces() {
 		boolean update = false;
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
@@ -210,6 +210,7 @@ public class StreamHiCS implements Callback {
 				// If contrast has changed more than epsilon or has fallen below
 				// the threshold we start a new complete evaluation.
 				if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
+				//if(subspace.getContrast() - contrast > epsilon || contrast < threshold){
 					update = true;
 				} else {
 					keep.addSubspace(subspace);
@@ -252,6 +253,7 @@ public class StreamHiCS implements Callback {
 
 	@Override
 	public void onAlarm() {
+		// System.out.println(getNumberOfElements());
 		stopwatch.start("Evaluation");
 		boolean updated = evaluateCorrelatedSubspaces();
 		stopwatch.stop("Evaluation");

@@ -162,7 +162,8 @@ public class FadingCentroids extends AbstractOptionHandler {
 			c = new RadiusCentroid(vector, negLambda, time, radius);
 			break;
 		default:
-			c = new AdaptingCentroid(vector, negLambda, time, radius, learningRate);
+			System.out.println("Centroid implementation not available!");
+			c = null;
 		}
 		centroids.add(c);
 	}

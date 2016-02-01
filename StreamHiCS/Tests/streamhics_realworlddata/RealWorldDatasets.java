@@ -1,7 +1,5 @@
 package streamhics_realworlddata;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,11 +20,12 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import clustree.ClusTree;
 import environment.Stopwatch;
-import moa.clusterers.denstream.WithDBSCAN;
 import moa.streams.ArffFileStream;
+import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
+import streamdatastructures.WithDBSCAN;
 import subspace.Subspace;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;
@@ -115,7 +114,7 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-	/*
+	
 	@Test
 	public void covertypeNormFiltered() {
 		// The change points in the data are: 211840, 495141, 530895, 533642,
@@ -125,8 +124,8 @@ public class RealWorldDatasets {
 		stream = new ArffFileStream(path, -1);
 		
 		int numberOfDimensions = 10;
-		int m = 20;
-		double alpha = 0.25;
+		int m = 50;
+		double alpha = 0.1;
 		double epsilon = 0.1;
 		double threshold = 0.35;
 		int cutoff = 8;
@@ -137,10 +136,8 @@ public class RealWorldDatasets {
 		System.out.println("Covertype filtered");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
-		
-		fail("Not yet implemented");
 	}
-	*/
+	
 	/*
 	@Test
 	public void electricityNW() {
@@ -165,31 +162,6 @@ public class RealWorldDatasets {
 		fail("Not yet implemented");
 	}
 	*/
-	@Test
-	public void intrusionDetection10Percent() {
-		// The change points in the data are: 2203, 2233, 2241, 2294, 2306,
-		// 3553, 3574, 3583, 3590, 110791, 111042, 208300, 208307, 208571,
-		// 209611, 209621, 211210, 492000, 492001, 492981, 494001
-		// Normal is in the range of 111042 to 208299
-		// Smurf is in the range of 211210 to 491999
-		path = "Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
-		// Class index is last attribute but not relevant for this task
-		stream = new ArffFileStream(path, -1);
-		
-		int numberOfDimensions = 34;
-		int m = 20;
-		double alpha = 0.15;
-		double epsilon = 0;
-		double threshold = 0.4;
-		int cutoff = 8;
-		double pruningDifference = 0.15;
-		int horizon = 5000;
-		int checkCount = 10000;
-
-		System.out.println("Intrusion Detection 10%");
-		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
-		System.out.println();
-		}
 	/*
 	@Test
 	public void intrusionDetection10Percent() {
@@ -217,9 +189,63 @@ public class RealWorldDatasets {
 		System.out.println();
 		}
 		*/
-	
+	/*
+	@Test
+	public void intrusionDetection10Percent() {
+		// The change points in the data are: 2203, 2233, 2241, 2294, 2306,
+		// 3553, 3574, 3583, 3590, 110791, 111042, 208300, 208307, 208571,
+		// 209611, 209621, 211210, 492000, 492001, 492981, 494001
+		// Normal is in the range of 111042 to 208299
+		// Smurf is in the range of 211210 to 491999
+		path = "Tests/RealWorldData/kddcup99_10_percent_sorted.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 34;
+		int m = 20;
+		double alpha = 0.15;
+		double epsilon = 0;
+		double threshold = 0.4;
+		int cutoff = 8;
+		double pruningDifference = 0.15;
+		int horizon = 5000;
+		int checkCount = 10000;
+
+		System.out.println("Intrusion Detection 10%");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
+		System.out.println();
+		}
+		*/
+	/*
 	@Test
 	public void intrusionDetection10PercentFiltered() {
+		// The change points in the data are: 2203, 2233, 2241, 2294, 2306,
+		// 3553, 3574, 3583, 3590, 110791, 111042, 208300, 208307, 208571,
+		// 209611, 209621, 211210, 492000, 492001, 492981, 494001
+		// Normal is in the range of 111042 to 208299
+		// Smurf is in the range of 211210 to 491999
+		path = "Tests/RealWorldData/kddcup99_10_percent_filtered.arff";
+		// Class index is last attribute but not relevant for this task
+		stream = new ArffFileStream(path, -1);
+		
+		int numberOfDimensions = 23;
+		int m = 50;
+		double alpha = 0.15;
+		double epsilon = 0.1;
+		double threshold = 0.6;
+		int cutoff = 8;
+		double pruningDifference = 0.15;
+		int horizon = 1000;
+		int checkCount = 10000;
+
+		System.out.println("Intrusion Detection 10% filtered");
+		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
+		System.out.println();
+		}
+	*/
+	/*
+	@Test
+	public void intrusionDetection10PercentSortedFiltered() {
 		// The change points in the data are: 2203, 2233, 2241, 2294, 2306,
 		// 3553, 3574, 3583, 3590, 110791, 111042, 208300, 208307, 208571,
 		// 209611, 209621, 211210, 492000, 492001, 492981, 494001
@@ -243,7 +269,7 @@ public class RealWorldDatasets {
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount);
 		System.out.println();
 		}
-	
+	*/
 		/*
 		public void intrusionDetectionFull() {
 		// The change points in the data are: 
@@ -371,20 +397,23 @@ public class RealWorldDatasets {
 		mcs.resetLearningImpl();
 		*/
 		
-		
+		/*
 		WithDBSCAN mcs = new WithDBSCAN();
 		mcs.speedOption.setValue(100);
 		mcs.epsilonOption.setValue(0.02);
 		mcs.betaOption.setValue(0.1);
-		mcs.lambdaOption.setValue(0.01);
+		mcs.muOption.setValue(10);
+		mcs.lambdaOption.setValue(0.001);
 		mcs.prepareForUse();
-		
-		
 		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
+		*/
+		
+		CentroidsAdapter adapter = new CentroidsAdapter(10000, 0.1, 0.1, "radius");
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
-		CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+		//CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
+		CorrelationSummary correlationSummary = null;
 		SubspaceBuilder subspaceBuilder = new AprioriBuilder(numberOfDimensions, threshold, cutoff,
 				contrastEvaluator, correlationSummary);
 
@@ -399,7 +428,7 @@ public class RealWorldDatasets {
 		
 		PearsonsCorrelation pc = new PearsonsCorrelation();
 		double[][] data = new double[checkCount][numberOfDimensions];
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ElectricityNorthWest/ENWCorrelations.csv";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/StreamHiCS/RealWorldData/IntrusionDetection/corr.csv";
 		
 		List<String> correlOut = new ArrayList<String>();
 		double overallMinCorrelation = Double.MAX_VALUE;

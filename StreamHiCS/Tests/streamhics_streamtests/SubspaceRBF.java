@@ -35,7 +35,7 @@ import weka.core.Instance;
 
 public class SubspaceRBF {
 
-	private static final boolean DRIFT = false;
+	private static final boolean DRIFT = true;
 	private static final boolean SAME_SUBSPACES = true;
 	private int numberSubspaceCentroids = 10;
 

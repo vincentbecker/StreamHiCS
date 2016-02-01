@@ -64,7 +64,7 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
-		double classVal = inst.classValue();
+		//double classVal = inst.classValue();
 		// Create new instance that only contains the dimensions of the subspace
 		int l = subspace.size();
 		if (header == null) {
@@ -87,10 +87,12 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		subspaceData[l] = inst.value(inst.classIndex());
 		Instance subspaceInstance = new DenseInstance(inst.weight(), subspaceData);
 		subspaceInstance.setDataset(header);
+		/*
 		double classVal2 = subspaceInstance.classValue();
 		if (classVal != classVal2) {
 			System.out.println("Class values different: " + classVal + " != " + classVal2);
 		}
+		*/
 		super.trainOnInstanceImpl(subspaceInstance);
 	}
 }

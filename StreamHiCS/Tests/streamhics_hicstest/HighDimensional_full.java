@@ -365,7 +365,7 @@ public class HighDimensional_full {
 			hierarchicalThreshold = 0.4;
 			radius = 5 * Math.sqrt(numberOfDimensions) - 1;
 			// radius = 5;
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
+			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

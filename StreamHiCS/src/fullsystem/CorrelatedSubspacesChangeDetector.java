@@ -3,25 +3,17 @@ package fullsystem;
 import java.util.ArrayList;
 import java.util.BitSet;
 
-import changechecker.ChangeChecker;
-import changechecker.TimeCountChecker;
-import clustree.ClusTree;
-import environment.Stopwatch;
 import moa.classifiers.AbstractClassifier;
+import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.Measurement;
 import moa.core.ObjectRepository;
-import moa.options.FloatOption;
 import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
-import streamdatastructures.CorrelationSummary;
-import streamdatastructures.MicroclusteringAdapter;
-import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import subspace.SubspaceSet;
-import subspacebuilder.AprioriBuilder;
-import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
+import weka.core.Utils;
 
 /**
  * This class represents the top level of the system. It uses StreamHiCS to
@@ -46,7 +38,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	public IntOption initOption = new IntOption("init", 'i',
 			"The number of instances after which the correlated subspaces are evaluated the first time.", 500, 1,
 			Integer.MAX_VALUE);
-	
+
 	/**
 	 * The {@link StreamHiCS} instance.
 	 */
@@ -67,7 +59,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	 * The number of dimensions.
 	 */
 	private int numberOfDimensions;
-	
+
 	/**
 	 * The number of samples seen.
 	 */
@@ -80,12 +72,18 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	private boolean initialized = false;
 
 	/**
+	 * The number of instances received before evaluating the correlated
+	 * subspaces the first time.
+	 */
+	private int numberInit;
+
+	/**
 	 * Creates an instance of this class.
 	 * 
 	 * @param numberOfDimensions
 	 *            The number of dimensions.
 	 * @param streamHiCS
-	 * 			The {@link StreamHiCS} instance.
+	 *            The {@link StreamHiCS} instance.
 	 */
 	public CorrelatedSubspacesChangeDetector(int numberOfDimensions, StreamHiCS streamHiCS) {
 		this.numberOfDimensions = numberOfDimensions;
@@ -107,19 +105,30 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	}
 
 	public boolean isChangeDetected() {
-		boolean res = false;
+		boolean changeDetected = false;
 		// The fullSpaceChangeDetector is only queried, if there are no subspace
 		// change detectors
 		if (!initialized && fullSpaceChangeDetector.isChangeDetected()) {
-			res = true;
+			changeDetected = true;
 		}
+		int index = 0;
 		for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
 			if (scd.isChangeDetected()) {
-				res = true;
-				System.out.println("CHANGE detected in subspace: " + scd.getSubspace().toString());
+				changeDetected = true;
+				//System.out.println("CHANGE detected in subspace: " + scd.getSubspace().toString());
+			} else if(!changeDetected) {
+				index++;
 			}
 		}
-		return res;
+		// In case of change reset all the other subspace change detectors
+		if (changeDetected) {
+			for (int i = 0; i < subspaceChangeDetectors.size(); i++) {
+				if (index != i) {
+					subspaceChangeDetectors.get(i).resetLearning();
+				}
+			}
+		}
+		return changeDetected;
 	}
 
 	@Override
@@ -128,7 +137,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		// Happens anyway: fullSpaceChangeDetector.resetLearning();
 		SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		// System.out.println("Number of samples: " + numberSamples);
-		// System.out.println("Correlated: " + streamHiCS.toString());
+		//System.out.println("Correlated: " + streamHiCS.toString() + " at " + numberSamples);
 		// subspaceChangeDetectors.clear();
 		/*
 		 * System.out.println("Number of samples: " + numberSamples);
@@ -139,11 +148,12 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		 * System.out.print(s.getContrast() + ", "); } System.out.println();
 		 */
 		ArrayList<SubspaceChangeDetector> temp = new ArrayList<SubspaceChangeDetector>();
-		// Mark which dimensions are contained in subspaces to add detectors for all the single dimensions which are not contained in subspaces. 
+		// Mark which dimensions are contained in subspaces to add detectors for
+		// all the single dimensions which are not contained in subspaces.
 		BitSet marked = new BitSet(numberOfDimensions);
 		boolean found = false;
 		for (Subspace s : correlatedSubspaces.getSubspaces()) {
-			for(int d : s.getDimensions()){
+			for (int d : s.getDimensions()) {
 				marked.set(d);
 			}
 			found = false;
@@ -162,12 +172,15 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 			}
 		}
 		// Handle the one-dimensional subspaces
-		for(int i = 0; i< numberOfDimensions; i++){
-			if(!marked.get(i)){
+		Subspace restSpace = new Subspace();
+		for (int i = 0; i < numberOfDimensions; i++) {
+			/*
+			if (!marked.get(i)) {
 				found = false;
 				Subspace s = new Subspace(i);
 				for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
-					// If there is an 'old' change detector running on the subspace
+					// If there is an 'old' change detector running on the
+					// subspace
 					// already we continue using that
 					if (scd.getSubspace().size() == 1 && s.equals(scd.getSubspace())) {
 						temp.add(scd);
@@ -179,8 +192,21 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 					temp.add(scd);
 				}
 			}
+			*/
+			
+			if (!marked.get(i)) {
+				restSpace.addDimension(i);
+			}
+			
 		}
-		
+		if(!restSpace.isEmpty()){
+			SubspaceChangeDetector restSpaceChangeDetector = new SubspaceChangeDetector(restSpace);
+			AbstractClassifier baseLearner = new NaiveBayes();
+			baseLearner.prepareForUse();
+			restSpaceChangeDetector.baseLearnerOption.setCurrentObject(baseLearner);
+			restSpaceChangeDetector.prepareForUse();
+			temp.add(restSpaceChangeDetector);
+		}
 		subspaceChangeDetectors = temp;
 		initialized = true;
 	}
@@ -195,7 +221,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 			fullSpaceChangeDetector.trainOnInstance(inst);
 		}
 		numberSamples++;
-		if (numberSamples == initOption.getValue()) {
+		if (numberSamples == numberInit) {
 			// Evaluate the correlated subspaces once
 			init();
 		}
@@ -210,10 +236,35 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	 */
 	private void init() {
 		SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
+		BitSet marked = new BitSet(numberOfDimensions);
 		for (Subspace s : correlatedSubspaces.getSubspaces()) {
+			for (int d : s.getDimensions()) {
+				marked.set(d);
+			}
 			SubspaceChangeDetector scd = createSubspaceChangeDetector(s);
 			subspaceChangeDetectors.add(scd);
 		}
+		Subspace restSpace = new Subspace();
+		for (int i = 0; i < numberOfDimensions; i++) {
+			if (!marked.get(i)) {
+				restSpace.addDimension(i);
+				/*
+				Subspace s = new Subspace();
+				s.addDimension(i);
+				SubspaceChangeDetector scd = createSubspaceChangeDetector(s);
+				subspaceChangeDetectors.add(scd);
+				*/
+			}
+		}
+		if(!restSpace.isEmpty()){
+			SubspaceChangeDetector restSpaceChangeDetector = new SubspaceChangeDetector(restSpace);
+			AbstractClassifier baseLearner = new NaiveBayes();
+			baseLearner.prepareForUse();
+			restSpaceChangeDetector.baseLearnerOption.setCurrentObject(baseLearner);
+			restSpaceChangeDetector.prepareForUse();
+			subspaceChangeDetectors.add(restSpaceChangeDetector);
+		}
+		
 		initialized = true;
 	}
 
@@ -249,6 +300,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		fullSpaceChangeDetector.prepareForUse();
 		// No correlated subspaces yet.
 		this.subspaceChangeDetectors = new ArrayList<SubspaceChangeDetector>();
+		this.numberInit = initOption.getValue();
 		super.prepareForUseImpl(arg0, arg1);
 	}
 
@@ -303,5 +355,26 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	protected Measurement[] getModelMeasurementsImpl() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public int getClassPrediction(Instance instance) {
+		if (numberSamples <= numberInit) {
+			return Utils.maxIndex(fullSpaceChangeDetector.getVotesForInstance(instance));
+		} else {
+			int numberClasses = instance.classAttribute().numValues();
+			double[] totalPredictions = new double[numberClasses];
+			for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
+				double[] scdPrediction = scd.getVotesForInstance(instance);
+				if (scdPrediction.length == numberClasses) {
+					for (int i = 0; i < numberClasses; i++) {
+						totalPredictions[i] += scdPrediction[i];
+					}
+				}else {
+					//System.out.println(scd.getSubspace().toString());
+					//System.out.println("Hello");
+				}
+			}
+			return Utils.maxIndex(totalPredictions);
+		}
 	}
 }
