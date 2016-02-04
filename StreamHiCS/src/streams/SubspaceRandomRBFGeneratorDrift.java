@@ -5,6 +5,9 @@ import moa.streams.generators.RandomRBFGeneratorDrift;
 import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import subspace.SubspaceSet;
+
+import java.util.Random;
+
 import moa.core.MiscUtils;
 import moa.core.ObjectRepository;
 import moa.options.FlagOption;
@@ -73,6 +76,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 * corresponding subspace.
 	 */
 	private double scaleIrrelevant;
+	
+	private Random modelRandom;
 
 	@Override
 	public Instance nextInstance() {
@@ -113,7 +118,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 			Subspace s = subspaces[centroidIndex];
 			for (int i = 0; i < numberDimensions; i++) {
 				if (!s.contains(i)) {
-					attVals[i] = ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
+					// attVals[i] = centroid.centr[i] + ((this.instanceRandom.nextDouble() * 2.0) -
+					// 1.0) * scaleIrrelevant;
+					attVals[i] = centroid.centre[i] + ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
 				} else {
 					attVals[i] = centroid.centre[i] + attVals[i] * scale;
 				}
@@ -133,10 +140,13 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	@Override
 	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
-		super.prepareForUseImpl(monitor, repository);
-
-		numberDimensions = numAttsOption.getValue();
+		//super.prepareForUseImpl(monitor, repository);
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
+		generateHeader();
+		generateCentroids();
+		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
+		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
+		numberDimensions = numAttsOption.getValue();
 		// Get scale
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
 		// Generate subspaces
@@ -154,14 +164,33 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 				subspaces[i] = createSubspace();
 			}
 		}
+	}
 
+	@Override
+	public void restart() {
+		generateCentroids();
+		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
+		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
+		
+		if (sameSubspaceOption.isSet()) {
+			// Use the the same subspace for all centroids with subspaces
+			Subspace s = createSubspace();
+			for (int i = 0; i < subspaces.length; i++) {
+				subspaces[i] = s;
+			}
+		} else {
+			for (int i = 0; i < subspaces.length; i++) {
+				subspaces[i] = createSubspace();
+			}
+		}
+		
 	}
 
 	private Subspace createSubspace() {
 		int numRelevantDims = 0;
 		if (randomSubspaceSizeOption.isSet()) {
-			numRelevantDims = (int) (avgSubspaceSizeOption.getValue() + (instanceRandom.nextBoolean() ? -1 : 1)
-					* avgSubspaceSizeOption.getValue() * instanceRandom.nextDouble());
+			numRelevantDims = (int) (avgSubspaceSizeOption.getValue() + (modelRandom.nextBoolean() ? -1 : 1)
+					* avgSubspaceSizeOption.getValue() * modelRandom.nextDouble());
 		} else {
 			numRelevantDims = avgSubspaceSizeOption.getValue();
 		}
@@ -175,12 +204,13 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		Subspace s = new Subspace();
 
 		for (int j = 0; j < numRelevantDims; j++) {
-			int relevantDim = (int) (instanceRandom.nextDouble() * (numAttsOption.getValue()));
+			int relevantDim = (int) (modelRandom.nextDouble() * (numAttsOption.getValue()));
 			while (s.contains(relevantDim)) {
-				relevantDim = (int) (instanceRandom.nextDouble() * (numAttsOption.getValue()));
+				relevantDim = (int) (modelRandom.nextDouble() * (numAttsOption.getValue()));
 			}
 			s.addDimension(relevantDim);
 		}
+		 System.out.println("Correlated Subspace: " + s.toString());
 		return s;
 	}
 
@@ -190,5 +220,19 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 			set.addSubspace(subspaces[i]);
 		}
 		return set;
+	}
+
+	public void subspaceChange() {
+		if (sameSubspaceOption.isSet()) {
+			// Use the the same subspace for all centroids with subspaces
+			Subspace s = createSubspace();
+			for (int i = 0; i < subspaces.length; i++) {
+				subspaces[i] = s;
+			}
+		} else {
+			for (int i = 0; i < subspaces.length; i++) {
+				subspaces[i] = createSubspace();
+			}
+		}
 	}
 }

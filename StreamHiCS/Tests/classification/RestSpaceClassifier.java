@@ -1,8 +1,9 @@
-package fullsystem;
+package classification;
 
 import java.util.ArrayList;
 
-import moa.classifiers.drift.SingleClassifierDrift;
+import fullsystem.SubspaceChangeDetector;
+import moa.classifiers.bayes.NaiveBayes;
 import moa.core.InstancesHeader;
 import subspace.Subspace;
 import weka.core.Attribute;
@@ -10,22 +11,14 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
-/**
- * This class represents a change detector using the DDM method which only takes
- * a {@link Subspace} into account.
- * 
- * @author Vincent
- *
- */
-public class SubspaceChangeDetector extends SingleClassifierDrift implements ChangeDetector {
-
+public class RestSpaceClassifier extends NaiveBayes {
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -2008369880916696270L;
 
 	/**
-	 * The subspace the {@link SubspaceChangeDetector} runs on.
+	 * The subsapce the {@link SubspaceChangeDetector} runs on.
 	 */
 	private Subspace subspace;
 
@@ -41,7 +34,7 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	 *            The {@link Subspace} the {@link SubspaceChangeDetector} should
 	 *            run on.
 	 */
-	public SubspaceChangeDetector(Subspace subspace) {
+	public RestSpaceClassifier(Subspace subspace) {
 		this.subspace = subspace;
 	}
 
@@ -52,14 +45,6 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	 */
 	public Subspace getSubspace() {
 		return this.subspace;
-	}
-
-	public boolean isWarningDetected() {
-		return (this.ddmLevel == DDM_WARNING_LEVEL);
-	}
-
-	public boolean isChangeDetected() {
-		return (this.ddmLevel == DDM_OUTCONTROL_LEVEL);
 	}
 
 	@Override
@@ -96,3 +81,4 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		super.trainOnInstanceImpl(subspaceInstance);
 	}
 }
+

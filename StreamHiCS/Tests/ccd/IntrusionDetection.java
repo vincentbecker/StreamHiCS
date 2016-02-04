@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -17,6 +17,7 @@ import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
 import clustree.ClusTree;
 import environment.Stopwatch;
+import environment.AccuracyEvaluator;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
@@ -39,12 +40,12 @@ import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import weka.core.Utils;
 
-public class RealWorldDriftTests {
+public class IntrusionDetection {
 
 	private String path;
 	private ArffFileStream stream;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private CorrelatedSubspacesChangeDetector cscd;
 	private FullSpaceChangeDetector refDetector;
 	private String summarisationDescription = null;
@@ -68,7 +69,7 @@ public class RealWorldDriftTests {
 	
 	@After
 	public void after(){
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/CCD/RealWorldData/Results.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/RealWorldData/Results.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
@@ -77,7 +78,7 @@ public class RealWorldDriftTests {
 			e.printStackTrace();
 		}
 	}
-	
+	/*
 	@Test
 	public void intrusionDetection10PercentFiltered() {
 		path = "Tests/RealWorldData/kddcup99_10_percent_filtered.arff";
@@ -100,26 +101,40 @@ public class RealWorldDriftTests {
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount, summarisation, buildup);
 		System.out.println();
 		}
+	*/
 	
 	@Test
-	public void electricityNWSUnsorted() {
-		path = "Tests/RealWorldData/elecNormNew_unsorted.arff";
+	public void intrusionDetection() {
+		path = "Tests/RealWorldData/kddcup99_10_percent_filtered.arff";
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 		
 		StreamSummarisation summarisation = StreamSummarisation.RADIUSCENTROIDS;
 		SubspaceBuildup buildup = SubspaceBuildup.APRIORI;
-		int numberOfDimensions = 8;
+		
+		double threshold = 0;
+		switch (summarisation) {
+		case CLUSTREE_DEPTHFIRST:
+			threshold = 0.4;
+			break;
+		case RADIUSCENTROIDS:
+			threshold = 0.1;
+			break;
+		default:
+			break;
+		}
+		
+		int numberOfDimensions = 23;
 		int m = 50;
 		double alpha = 0.15;
 		double epsilon = 0.1;
-		double threshold = 0.45;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
-		int horizon = 1000;
-		int checkCount = 1000;
+		int horizon = 10000;
+		int checkCount = 10000;
+		
 
-		System.out.println("Electricity New South Wales unsorted");
+		System.out.println("Intrusion Detection");
 		carryOutTest(numberOfDimensions, m, alpha, epsilon, threshold, cutoff, pruningDifference, horizon, checkCount, summarisation, buildup);
 	}
 	
@@ -136,6 +151,7 @@ public class RealWorldDriftTests {
 		StreamHiCS streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, null, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
+		//cscd.initOption.setValue(0);
 		cscd.prepareForUse();
 		streamHiCS.setCallback(cscd);
 
@@ -146,20 +162,104 @@ public class RealWorldDriftTests {
 		refDetector.prepareForUse();
 		
 		stopwatch.reset();
-		double cscdAccuracy = 0;
-		double refAccuracy = 0;
+		double cscdErrorRate = 0;
+		double refErrorRate = 0;
 		for (int i = 0; i < numberTestRuns; i++) {
 			System.out.println("Run: " +  (i + 1));
-			double[] accuracies = testRun();
-			for (int j = 0; j < 2; j++) {
-				cscdAccuracy += accuracies[j];
-				refAccuracy += accuracies[j];
-			}
+			double[] errorRates = testRun();
+				cscdErrorRate += errorRates[0];
+				refErrorRate += errorRates[1];
 		}
 		
-		cscdAccuracy /= numberTestRuns;
-		refAccuracy /= numberTestRuns;
-		System.out.println("CSCD: " + cscdAccuracy + ", REF: " + refAccuracy);
+		cscdErrorRate /= numberTestRuns;
+		refErrorRate /= numberTestRuns;
+		System.out.println("CSCD: " + cscdErrorRate + ", REF: " + refErrorRate);
+	}
+	
+	private double[] testRun() {
+		stream.restart();
+		cscd.resetLearning();
+		refDetector.resetLearning();
+
+		int numberSamples = 0;
+
+		//ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		//ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
+		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
+		int numberChangesCSCD = 0;
+		int numberChangesREF = 0;
+
+		while (stream.hasMoreInstances()) {
+			Instance inst = stream.nextInstance();
+			
+			
+			if(numberSamples % 18000 == 0){
+				//System.out.println(cscd.getNumberOfElements());
+				//cscd.onAlarm();
+			}
+			
+			// For accuracy
+			int trueClass = (int) inst.classValue();
+			int prediction = cscd.getClassPrediction(inst);
+			cscdAccuracy.addClassLabel(trueClass);
+			cscdAccuracy.addPrediction(prediction);
+			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
+			refAccuracy.addClassLabel(trueClass);
+			refAccuracy.addPrediction(prediction);
+			
+			stopwatch.start("Total_CSCD");
+			cscd.trainOnInstance(inst);
+			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_REF");
+			refDetector.trainOnInstance(inst);
+			stopwatch.stop("Total_REF");
+
+			
+			if (cscd.isWarningDetected()) {
+				// System.out.println("cscd: WARNING at " + numberSamples);
+			} else if (cscd.isChangeDetected()) {
+				numberChangesCSCD++;
+				//cscdDetectedChanges.add((double) numberSamples);
+				//System.out.println("cscd: CHANGE at " + numberSamples);
+			}
+
+			if (refDetector.isWarningDetected()) {
+				// System.out.println("refDetector: WARNING at " +
+				// numberSamples);
+			} else if (refDetector.isChangeDetected()) {
+				numberChangesREF++;
+				//refDetectedChanges.add((double) numberSamples);
+				//System.out.println("refDetector: CHANGE at " + numberSamples);
+			}
+			 
+			numberSamples++;
+		}
+
+		System.out.println("CSCD changes: " + numberChangesCSCD);
+		System.out.println("REF changes: " + numberChangesREF);
+		
+		double[] errorRates = new double[2];
+		errorRates[0] = cscdAccuracy.calculateOverallErrorRate();
+		errorRates[1] = refAccuracy.calculateOverallErrorRate();
+		
+		List<String> errorRatesList = new ArrayList<String>();
+		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
+		for (int i = 0; i < cscdAccuracy.size(); i++) {
+			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+		}
+		
+		String filePath = "C:/Users/Vincent/Desktop/ErrorRates.csv";
+
+		try {
+			Files.write(Paths.get(filePath), errorRatesList);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		
+		return errorRates;
 	}
 	
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss, int numberOfDimensions, int horizon) {
@@ -223,7 +323,7 @@ public class RealWorldDriftTests {
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			radius = 3.5;
+			radius = 0.05;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -260,60 +360,5 @@ public class RealWorldDriftTests {
 			results.add(builderDescription);
 		}
 		return builder;
-	}
-
-	private double[] testRun() {
-		stream.restart();
-		cscd.resetLearning();
-		refDetector.resetLearning();
-
-		int numberSamples = 0;
-
-		//ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
-		//ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
-		int numberCorrectCSCD = 0;
-		int numberCorrectREF = 0;
-		while (stream.hasMoreInstances()) {
-			Instance inst = stream.nextInstance();
-			
-			// For accuracy
-			int trueClass = (int) inst.classValue();
-			if(trueClass == cscd.getClassPrediction(inst)){
-				numberCorrectCSCD++;
-			}
-			if(trueClass == Utils.maxIndex(refDetector.getVotesForInstance(inst))){
-				numberCorrectREF++;
-			}
-			
-			stopwatch.start("Total_CSCD");
-			cscd.trainOnInstance(inst);
-			stopwatch.stop("Total_CSCD");
-			stopwatch.start("Total_REF");
-			refDetector.trainOnInstance(inst);
-			stopwatch.stop("Total_REF");
-
-			/*
-			if (cscd.isWarningDetected()) {
-				// System.out.println("cscd: WARNING at " + numberSamples);
-			} else if (cscd.isChangeDetected()) {
-				cscdDetectedChanges.add((double) numberSamples);
-				System.out.println("cscd: CHANGE at " + numberSamples);
-			}
-
-			if (refDetector.isWarningDetected()) {
-				// System.out.println("refDetector: WARNING at " +
-				// numberSamples);
-			} else if (refDetector.isChangeDetected()) {
-				refDetectedChanges.add((double) numberSamples);
-				System.out.println("refDetector: CHANGE at " + numberSamples);
-			}
-			 */
-			numberSamples++;
-		}
-
-		double[] accuracies = new double[2];
-		accuracies[0] = ((double) numberCorrectCSCD) / numberSamples;
-		accuracies[1] = ((double) numberCorrectREF) / numberSamples;
-		return accuracies;
 	}
 }

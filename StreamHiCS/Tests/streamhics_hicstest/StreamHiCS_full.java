@@ -1,7 +1,5 @@
 package streamhics_hicstest;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -83,7 +81,7 @@ public class StreamHiCS_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				//if (summarisation == StreamSummarisation.DENSTREAM && buildup == SubspaceBuildup.APRIORI) {
+				if (summarisation == StreamSummarisation.RADIUSCENTROIDS && buildup == SubspaceBuildup.HIERARCHICAL) {
 					resultSummary = new double[7];
 					for (int test = 1; test <= 29; test++) {
 						stopwatch.reset();
@@ -258,7 +256,7 @@ public class StreamHiCS_full {
 							+ resultSummary[2] / 29 + ", " + resultSummary[3] / 29 + ", " + resultSummary[4] / 29 + ", "
 							+ resultSummary[5] / 29 + ", " + resultSummary[6] / 29);
 				}
-			//}
+			}
 		}
 
 		// Write the results
@@ -270,8 +268,6 @@ public class StreamHiCS_full {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		fail("No condition");
 	}
 
 	private SummarisationAdapter createSummarisationAdapter(StreamSummarisation ss) {
@@ -349,7 +345,7 @@ public class StreamHiCS_full {
 		case RADIUSCENTROIDS:
 			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.35;
-			radius = 3.5;
+			radius = 0.75;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
@@ -396,6 +392,7 @@ public class StreamHiCS_full {
 		int numberSamples = 0;
 
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
+			
 			Instance inst = stream.nextInstance();
 			stopwatch.start("Total");
 			streamHiCS.add(inst);
