@@ -76,7 +76,7 @@ public class HighDimensional_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS || summarisation == StreamSummarisation.RADIUSCENTROIDS) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
 					for (int test = 1; test <= 10; test++) {
 						stopwatch.reset();
 						double sumTPvsFP = 0;
@@ -352,19 +352,23 @@ public class HighDimensional_full {
 			break;
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.4;
+			hierarchicalThreshold = 0.45;
 			// double radius = 5;
-			double radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			double learningRate = 0.1;
+			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
+			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			aprioriThreshold = 0.25;
+			aprioriThreshold = 0.2;
 			hierarchicalThreshold = 0.4;
-			radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			// radius = 5;
+			//radius = 0.5 * Math.sqrt(numberOfDimensions) - 1;
+			if(numberOfDimensions == 10){
+				radius = 0.75;
+			}else{
+				radius = 2.1;
+			}
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;

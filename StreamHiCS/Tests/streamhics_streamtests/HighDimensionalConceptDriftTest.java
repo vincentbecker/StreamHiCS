@@ -1,6 +1,5 @@
 package streamhics_streamtests;
 
-import static org.junit.Assert.*;
 import java.util.ArrayList;
 
 import org.junit.AfterClass;
@@ -150,9 +149,9 @@ public class HighDimensionalConceptDriftTest {
 		mcs.horizonOption.setValue(horizon);
 		mcs.prepareForUse();
 
-		double alpha = 0.2;
+		double alpha = 0.1;
 		double epsilon = 0;
-		double threshold = 0.2;
+		double threshold = 0.3;
 		int cutoff = 20;
 		double pruningDifference = 0.25;
 
@@ -174,8 +173,6 @@ public class HighDimensionalConceptDriftTest {
 				evaluate();
 			}
 		}
-
-		fail();
 	}
 
 	private void evaluate() {

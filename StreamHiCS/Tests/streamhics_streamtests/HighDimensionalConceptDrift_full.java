@@ -48,7 +48,7 @@ public class HighDimensionalConceptDrift_full {
 	private CorrelationSummary correlationSummary;
 	private final int horizon = 6000;
 	private final int m = 50;
-	private final double alpha = 0.2;
+	private final double alpha = 0.1;
 	private double epsilon = 0;
 	private double aprioriThreshold;
 	private double hierarchicalThreshold;
@@ -98,7 +98,7 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST && buildup == SubspaceBuildup.APRIORI && summarisation != StreamSummarisation.DENSTREAM && summarisation != StreamSummarisation.SLIDINGWINDOW && summarisation != StreamSummarisation.CLUSTREAM) {
+				if (summarisation == StreamSummarisation.RADIUSCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
 				stopwatch.reset();
 				double sumTPvsFP = 0;
 				double sumAMJS = 0;
@@ -166,6 +166,7 @@ public class HighDimensionalConceptDrift_full {
 	}
 
 	private double[] testRun() {
+		streamHiCS.clear();
 		correctResults = new ArrayList<SubspaceSet>();
 		UncorrelatedStream s1 = new UncorrelatedStream();
 		s1.dimensionsOption.setValue(50);
@@ -276,7 +277,7 @@ public class HighDimensionalConceptDrift_full {
 			s.sort();
 		}
 		correctResult.sort();
-		// Evaluator.displayResult(result, correctResult);
+		//Evaluator.displayResult(result, correctResult);
 		double[] performanceMeasures = new double[4];
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
@@ -331,8 +332,8 @@ public class HighDimensionalConceptDrift_full {
 					+ mu + ", lambda" + lambda;
 			break;
 		case CLUSTREE_DEPTHFIRST:
-			aprioriThreshold = 0.2;
-			hierarchicalThreshold = 0.3;
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.35;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
@@ -350,18 +351,18 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.35;
 			double radius = 45;
-			double learningRate = 0.1;
+			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
 			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			radius = 45;
+			hierarchicalThreshold = 0.3;
+			radius = 5.5;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;

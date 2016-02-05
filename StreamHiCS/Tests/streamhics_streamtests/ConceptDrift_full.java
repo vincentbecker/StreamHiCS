@@ -54,7 +54,7 @@ public class ConceptDrift_full {
 	private int numberOfDimensions = 5;
 	private static Stopwatch stopwatch;
 	private Contrast contrastEvaluator;
-	private static final int numberTestRuns = 1;
+	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -94,7 +94,7 @@ public class ConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				//if (summarisation == StreamSummarisation.CLUSTREAM && buildup == SubspaceBuildup.HIERARCHICAL) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
 					stopwatch.reset();
 					double sumTPvsFP = 0;
 					double sumAMJS = 0;
@@ -146,7 +146,7 @@ public class ConceptDrift_full {
 							+ avgNumElements + ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
 					System.out.println(measures);
 					results.add(measures);
-				//}
+				}
 			}	
 		}
 		// Write the results
@@ -385,20 +385,20 @@ public class ConceptDrift_full {
 			break;
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.3;
-			hierarchicalThreshold = 0.5;
+			hierarchicalThreshold = 0.4;
 			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
 			// double radius = 6 * Math.sqrt(numberOfDimensions) - 1;
 			double radius = 10;
-			double learningRate = 0.1;
+			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			aprioriThreshold = 0.3;
-			hierarchicalThreshold = 0.5;
-			radius = 10;
+			aprioriThreshold = 0.25;
+			hierarchicalThreshold = 0.4;
+			radius = 1;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;

@@ -81,7 +81,7 @@ public class StreamHiCS_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.RADIUSCENTROIDS && buildup == SubspaceBuildup.HIERARCHICAL) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.HIERARCHICAL) {
 					resultSummary = new double[7];
 					for (int test = 1; test <= 29; test++) {
 						stopwatch.reset();
@@ -334,17 +334,17 @@ public class StreamHiCS_full {
 			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.35;
+			aprioriThreshold = 0.3;
+			hierarchicalThreshold = 0.3;
 			double radius = 3.5;
-			double learningRate = 0.1;
+			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
 			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.35;
+			hierarchicalThreshold = 0.3;
 			radius = 0.75;
 			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
