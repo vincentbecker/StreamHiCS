@@ -20,15 +20,14 @@ import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
-import moa.clusterers.clustream.Clustream;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.MicroclusteringAdapter;
-import streamdatastructures.SlidingWindowAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.SubspaceRandomRBFGeneratorDrift;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import subspacebuilder.AprioriBuilder;
+import subspacebuilder.ComponentBuilder;
 import subspacebuilder.HierarchicalBuilderCutoff;
 import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
@@ -37,7 +36,7 @@ public class SubspaceRBF {
 
 	private static final boolean DRIFT = true;
 	private static final boolean SAME_SUBSPACES = true;
-	private int numberSubspaceCentroids = 10;
+	private int numberSubspaceCentroids;
 
 	private SubspaceRandomRBFGeneratorDrift stream;
 	private StreamHiCS streamHiCS;
@@ -48,6 +47,7 @@ public class SubspaceRBF {
 	private double epsilon = 0;
 	private double aprioriThreshold;
 	private double hierarchicalThreshold;
+	private double connectedComponentsThreshold;
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
@@ -75,32 +75,21 @@ public class SubspaceRBF {
 	public void test() {
 		// Output
 		results = new LinkedList<String>();
-		results.add("Number subspace centroids: " + numberSubspaceCentroids);
 		SummarisationAdapter adapter;
 		SubspaceBuilder subspaceBuilder;
-		for (numberSubspaceCentroids = 5; numberSubspaceCentroids <= 10; numberSubspaceCentroids += 5) {
+		for (numberSubspaceCentroids = 5; numberSubspaceCentroids <= 5; numberSubspaceCentroids += 5) {
+			results.add("Number subspace centroids: " + numberSubspaceCentroids);
 			for (StreamSummarisation summarisation : StreamSummarisation.values()) {
 				summarisationDescription = null;
 				for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 					builderDescription = null;
-					if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST
-							|| summarisation == StreamSummarisation.RADIUSCENTROIDS) {
-						for (numberOfDimensions = 3; numberOfDimensions <= 40; numberOfDimensions++) {
+					if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS) {
+						for (numberOfDimensions = 5; numberOfDimensions <= 50; numberOfDimensions += 5) {
 							stopwatch.reset();
 							double sumTPvsFP = 0;
 							double sumAMJS = 0;
 							double sumAMSS = 0;
 							int sumElements = 0;
-
-							double threshold = 1;
-							switch (buildup) {
-							case APRIORI:
-								threshold = aprioriThreshold;
-								break;
-							case HIERARCHICAL:
-								threshold = hierarchicalThreshold;
-								break;
-							}
 
 							// Creating the stream
 							stream = new SubspaceRandomRBFGeneratorDrift();
@@ -108,11 +97,7 @@ public class SubspaceRBF {
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
 							stream.numCentroidsOption.setValue(10);
 							stream.numSubspaceCentroidsOption.setValue(numberSubspaceCentroids);
-							if (SAME_SUBSPACES) {
-								stream.sameSubspaceOption.setValue(true);
-							} else {
-								stream.sameSubspaceOption.setValue(false);
-							}
+							stream.sameSubspaceOption.setValue(SAME_SUBSPACES);
 							stream.randomSubspaceSizeOption.setValue(false);
 							if (DRIFT) {
 								stream.numDriftCentroidsOption.setValue(10);
@@ -123,6 +108,23 @@ public class SubspaceRBF {
 							// Creating the StreamHiCS system
 							adapter = createSummarisationAdapter(summarisation);
 							contrastEvaluator = new Contrast(m, alpha, adapter);
+							
+							double threshold = 1;
+							switch (buildup) {
+							case APRIORI:
+								threshold = aprioriThreshold;
+								break;
+							case HIERARCHICAL:
+								threshold = hierarchicalThreshold;
+								break;
+							case CONNECTED_COMPONENTS:
+								threshold = connectedComponentsThreshold;
+								break;
+							default:
+								System.out.println("Error!");
+								break;
+							}
+							
 							subspaceBuilder = createSubspaceBuilder(buildup);
 							ChangeChecker changeChecker = new TimeCountChecker(numInstances);
 							streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
@@ -184,75 +186,52 @@ public class SubspaceRBF {
 		}
 		SummarisationAdapter adapter = null;
 		switch (ss) {
-		case SLIDINGWINDOW:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			adapter = new SlidingWindowAdapter(numberOfDimensions, horizon);
-			summarisationDescription = "Sliding window, window size: " + horizon;
-			break;
-		case CLUSTREAM:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			Clustream cluStream = new Clustream();
-			cluStream.kernelRadiFactorOption.setValue(2);
-			int numberKernels = 0;
-			if (numberSubspaceCentroids == 10) {
-				numberKernels = 750;
-			} else if (numberSubspaceCentroids == 5) {
-				numberKernels = 400;
-			}
-			cluStream.maxNumKernelsOption.setValue(numberKernels);
-			cluStream.prepareForUse();
-			adapter = new MicroclusteringAdapter(cluStream);
-			summarisationDescription = "CluStream, maximum number kernels: " + numberKernels;
-			break;
 		case CLUSTREE_DEPTHFIRST:
-			aprioriThreshold = 0.25;
+			aprioriThreshold = 0.4;
 			hierarchicalThreshold = 0.25;
+			connectedComponentsThreshold = 0.4;
 			ClusTree clusTree = new ClusTree();
 			clusTree.horizonOption.setValue(horizon);
 			clusTree.prepareForUse();
 			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
-			break;
-		case CLUSTREE_BREADTHFIRST:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			clusTree = new ClusTree();
-			clusTree.horizonOption.setValue(horizon);
-			clusTree.breadthFirstSearchOption.set();
-			clusTree.prepareForUse();
-			adapter = new MicroclusteringAdapter(clusTree);
-			summarisationDescription = "ClusTree, horizon: " + horizon;
+			summarisationDescription = "ClusTree depth-first, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
+			if (DRIFT) {
+				if (numberSubspaceCentroids == 5) {
+					aprioriThreshold = 0.3;
+					hierarchicalThreshold = 0.3;
+					connectedComponentsThreshold = 0.3;
+				} else if (numberSubspaceCentroids == 10) {
+					aprioriThreshold = 0.2;
+					hierarchicalThreshold = 0.2;
+					connectedComponentsThreshold = 0.25;
+				}
+			} else {
+				if (numberSubspaceCentroids == 5) {
+					aprioriThreshold = 0.3;
+					hierarchicalThreshold = 0.3;
+					connectedComponentsThreshold = 0.3;
+				} else if (numberSubspaceCentroids == 10) {
+					aprioriThreshold = 0.25;
+					hierarchicalThreshold = 0.25;
+					connectedComponentsThreshold = 0.25;
+				}
+			}
+
 			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
-			// double radius = 6 * Math.sqrt(numberOfDimensions) - 1;
-			double radius = 0;
-			if (numberSubspaceCentroids == 10) {
-				radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			} else if (numberSubspaceCentroids == 5) {
-				radius = 7 * Math.sqrt(numberOfDimensions) - 1;
-			}
-			double learningRate = 0.1;
+			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
+			/*
+			 * if (numberSubspaceCentroids == 10) {
+			 * 
+			 * } else if (numberSubspaceCentroids == 5) { radius = 7 *
+			 * Math.sqrt(numberOfDimensions) - 1; }
+			 */
+			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
+			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
-			break;
-		case RADIUSCENTROIDS:
-			aprioriThreshold = 0.25;
-			hierarchicalThreshold = 0.25;
-			radius = 0;
-			if (numberSubspaceCentroids == 10) {
-				radius = 5 * Math.sqrt(numberOfDimensions) - 1;
-			} else if (numberSubspaceCentroids == 5) {
-				radius = 7 * Math.sqrt(numberOfDimensions) - 1;
-			}
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "readius");
-			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:
 			adapter = null;
@@ -272,15 +251,20 @@ public class SubspaceRBF {
 		SubspaceBuilder builder = null;
 		switch (sb) {
 		case APRIORI:
-			cutoff = 15;
+			cutoff = 20;
 			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator, null);
 			builderDescription = "Apriori, threshold:" + aprioriThreshold + "cutoff: " + cutoff;
 			break;
 		case HIERARCHICAL:
-			cutoff = 1;
+			cutoff = 2;
 			builder = new HierarchicalBuilderCutoff(numberOfDimensions, hierarchicalThreshold, cutoff,
 					contrastEvaluator, null, true);
 			builderDescription = "Hierarchical, threshold: " + hierarchicalThreshold + ", cutoff: " + cutoff;
+			break;
+		case CONNECTED_COMPONENTS:
+			pruningDifference = -1;
+			builder = new ComponentBuilder(numberOfDimensions, connectedComponentsThreshold, contrastEvaluator, null);
+			builderDescription = "Connected Components, threshold: " + connectedComponentsThreshold;
 			break;
 		default:
 			builder = null;
@@ -292,7 +276,8 @@ public class SubspaceRBF {
 	}
 
 	private double[] testRun() {
-		stream.instanceRandomSeedOption.setValue(random.nextInt(1000000000));
+		stream.instanceRandomSeedOption.setValue(random.nextInt());
+		stream.modelRandomSeedOption.setValue(random.nextInt());
 		stream.prepareForUse();
 		streamHiCS.clear();
 
@@ -317,7 +302,7 @@ public class SubspaceRBF {
 		}
 		correctResult.sort();
 		double[] performanceMeasures = new double[4];
-		// Evaluator.displayResult(result, correctResult);
+		//Evaluator.displayResult(result, correctResult);
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
 		performanceMeasures[2] = Evaluator.evaluateStructuralSimilarity(result, correctResult);

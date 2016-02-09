@@ -185,9 +185,9 @@ public class DriftTest {
 			numberSamples++;
 		}
 
-		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
+		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges, 1000, 
 				numInstances);
-		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges,
+		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, 1000, 
 				numInstances);
 
 		double cscdAccuracy = ((double) numberCorrectCSCD) / numInstances;

@@ -9,6 +9,6 @@ public class Parameters {
 
 	// 
 	public enum SubspaceBuildup {
-		APRIORI, HIERARCHICAL
+		APRIORI, HIERARCHICAL, CONNECTED_COMPONENTS, CLIQUE
 	}
 }

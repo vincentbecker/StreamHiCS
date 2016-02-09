@@ -57,10 +57,11 @@ public class StreamHiCS implements Callback {
 	private AbstractPruner pruner;
 
 	/**
-	 * The {@link CorrelationSummary} to calculate the Pearsons's correlation coefficient for pairs of dimensions. 
+	 * The {@link CorrelationSummary} to calculate the Pearsons's correlation
+	 * coefficient for pairs of dimensions.
 	 */
 	private CorrelationSummary correlationSummary;
-	
+
 	/**
 	 * The {@link Stopwatch} instance.
 	 */
@@ -95,7 +96,8 @@ public class StreamHiCS implements Callback {
 	 *            The {@link Stopwatch} instance
 	 */
 	public StreamHiCS(double epsilon, double threshold, double pruningDifference, Contrast contrastEvaluator,
-			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback, CorrelationSummary correlationSummary, Stopwatch stopwatch) {
+			SubspaceBuilder subspaceBuilder, ChangeChecker changeChecker, Callback callback,
+			CorrelationSummary correlationSummary, Stopwatch stopwatch) {
 		correlatedSubspaces = new SubspaceSet();
 		if (epsilon < 0) {
 			throw new IllegalArgumentException("Non-positive input value.");
@@ -107,7 +109,9 @@ public class StreamHiCS implements Callback {
 		this.changeChecker = changeChecker;
 		this.callback = callback;
 		// this.pruner = new SimplePruner(pruningDifference);
-		this.pruner = new TopDownPruner(pruningDifference);
+		if (pruningDifference >= 0) {
+			this.pruner = new TopDownPruner(pruningDifference);
+		}
 		this.correlationSummary = correlationSummary;
 		this.stopwatch = stopwatch;
 	}
@@ -162,7 +166,7 @@ public class StreamHiCS implements Callback {
 			instance = newInst;
 		}
 		contrastEvaluator.add(instance);
-		if(correlationSummary != null){
+		if (correlationSummary != null) {
 			correlationSummary.addInstance(instance);
 		}
 		stopwatch.stop("Adding");
@@ -175,7 +179,7 @@ public class StreamHiCS implements Callback {
 	public void clear() {
 		correlatedSubspaces.clear();
 		contrastEvaluator.clear();
-		if(correlationSummary != null){
+		if (correlationSummary != null) {
 			correlationSummary.clear();
 		}
 	}
@@ -191,7 +195,9 @@ public class StreamHiCS implements Callback {
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			correlatedSubspaces = subspaceBuilder.buildCorrelatedSubspaces();
-			correlatedSubspaces = pruner.prune(correlatedSubspaces);
+			if(pruner != null){
+				correlatedSubspaces = pruner.prune(correlatedSubspaces);
+			}
 			if (!correlatedSubspaces.isEmpty()) {
 				update = true;
 			}
@@ -210,7 +216,8 @@ public class StreamHiCS implements Callback {
 				// If contrast has changed more than epsilon or has fallen below
 				// the threshold we start a new complete evaluation.
 				if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
-				//if(subspace.getContrast() - contrast > epsilon || contrast < threshold){
+					// if(subspace.getContrast() - contrast > epsilon ||
+					// contrast < threshold){
 					update = true;
 				} else {
 					keep.addSubspace(subspace);
@@ -227,7 +234,9 @@ public class StreamHiCS implements Callback {
 				// are
 				// subspace to another subspace with higher contrast are
 				// discarded.
-				correlatedSubspaces = pruner.prune(correlatedSubspaces);
+				if (pruner != null) {
+					correlatedSubspaces = pruner.prune(correlatedSubspaces);
+				}
 			}
 		}
 
@@ -258,14 +267,14 @@ public class StreamHiCS implements Callback {
 		boolean updated = evaluateCorrelatedSubspaces();
 		stopwatch.stop("Evaluation");
 		if (updated) {
-			//System.out.println(correlatedSubspaces.toString());
+			// System.out.println(correlatedSubspaces.toString());
 			// Notify the callback
 			callback.onAlarm();
 		}
 
 	}
-	
-	public boolean isValidSubspace(Subspace subspace){
+
+	public boolean isValidSubspace(Subspace subspace) {
 		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 		if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
 			return false;

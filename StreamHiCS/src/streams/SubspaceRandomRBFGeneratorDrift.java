@@ -59,7 +59,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 * Determines how many centroids use subspaces.
 	 */
 	public IntOption numSubspaceCentroidsOption = new IntOption("numSubspaceCentroids", 'e',
-			"The number of centroids with a subspace.", 50, 0, Integer.MAX_VALUE);
+			"The number of centroids with a subspace.", 0, 0, Integer.MAX_VALUE);
 
 	public FloatOption scaleIrrelevantDimensionsOption = new FloatOption("scaleIrrelevantDimensions", 'd',
 			"The scale the uniformly random value (-1, 1) is scaled with for irrelevant dimensions, i.e. dimensions not contained in the subspace.",
@@ -68,7 +68,13 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	/**
 	 * The subspaces, indexed by the labels of the centroids, which use them.
 	 */
-	private Subspace[] subspaces;
+	private Subspace[] currentSubspaces;
+
+	private Subspace[] newSubspaces;
+
+	private int changeCounter = -1;
+
+	private int changeLength;
 
 	/**
 	 * The scale applied to the uniform random value in the range (-1, 1) for
@@ -76,7 +82,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 * corresponding subspace.
 	 */
 	private double scaleIrrelevant;
-	
+
 	private Random modelRandom;
 
 	@Override
@@ -115,12 +121,30 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		double desiredMag = this.instanceRandom.nextGaussian() * centroid.stdDev;
 		double scale = desiredMag / magnitude;
 		if (centroidIndex < numberSubspaceCentroids) {
-			Subspace s = subspaces[centroidIndex];
+			// Model the change
+			Subspace s = null;
+			if (changeCounter >= 0) {
+				if (changeCounter < changeLength) {
+					if (useNewSubspaces()) {
+						s = newSubspaces[centroidIndex];
+					} else {
+						s = currentSubspaces[centroidIndex];
+					}
+					changeCounter++;
+				} else {
+					changeCounter = -1;
+					currentSubspaces = newSubspaces;
+					s = currentSubspaces[centroidIndex];
+				}
+			} else{
+				s = currentSubspaces[centroidIndex];
+			}
 			for (int i = 0; i < numberDimensions; i++) {
 				if (!s.contains(i)) {
-					// attVals[i] = centroid.centr[i] + ((this.instanceRandom.nextDouble() * 2.0) -
+					// attVals[i] = centroid.centr[i] +
+					// ((this.instanceRandom.nextDouble() * 2.0) -
 					// 1.0) * scaleIrrelevant;
-					attVals[i] = centroid.centre[i] + ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
+					attVals[i] = ((this.instanceRandom.nextDouble() * 2.0) - 1.0) * scaleIrrelevant;
 				} else {
 					attVals[i] = centroid.centre[i] + attVals[i] * scale;
 				}
@@ -140,7 +164,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	@Override
 	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
-		//super.prepareForUseImpl(monitor, repository);
+		// super.prepareForUseImpl(monitor, repository);
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
 		generateHeader();
 		generateCentroids();
@@ -151,17 +175,18 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
 		// Generate subspaces
 		numberSubspaceCentroids = numSubspaceCentroidsOption.getValue();
-		subspaces = new Subspace[numberSubspaceCentroids];
+		currentSubspaces = new Subspace[numberSubspaceCentroids];
+		newSubspaces = new Subspace[numberSubspaceCentroids];
 
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
 			Subspace s = createSubspace();
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = s;
+			for (int i = 0; i < currentSubspaces.length; i++) {
+				currentSubspaces[i] = s;
 			}
 		} else {
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = createSubspace();
+			for (int i = 0; i < currentSubspaces.length; i++) {
+				currentSubspaces[i] = createSubspace();
 			}
 		}
 	}
@@ -171,19 +196,19 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		generateCentroids();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
-		
+
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
 			Subspace s = createSubspace();
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = s;
+			for (int i = 0; i < currentSubspaces.length; i++) {
+				currentSubspaces[i] = s;
 			}
 		} else {
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = createSubspace();
+			for (int i = 0; i < currentSubspaces.length; i++) {
+				currentSubspaces[i] = createSubspace();
 			}
 		}
-		
+
 	}
 
 	private Subspace createSubspace() {
@@ -210,29 +235,40 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 			}
 			s.addDimension(relevantDim);
 		}
-		 System.out.println("Correlated Subspace: " + s.toString());
+		System.out.println("Correlated Subspace: " + s.toString());
 		return s;
 	}
 
 	public SubspaceSet getSubspaces() {
 		SubspaceSet set = new SubspaceSet();
-		for (int i = 0; i < subspaces.length; i++) {
-			set.addSubspace(subspaces[i]);
+		for (int i = 0; i < currentSubspaces.length; i++) {
+			set.addSubspace(currentSubspaces[i]);
 		}
 		return set;
 	}
 
-	public void subspaceChange() {
+	public void subspaceChange(int changeLength) {
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
 			Subspace s = createSubspace();
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = s;
+			for (int i = 0; i < newSubspaces.length; i++) {
+				newSubspaces[i] = s;
 			}
 		} else {
-			for (int i = 0; i < subspaces.length; i++) {
-				subspaces[i] = createSubspace();
+			for (int i = 0; i < currentSubspaces.length; i++) {
+				newSubspaces[i] = createSubspace();
 			}
 		}
+		changeCounter = 0;
+		this.changeLength = changeLength;
+	}
+
+	private boolean useNewSubspaces() {
+		double x = -4.0 * (double) (changeCounter) / changeLength;
+		double probabilityDrift = 1.0 / (1.0 + Math.exp(x));
+		if (instanceRandom.nextDouble() > probabilityDrift) {
+			return false;
+		}
+		return true;
 	}
 }

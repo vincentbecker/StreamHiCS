@@ -60,8 +60,6 @@ public class AprioriBuilder extends SubspaceBuilder {
 	 *            The threshold
 	 * @param cutoff
 	 *            The cutoff
-	 * @param pruningDifference
-	 *            The pruning difference
 	 * @param contrastEvaluator
 	 *            The {@link Contrast} instance
 	 * @param correlationSummary

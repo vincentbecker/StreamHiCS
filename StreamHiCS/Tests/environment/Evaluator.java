@@ -151,7 +151,7 @@ public class Evaluator {
 	}
 
 	public static double[] evaluateConceptChange(ArrayList<Double> trueChanges, ArrayList<Double> detectedChanges,
-			int streamLength) {
+			int changeLength, int streamLength) {
 		double sumTimeToDetection = 0;
 		int missedDetections = 0;
 		int t = trueChanges.size();
@@ -174,6 +174,9 @@ public class Evaluator {
 			} else if (!trueChangesFound[j - 1]) {
 				trueChangesFound[j - 1] = true;
 				sumTimeToDetection += (detectedChange - trueChanges.get(j - 1));
+			} else if (detectedChange - trueChanges.get(j - 1) < changeLength) {
+				// We don't treat these as false positives
+				// Do not do anything
 			} else {
 				falseAlarms++;
 				// falseAlarms.add(detectedChange);
