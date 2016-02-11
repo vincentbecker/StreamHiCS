@@ -171,7 +171,7 @@ public class Evaluator {
 			if (j == 0) {
 				// falseAlarms.add(detectedChange);
 				falseAlarms++;
-			} else if (!trueChangesFound[j - 1]) {
+			} else if (!trueChangesFound[j - 1] && detectedChange - trueChanges.get(j - 1) < 2 * changeLength) {
 				trueChangesFound[j - 1] = true;
 				sumTimeToDetection += (detectedChange - trueChanges.get(j - 1));
 			} else if (detectedChange - trueChanges.get(j - 1) < changeLength) {

@@ -45,6 +45,8 @@ public class GaussianStream implements InstanceStream {
 	 */
 	private InstancesHeader streamHeader;
 	
+	private double[][] covarianceMatrix;
+	
 	/**
 	 * The {@link EuclideanDistance} instance. 
 	 */
@@ -72,6 +74,7 @@ public class GaussianStream implements InstanceStream {
 			this.mean = mean;
 		}
 		init(covarianceMatrix);
+		this.covarianceMatrix = covarianceMatrix;
 		this.euclideanDistance = new EuclideanDistance();
 		this.manhattanDistance = new ManhattanDistance();
 		this.classRadius = classRadius;
@@ -83,6 +86,7 @@ public class GaussianStream implements InstanceStream {
 	 * @param covarianceMatrix The new covariance matrix
 	 */
 	public void setCovarianceMatrix(double[][] covarianceMatrix) {
+		this.covarianceMatrix = covarianceMatrix;
 		init(covarianceMatrix);
 	}
 
@@ -182,7 +186,7 @@ public class GaussianStream implements InstanceStream {
 
 	@Override
 	public void restart() {
-		// TODO Auto-generated method stub
+		normalDistribution = new MultivariateNormalDistribution(mean, covarianceMatrix);
 	}
 
 	/**

@@ -2,11 +2,11 @@ package centroids;
 
 import java.util.ArrayList;
 
-import moa.core.ObjectRepository;
-import moa.options.AbstractOptionHandler;
 import moa.options.FloatOption;
 import moa.options.IntOption;
 import moa.options.StringOption;
+import moa.core.ObjectRepository;
+import moa.options.AbstractOptionHandler;
 import moa.tasks.TaskMonitor;
 import weka.core.Instance;
 

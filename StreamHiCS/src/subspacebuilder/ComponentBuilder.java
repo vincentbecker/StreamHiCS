@@ -32,7 +32,7 @@ public class ComponentBuilder extends SubspaceBuilder {
 	 */
 	private double threshold;
 
-	//private int cutoff;
+	// private int cutoff;
 
 	/**
 	 * The {@link Contrast} evaluator.
@@ -62,7 +62,7 @@ public class ComponentBuilder extends SubspaceBuilder {
 			CorrelationSummary correlationSummary) {
 		this.numberOfDimensions = numberOfDimensions;
 		this.threshold = threshold;
-		//this.cutoff = cutoff;
+		// this.cutoff = cutoff;
 		this.contrastEvaluator = contrastEvaluator;
 		this.correlationSummary = correlationSummary;
 	}
@@ -73,7 +73,7 @@ public class ComponentBuilder extends SubspaceBuilder {
 		// Create all 2-dimensional candidates
 		// stopwatch.start("2D-contrast");
 
-		//SubspaceSet set = new SubspaceSet();
+		// SubspaceSet set = new SubspaceSet();
 		double[][] adjacencyMatrix = new double[numberOfDimensions][numberOfDimensions];
 		if (correlationSummary != null) {
 			double[][] coefficientMatrix = correlationSummary.getCorrelationMatrix();
@@ -85,7 +85,7 @@ public class ComponentBuilder extends SubspaceBuilder {
 						s.addDimension(j);
 						contrast = contrastEvaluator.evaluateSubspaceContrast(s);
 						// if (contrast >= threshold) {
-						//set.addSubspace(s);
+						// set.addSubspace(s);
 						adjacencyMatrix[i][j] = contrast;
 						adjacencyMatrix[j][i] = contrast;
 						// }
@@ -105,19 +105,16 @@ public class ComponentBuilder extends SubspaceBuilder {
 					// if (contrast >= threshold) {
 					adjacencyMatrix[i][j] = contrast;
 					adjacencyMatrix[j][i] = contrast;
-					//set.addSubspace(s);
+					// set.addSubspace(s);
 					// }
 				}
 			}
 		}
 		/*
-		set.selectTopK(cutoff);
-		for (Subspace s : set.getSubspaces()) {
-			int dim1 = s.getDimension(0);
-			int dim2 = s.getDimension(1);
-			adjacencyMatrix[dim1][dim2] = 1;
-		}
-	*/
+		 * set.selectTopK(cutoff); for (Subspace s : set.getSubspaces()) { int
+		 * dim1 = s.getDimension(0); int dim2 = s.getDimension(1);
+		 * adjacencyMatrix[dim1][dim2] = 1; }
+		 */
 		// Finding the connected components using depth-first search
 		SubspaceSet correlatedSubspaces = new SubspaceSet();
 		boolean[] visited = new boolean[numberOfDimensions];

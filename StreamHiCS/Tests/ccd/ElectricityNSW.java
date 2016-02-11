@@ -30,6 +30,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.ArffFileStream;
+import moa.streams.InstanceStream;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
@@ -55,6 +56,7 @@ public class ElectricityNSW {
 	private String summarisationDescription = null;
 	private String builderDescription = null;
 	private List<String> results;
+	private int numberOfDimensions;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
@@ -89,28 +91,31 @@ public class ElectricityNSW {
 		// Class index is last attribute but not relevant for this task
 		stream = new ArffFileStream(path, -1);
 
-		StreamSummarisation summarisation = StreamSummarisation.CLUSTREE_DEPTHFIRST;
+		StreamSummarisation summarisation = StreamSummarisation.ADAPTINGCENTROIDS;
 		SubspaceBuildup buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 
 		double threshold = 0;
 		switch (summarisation) {
 		case CLUSTREE_DEPTHFIRST:
-			threshold = 0.2;
+			threshold = 0.55;
 			break;
 		case ADAPTINGCENTROIDS:
-			threshold = 0.45;
+			threshold = 0.45; // threshold = 0.45 + alpha = 0.1 -> best for eight dimensions
 			break;
 		default:
 			break;
 		}
+		
+		//50 dims
+		// threshold = 0.4, alpha = 0.15
 
-		int numberOfDimensions = 15;
+		numberOfDimensions = 8;
 		int m = 50;
-		double alpha = 0.1;
-		double epsilon = 0.2;
+		double alpha = 0.15;
+		double epsilon = 0.25;
 		int cutoff = 8;
 		double pruningDifference = 0.15;
-		int horizon = 5000;
+		int horizon = 2000;
 		int checkCount = 1000;
 
 		System.out.println("Electricity New South Wales unsorted");
@@ -165,8 +170,6 @@ public class ElectricityNSW {
 
 		int numberSamples = 0;
 
-		// ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
-		// ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
 		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 		int numberChangesCSCD = 0;
@@ -174,38 +177,39 @@ public class ElectricityNSW {
 
 		InstancesHeader header = null;
 		Random rand = new Random();
-		int totalSize = 15;
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
 
 			if(numberSamples % 1000 == 0){
-				System.out.println(cscd.getNumberOfElements());
+				//System.out.println(cscd.getNumberOfElements());
 			}
 			
 			if (header == null) {
 				ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 				for (int i = 0; i < 8; i++) {
-					attributes.add(inst.dataset().attribute(i));
+					Attribute a = new Attribute("original" + i);
+					attributes.add(a);
 				}
-				for (int i = 8; i < totalSize; i++) {
+				for (int i = 8; i < numberOfDimensions; i++) {
 					Attribute a = new Attribute("noise" + i);
 					attributes.add(a);
 				}
-
-				// set the class attribute
-				attributes.add(inst.dataset().attribute(inst.classIndex()));
-				header = new InstancesHeader(new Instances("subspaceData", attributes, 0));
-				header.setClassIndex(totalSize);
+				ArrayList<String> classLabels = new ArrayList<String>();
+				classLabels.add("UP");
+				classLabels.add("DOWN");
+				attributes.add(new Attribute("class", classLabels));
+				header = new InstancesHeader(new Instances("AugmentedStream", attributes, 0));
+				header.setClassIndex(numberOfDimensions);
 			}
-			double[] newData = new double[totalSize + 1];
+			double[] newData = new double[numberOfDimensions + 1];
 			for (int i = 0; i < 8; i++) {
 				newData[i] = inst.value(i);
 			}
-			for (int i = 8; i < totalSize; i++) {
-				newData[i] = rand.nextDouble();
+			for (int i = 8; i < numberOfDimensions; i++) {
+				newData[i] = (rand.nextDouble() - 1)*2;
 			}
 			// Setting the class label
-			newData[totalSize] = inst.value(inst.classIndex());
+			newData[numberOfDimensions] = inst.value(inst.classIndex());
 			inst = new DenseInstance(inst.weight(), newData);
 			inst.setDataset(header);
 

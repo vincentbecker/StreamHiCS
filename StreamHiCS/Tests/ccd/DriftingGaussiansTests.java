@@ -32,6 +32,7 @@ import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
+import streams.DriftingGaussians;
 import streams.SubspaceRandomRBFGeneratorDrift;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.CliqueBuilder;
@@ -41,13 +42,13 @@ import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import weka.core.Utils;
 
-public class SubspaceRBFDriftTests {
+public class DriftingGaussiansTests {
 	private SubspaceRandomRBFGeneratorDrift stream;
 	private StreamHiCS streamHiCS;
 	private int numInstances;
 	private final int horizon = 2000;
 	private final int m = 50;
-	private final double alpha = 0.1;
+	private final double alpha = 0.05;
 	private double epsilon;
 	private double aprioriThreshold;
 	private double hierarchicalThreshold;
@@ -78,7 +79,7 @@ public class SubspaceRBFDriftTests {
 	}
 
 	@Before
-	public void setup() {
+	public void before() {
 		random = new Random();
 	}
 
@@ -92,11 +93,9 @@ public class SubspaceRBFDriftTests {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					// int from = 1;
-					// int to = 1;
-					// int numberTests = from - to + 1;
-					for (int test = 3; test <= 3; test++) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS
+						&& buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
+					for (int test = 4; test <= 4; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
@@ -148,10 +147,7 @@ public class SubspaceRBFDriftTests {
 							stream.numSubspaceCentroidsOption.setValue(10);
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
-							stream.numDriftCentroidsOption.setValue(10);							
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
+							stream.numDriftCentroidsOption.setValue(10);
 							changePoints = new int[4];
 							changePoints[0] = 5000;
 							changePoints[1] = 10000;
@@ -205,9 +201,6 @@ public class SubspaceRBFDriftTests {
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(5);
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
 							changePoints = new int[4];
 							changePoints[0] = 5000;
 							changePoints[1] = 10000;
@@ -220,7 +213,7 @@ public class SubspaceRBFDriftTests {
 							trueChanges.add(15000.0);
 							trueChanges.add(20000.0);
 							break;
-							
+
 						case 3:
 							switch (summarisation) {
 							case CLUSTREE_DEPTHFIRST:
@@ -255,11 +248,10 @@ public class SubspaceRBFDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 90000;
 							epsilon = 0.1;
-							stream = new SubspaceRandomRBFGeneratorDrift();
+							stream = new DriftingGaussians();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
-							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(5);
+							stream.avgSubspaceSizeOption.setValue(5);
 							stream.numCentroidsOption.setValue(2);
 							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
@@ -272,7 +264,7 @@ public class SubspaceRBFDriftTests {
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 1;
+							speed = 5;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
@@ -291,7 +283,7 @@ public class SubspaceRBFDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.4;
+								connectedComponentsThreshold = 0.35;
 								cliqueThreshold = 0.5;
 								break;
 							default:
@@ -314,55 +306,39 @@ public class SubspaceRBFDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 90000;
 							epsilon = 0.1;
-							stream = new SubspaceRandomRBFGeneratorDrift();
+							stream = new DriftingGaussians();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(5);
 							stream.numCentroidsOption.setValue(2);
-							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
 							changePoints = new int[4];
-							/*
-							 * changePoints[0] = 5000; changePoints[1] = 10000;
-							 * changePoints[2] = 15000; changePoints[3] = 20000;
-							 */
 							changePoints[0] = 10000;
 							changePoints[1] = 30000;
 							changePoints[2] = 50000;
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 1;
+							speed = 5;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
-							/*
-							 * virtualDriftPoints = new int[3];
-							 * virtualDriftPoints[0] = 7500;
-							 * virtualDriftPoints[1] = 12500;
-							 * virtualDriftPoints[2] = 17500;
-							 */
 
 							virtualDriftPoints = new int[4];
 							virtualDriftPoints[0] = 20000;
 							virtualDriftPoints[1] = 40000;
 							virtualDriftPoints[2] = 60000;
 							virtualDriftPoints[3] = 80000;
-
 							break;
 						}
 
 						// Creating the StreamHiCS system
 						adapter = createSummarisationAdapter(summarisation);
 						contrastEvaluator = new Contrast(m, alpha, adapter);
-						CorrelationSummary correlationSummary = null;
+						CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
 						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
 						ChangeChecker changeChecker = new TimeCountChecker(1000);
 						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
@@ -370,7 +346,7 @@ public class SubspaceRBFDriftTests {
 						changeChecker.setCallback(streamHiCS);
 
 						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
-						cscd.initOption.setValue(5000);
+						cscd.initOption.setValue(1000);
 						cscd.prepareForUse();
 						streamHiCS.setCallback(cscd);
 
@@ -387,11 +363,11 @@ public class SubspaceRBFDriftTests {
 						for (int i = 0; i < numberTestRuns; i++) {
 							// Reset the stream and the change detectors
 							int seed = random.nextInt();
-							// System.out.println(seed);
 							stream.modelRandomSeedOption.setValue(seed);
+							System.out.println("Seed1: " + seed);
 							seed = random.nextInt();
-							// System.out.println(seed);
 							stream.instanceRandomSeedOption.setValue(seed);
+							System.out.println("Seed2: " + seed);
 							// stream.restart();
 							stream.prepareForUse();
 							cscd.resetLearning();
@@ -434,7 +410,7 @@ public class SubspaceRBFDriftTests {
 		}
 
 		// Write the results
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/SubspaceRBF/Tests.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/DriftingGaussians/Tests.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
@@ -465,12 +441,23 @@ public class SubspaceRBFDriftTests {
 		if (virtualDriftPoints != null) {
 			driftStart = changePoints[0];
 		}
-		
-		//cscd.onAlarm();
+
+		int class1 = 0;
+		int class2 = 0;
+		String className;
+		int classNameMismatch = 0;
+
+		int correct1Prediction1 = 0;
+		int correct1Prediction2 = 0;
+		int correct2Prediction2 = 0;
+		int correct2Prediction1 = 0;
+
+		// cscd.onAlarm();
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			if (numberSamples % 1000 == 0) {
-				//System.out.println(streamHiCS.getNumberOfElements());
-				//System.out.println("Found: " + cscd.getCurrentlyCorrelatedSubspaces().toString());
+				// System.out.println(streamHiCS.getNumberOfElements());
+				// System.out.println("Found: " +
+				// cscd.getCurrentlyCorrelatedSubspaces().toString());
 			}
 
 			// Carry out the concept drift at the relevant points
@@ -505,7 +492,26 @@ public class SubspaceRBFDriftTests {
 
 			// For accuracy
 			int trueClass = (int) inst.classValue();
+			if (trueClass == 0) {
+				class1++;
+			} else {
+				class2++;
+			}
+			String toStringClassName = inst.toString().split(",")[numberOfDimensions];
+			className = inst.attribute(inst.classIndex()).value(trueClass);
+			if (!className.equals(toStringClassName)) {
+				classNameMismatch++;
+			}
 			int prediction = cscd.getClassPrediction(inst);
+			if (trueClass == 0 && prediction == 0) {
+				correct1Prediction1++;
+			} else if (trueClass == 0 && prediction == 1) {
+				correct1Prediction2++;
+			} else if (trueClass == 1 && prediction == 1) {
+				correct2Prediction2++;
+			} else {
+				correct2Prediction1++;
+			}
 			cscdAccuracy.addClassLabel(trueClass);
 			cscdAccuracy.addPrediction(prediction);
 			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
@@ -523,7 +529,7 @@ public class SubspaceRBFDriftTests {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (cscd.isChangeDetected()) {
 				cscdDetectedChanges.add((double) numberSamples);
-				System.out.println("cscd: CHANGE at " + numberSamples);
+				// System.out.println("cscd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -538,10 +544,17 @@ public class SubspaceRBFDriftTests {
 			numberSamples++;
 		}
 
+		System.out
+				.println("Class 1: " + class1 + ", Class 2: " + class2 + ", class name mismatch: " + classNameMismatch);
+
+		System.out.println("Correct1Prediction1: " + correct1Prediction1 + ", Correct1Prediction2: "
+				+ correct1Prediction2 + ", Correct2Prediction2: " + correct2Prediction2 + ", Correct2Prediction1: "
+				+ correct2Prediction1);
+
 		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
 				changeLength, numInstances);
-		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges,
-				changeLength, numInstances);
+		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, changeLength,
+				numInstances);
 		double[][] performanceMeasures = new double[2][5];
 		for (int i = 0; i < 4; i++) {
 			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
@@ -567,7 +580,7 @@ public class SubspaceRBFDriftTests {
 			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
 		}
 
-		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_SubspaceRBF.csv";
+		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_DriftingGaussians.csv";
 
 		try {
 			Files.write(Paths.get(filePath), errorRatesList);
@@ -594,7 +607,7 @@ public class SubspaceRBFDriftTests {
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			double radius = 10* Math.sqrt(numberOfDimensions) - 1;
+			double radius = 10 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
@@ -630,7 +643,8 @@ public class SubspaceRBFDriftTests {
 			break;
 		case CONNECTED_COMPONENTS:
 			pruningDifference = 0.15;
-			builder = new ComponentBuilder(numberOfDimensions, connectedComponentsThreshold, contrastEvaluator, correlationSummary);
+			builder = new ComponentBuilder(numberOfDimensions, connectedComponentsThreshold, contrastEvaluator,
+					correlationSummary);
 			builderDescription = "Connnected Components, threshold: " + connectedComponentsThreshold;
 			break;
 		case CLIQUE:

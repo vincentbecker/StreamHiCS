@@ -276,7 +276,7 @@ public class StreamHiCS implements Callback {
 
 	public boolean isValidSubspace(Subspace subspace) {
 		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
-		if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
+		if (Math.abs(Math.abs(contrast - subspace.getContrast())) > epsilon || contrast < threshold) {
 			return false;
 		}
 		return true;

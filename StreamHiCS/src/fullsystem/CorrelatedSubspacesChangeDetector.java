@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 
 import moa.classifiers.AbstractClassifier;
+import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.Measurement;
 import moa.core.ObjectRepository;
@@ -122,8 +123,9 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		// System.out.println("Number of samples: " + numberSamples);
 		/*
-		 * SubspaceSet correlatedSubspaces = new SubspaceSet(); Subspace cs =
-		 * new Subspace(0, 2, 3, 7, 8); correlatedSubspaces.addSubspace(cs);
+		 SubspaceSet correlatedSubspaces = new SubspaceSet(); 
+		 Subspace cs = new Subspace(0, 1, 2, 3, 4); 
+		 correlatedSubspaces.addSubspace(cs);
 		 */
 		/*
 		 * SubspaceSet correlatedSubspaces = new SubspaceSet(); if
@@ -149,11 +151,14 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		BitSet marked = new BitSet(numberOfDimensions);
 		boolean found = false;
 		for (Subspace s : correlatedSubspaces.getSubspaces()) {
+			//s.sort();
 			for (int d : s.getDimensions()) {
 				marked.set(d);
 			}
 			found = false;
-			for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
+			SubspaceChangeDetector scd;
+			for (int i = 0; i < subspaceChangeDetectors.size() && !found; i++) {
+				scd = subspaceChangeDetectors.get(i);
 				// If there is an 'old' change detector running on the subspace
 				// already we continue using that
 				if (s.equals(scd.getSubspace())) {
@@ -163,7 +168,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 			}
 			// If the subspace is new we start a new change detector on it
 			if (!found) {
-				SubspaceChangeDetector scd = createSubspaceChangeDetector(s);
+				scd = createSubspaceChangeDetector(s);
 				temp.add(scd);
 			}
 		}
@@ -199,6 +204,8 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 				state = State.WARNING;
 			} else if (fullSpaceChangeDetector.isChangeDetected()) {
 				state = State.DRIFT;
+				//System.out.println(
+				//		"cscd: CHANGE in full space at " + numberSamples);
 			} else {
 				state = State.IN_CONTROL;
 			}
@@ -215,7 +222,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 				} else if (scd.isChangeDetected()) {
 					if (streamHiCS.isValidSubspace(scd.getSubspace())) {
 						//System.out.println(
-						//		"Change in subspace: " + scd.getSubspace().toString() + " at " + numberSamples);
+						//		"cscd: CHANGE in subspace: " + scd.getSubspace().toString() + " at " + numberSamples);
 						drift = true;
 						driftDetectedIndexes.add(i);
 					} else {
@@ -230,8 +237,8 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 				if (restSpaceChangeDetector.isWarningDetected()) {
 					warning = true;
 				} else if (restSpaceChangeDetector.isChangeDetected()) {
-					System.out.println("Change in subspace: " + restSpaceChangeDetector.getSubspace().toString() + " at "
-							+ numberSamples);
+					// System.out.println("cscd: CHANGE in restspace: " + restSpaceChangeDetector.getSubspace().toString() + " at "
+					//		+ numberSamples);
 					drift = true;
 				}
 			}
@@ -286,6 +293,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	private SubspaceChangeDetector createSubspaceChangeDetector(Subspace s) {
 		SubspaceChangeDetector scd = new SubspaceChangeDetector(s);
 		AbstractClassifier baseLearner = new HoeffdingTree();
+		//((HoeffdingTree) baseLearner).splitConfidenceOption.setValue(0.000000001);
 		// AbstractClassifier baseLearner = new HoeffdingAdaptiveTree();
 		// AbstractClassifier baseLearner = new DecisionStump();
 		baseLearner.prepareForUse();
@@ -297,7 +305,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	private SubspaceChangeDetector createRestspaceDetector(Subspace restspace) {
 		SubspaceChangeDetector restSpaceChangeDetector = new SubspaceChangeDetector(restspace);
-		AbstractClassifier baseLearner = new HoeffdingTree();
+		AbstractClassifier baseLearner = new NaiveBayes();
 		baseLearner.prepareForUse();
 		restSpaceChangeDetector.baseLearnerOption.setCurrentObject(baseLearner);
 		restSpaceChangeDetector.prepareForUse();

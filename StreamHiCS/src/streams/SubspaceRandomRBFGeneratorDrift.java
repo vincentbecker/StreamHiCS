@@ -5,10 +5,7 @@ import moa.streams.generators.RandomRBFGeneratorDrift;
 import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import subspace.SubspaceSet;
-
 import java.util.Random;
-
-import moa.core.MiscUtils;
 import moa.core.ObjectRepository;
 import moa.options.FlagOption;
 import moa.options.FloatOption;
@@ -33,9 +30,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	private static final long serialVersionUID = 1L;
 
-	private int numberDimensions;
+	protected int numberDimensions;
 
-	private int numberSubspaceCentroids;
+	protected int numberSubspaceCentroids;
 
 	/**
 	 * Determines whether each centroid uses the same subspace.
@@ -72,9 +69,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	private Subspace[] newSubspaces;
 
-	private int changeCounter = -1;
+	protected int changeCounter = -1;
 
-	private int changeLength;
+	protected int changeLength;
 
 	/**
 	 * The scale applied to the uniform random value in the range (-1, 1) for
@@ -83,7 +80,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 */
 	private double scaleIrrelevant;
 
-	private Random modelRandom;
+	protected Random modelRandom;
+	
+	protected int numberCentroids;
 
 	@Override
 	public Instance nextInstance() {
@@ -107,7 +106,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		}
 
 		// Create instance
-		int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(this.centroidWeights, this.instanceRandom);
+		//int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(centroidWeights, this.instanceRandom);
+		int centroidIndex = modelRandom.nextInt(numberCentroids);
 		Centroid centroid = this.centroids[centroidIndex];
 		double[] attVals = new double[numberDimensions + 1];
 		for (int i = 0; i < numberDimensions; i++) {
@@ -178,6 +178,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		currentSubspaces = new Subspace[numberSubspaceCentroids];
 		newSubspaces = new Subspace[numberSubspaceCentroids];
 
+		// Weights for centroids
+		numberCentroids = numCentroidsOption.getValue();
+		
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
 			Subspace s = createSubspace();
@@ -211,7 +214,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	}
 
-	private Subspace createSubspace() {
+	protected Subspace createSubspace() {
 		int numRelevantDims = 0;
 		if (randomSubspaceSizeOption.isSet()) {
 			numRelevantDims = (int) (avgSubspaceSizeOption.getValue() + (modelRandom.nextBoolean() ? -1 : 1)
@@ -236,6 +239,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 			s.addDimension(relevantDim);
 		}
 		System.out.println("Correlated Subspace: " + s.toString());
+		
 		return s;
 	}
 
@@ -263,7 +267,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		this.changeLength = changeLength;
 	}
 
-	private boolean useNewSubspaces() {
+	protected boolean useNewSubspaces() {
 		double x = -4.0 * (double) (changeCounter) / changeLength;
 		double probabilityDrift = 1.0 / (1.0 + Math.exp(x));
 		if (instanceRandom.nextDouble() > probabilityDrift) {

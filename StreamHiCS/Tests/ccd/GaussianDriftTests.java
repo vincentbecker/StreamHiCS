@@ -63,7 +63,7 @@ public class GaussianDriftTests {
 	};
 	private static Stopwatch stopwatch;
 	private Contrast contrastEvaluator;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -95,7 +95,7 @@ public class GaussianDriftTests {
 					// int from = 1;
 					// int to = 1;
 					// int numberTests = from - to + 1;
-					for (int test = 1; test <= 7; test++) {
+					for (int test = 3; test <= 3; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
@@ -505,7 +505,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.5;
-								connectedComponentThreshold = 0.5;
+								connectedComponentThreshold = 0.45;
 								break;
 							default:
 								break;
@@ -525,7 +525,7 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 50;
 							numInstances = 25000;
-							
+							epsilon = 0.2;
 							int[] blockBeginnings = {0, 10};
 							int[] blockSizes = {10, 10};
 							double[][] covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings, blockSizes, 0.9);
@@ -553,7 +553,7 @@ public class GaussianDriftTests {
 							conceptDriftStream2.positionOption.setValue(10000);
 							conceptDriftStream2.widthOption.setValue(1000);
 							conceptDriftStream2.prepareForUse();
-							// trueChanges.add(9500.0);
+							trueChanges.add(9500.0);
 
 							conceptDriftStream3 = new ConceptDriftStream();
 							conceptDriftStream3.streamOption.setCurrentObject(conceptDriftStream2);
@@ -601,7 +601,7 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 50;
 							numInstances = 30000;
-							
+							epsilon = 0.15;
 							int[] blockBeginnings1 = {0, 10};
 							int[] blockSizes1 = {10, 10};
 							covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings1, blockSizes1, 0.9);
@@ -863,6 +863,34 @@ public class GaussianDriftTests {
 		}
 		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
 		performanceMeasures[1][4] = refAccuracy.calculateOverallErrorRate();
+		
+		String cscdP = "CSCD, ";
+		String refP = "REF, ";
+		for (int i = 0; i < 5; i++) {
+			cscdP += performanceMeasures[0][i] + ", ";
+			refP += performanceMeasures[1][i] + ", ";
+		}
+		//System.out.println(cscdP);
+		//System.out.println(refP);
+		results.add(cscdP);
+		results.add(refP);
+		
+		List<String> errorRatesList = new ArrayList<String>();
+		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
+		for (int i = 0; i < cscdAccuracy.size(); i++) {
+			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+		}
+
+		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_Gaussian.csv";
+
+		try {
+			Files.write(Paths.get(filePath), errorRatesList);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return performanceMeasures;
 	}
 }
