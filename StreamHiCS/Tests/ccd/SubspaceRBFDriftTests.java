@@ -21,11 +21,11 @@ import environment.Evaluator;
 import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
-import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.CorrelatedSubspacesChangeDetector;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
+import fullsystem.SubspaceClassifierChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import streamdatastructures.CentroidsAdapter;
@@ -43,7 +43,6 @@ import weka.core.Utils;
 
 public class SubspaceRBFDriftTests {
 	private SubspaceRandomRBFGeneratorDrift stream;
-	private StreamHiCS streamHiCS;
 	private int numInstances;
 	private final int horizon = 2000;
 	private final int m = 50;
@@ -56,19 +55,13 @@ public class SubspaceRBFDriftTests {
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
-	private Callback callback = new Callback() {
-		@Override
-		public void onAlarm() {
-			// System.out.println("StreamHiCS: onAlarm()");
-		}
-	};
 	private static Stopwatch stopwatch;
-	private Contrast contrastEvaluator;
 	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
 	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceClassifierChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private Random random;
 
@@ -86,8 +79,6 @@ public class SubspaceRBFDriftTests {
 	public void test() {
 		// Output
 		results = new LinkedList<String>();
-		SummarisationAdapter adapter;
-		SubspaceBuilder subspaceBuilder;
 		for (StreamSummarisation summarisation : StreamSummarisation.values()) {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
@@ -359,21 +350,37 @@ public class SubspaceRBFDriftTests {
 							break;
 						}
 
-						// Creating the StreamHiCS system
-						adapter = createSummarisationAdapter(summarisation);
-						contrastEvaluator = new Contrast(m, alpha, adapter);
-						CorrelationSummary correlationSummary = null;
-						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
-						ChangeChecker changeChecker = new TimeCountChecker(1000);
-						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
-						changeChecker.setCallback(streamHiCS);
-
-						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
-						cscd.initOption.setValue(5000);
+						// Creating the CSCD system
+						SummarisationAdapter adapter1 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator1 = new Contrast(m, alpha, adapter1);
+						CorrelationSummary correlationSummary1 = null;
+						SubspaceBuilder subspaceBuilder1 = createSubspaceBuilder(buildup, contrastEvaluator1,
+								correlationSummary1);
+						ChangeChecker changeChecker1 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS1 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator1, subspaceBuilder1, changeChecker1, null, correlationSummary1,
+								stopwatch);
+						changeChecker1.setCallback(streamHiCS1);
+						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS1);
 						cscd.prepareForUse();
-						streamHiCS.setCallback(cscd);
+						streamHiCS1.setCallback(cscd);
 
+						// Creating the SCCD system
+						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
+						CorrelationSummary correlationSummary2 = null;
+						SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, contrastEvaluator2,
+								correlationSummary2);
+						ChangeChecker changeChecker2 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
+								stopwatch);
+						changeChecker2.setCallback(streamHiCS2);
+						sccd = new SubspaceClassifierChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd.prepareForUse();
+						streamHiCS2.setCallback(sccd);						
+						
+						// Creating the reference detector
 						refDetector = new FullSpaceChangeDetector();
 						AbstractClassifier baseLearner = new HoeffdingTree();
 						baseLearner.prepareForUse();
@@ -381,6 +388,7 @@ public class SubspaceRBFDriftTests {
 						refDetector.prepareForUse();
 
 						double[] cscdSums = new double[8];
+						double[] sccdSums = new double[8];
 						double[] refSums = new double[8];
 
 						stopwatch.reset();
@@ -395,6 +403,7 @@ public class SubspaceRBFDriftTests {
 							// stream.restart();
 							stream.prepareForUse();
 							cscd.resetLearning();
+							sccd.resetLearning();
 							refDetector.resetLearning();
 
 							System.out.println("Run: " + (i + 1));
@@ -402,6 +411,7 @@ public class SubspaceRBFDriftTests {
 									virtualDriftPoints);
 							for (int j = 0; j < 5; j++) {
 								cscdSums[j] += performanceMeasures[0][j];
+								sccdSums[j] += performanceMeasures[1][j];
 								refSums[j] += performanceMeasures[1][j];
 							}
 						}
@@ -410,10 +420,12 @@ public class SubspaceRBFDriftTests {
 						cscdSums[5] = stopwatch.getTime("Evaluation");
 						cscdSums[6] = stopwatch.getTime("Adding");
 						cscdSums[7] = stopwatch.getTime("Total_CSCD");
+						sccdSums[7] = stopwatch.getTime("Total_SCCD");
 						refSums[7] = stopwatch.getTime("Total_REF");
 
 						for (int j = 0; j < 8; j++) {
 							cscdSums[j] /= numberTestRuns;
+							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
@@ -422,11 +434,15 @@ public class SubspaceRBFDriftTests {
 						String cscdMeasures = "CSCD," + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
 								+ cscdSums[2] + ", " + cscdSums[3] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", "
 								+ cscdSums[6] + ", " + cscdSums[7];
+						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + cscdSums[1] + ", "
+								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
 						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
 								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
 						System.out.println(cscdMeasures);
+						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
 						results.add(cscdMeasures);
+						results.add(sccdMeasures);
 						results.add(refMeasures);
 					}
 				}
@@ -449,8 +465,10 @@ public class SubspaceRBFDriftTests {
 		int numberSamples = 0;
 
 		ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> sccdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
 		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 
 		int changeCounter = 0;
@@ -508,6 +526,9 @@ public class SubspaceRBFDriftTests {
 			int prediction = cscd.getClassPrediction(inst);
 			cscdAccuracy.addClassLabel(trueClass);
 			cscdAccuracy.addPrediction(prediction);
+			prediction = sccd.getClassPrediction(inst);
+			sccdAccuracy.addClassLabel(trueClass);
+			sccdAccuracy.addPrediction(prediction);
 			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(prediction);
@@ -515,6 +536,9 @@ public class SubspaceRBFDriftTests {
 			stopwatch.start("Total_CSCD");
 			cscd.trainOnInstance(inst);
 			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_SCCD");
+			sccd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCCD");
 			stopwatch.start("Total_REF");
 			refDetector.trainOnInstance(inst);
 			stopwatch.stop("Total_REF");
@@ -524,6 +548,13 @@ public class SubspaceRBFDriftTests {
 			} else if (cscd.isChangeDetected()) {
 				cscdDetectedChanges.add((double) numberSamples);
 				System.out.println("cscd: CHANGE at " + numberSamples);
+			}
+			
+			if (sccd.isWarningDetected()) {
+				// System.out.println("cscd: WARNING at " + numberSamples);
+			} else if (sccd.isChangeDetected()) {
+				sccdDetectedChanges.add((double) numberSamples);
+				System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -540,31 +571,40 @@ public class SubspaceRBFDriftTests {
 
 		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
 				changeLength, numInstances);
+		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
+				changeLength, numInstances);
 		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges,
 				changeLength, numInstances);
-		double[][] performanceMeasures = new double[2][5];
+		double[][] performanceMeasures = new double[3][5];
 		for (int i = 0; i < 4; i++) {
 			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
-			performanceMeasures[1][i] = refPerformanceMeasures[i];
+			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
+			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
 		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[1][4] = refAccuracy.calculateOverallErrorRate();
+		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
 		String cscdP = "CSCD, ";
+		String sccdP = "SCCD, ";
 		String refP = "REF, ";
 		for (int i = 0; i < 5; i++) {
 			cscdP += performanceMeasures[0][i] + ", ";
-			refP += performanceMeasures[1][i] + ", ";
+			sccdP += performanceMeasures[1][i] + ", ";
+			refP += performanceMeasures[2][i] + ", ";
 		}
 		System.out.println(cscdP);
+		System.out.println(sccdP);
 		System.out.println(refP);
 		results.add(cscdP);
+		results.add(sccdP);
 		results.add(refP);
 
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] cscdSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
 		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+			errorRatesList.add(i + "," + cscdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_SubspaceRBF.csv";
@@ -609,7 +649,7 @@ public class SubspaceRBFDriftTests {
 		return adapter;
 	}
 
-	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, CorrelationSummary correlationSummary) {
+	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, Contrast contrastEvaluator, CorrelationSummary correlationSummary) {
 		cutoff = 3;
 		pruningDifference = 0.15;
 		boolean addDescription = false;

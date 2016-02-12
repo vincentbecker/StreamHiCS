@@ -26,11 +26,11 @@ import fullsystem.Contrast;
 import fullsystem.CorrelatedSubspacesChangeDetector;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
+import fullsystem.SubspaceClassifierChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.ArffFileStream;
-import moa.streams.InstanceStream;
 import streamdatastructures.CentroidsAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
@@ -49,9 +49,11 @@ public class ElectricityNSW {
 
 	private String path;
 	private ArffFileStream stream;
-	private static Stopwatch stopwatch;
+	private static Stopwatch stopwatch1;
+	private static Stopwatch stopwatch2;
 	private static final int numberTestRuns = 1;
 	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceClassifierChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -60,7 +62,8 @@ public class ElectricityNSW {
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
-		stopwatch = new Stopwatch();
+		stopwatch1 = new Stopwatch();
+		stopwatch2 = new Stopwatch();
 	}
 
 	@AfterClass
@@ -100,13 +103,14 @@ public class ElectricityNSW {
 			threshold = 0.55;
 			break;
 		case ADAPTINGCENTROIDS:
-			threshold = 0.45; // threshold = 0.45 + alpha = 0.1 -> best for eight dimensions
+			threshold = 0.45; // threshold = 0.45 + alpha = 0.15 -> best for
+								// eight dimensions
 			break;
 		default:
 			break;
 		}
-		
-		//50 dims
+
+		// 50 dims
 		// threshold = 0.4, alpha = 0.15
 
 		numberOfDimensions = 8;
@@ -127,52 +131,84 @@ public class ElectricityNSW {
 			double pruningDifference, int horizon, int checkCount, StreamSummarisation summarisation,
 			SubspaceBuildup buildup) {
 
-		SummarisationAdapter adapter = createSummarisationAdapter(summarisation, numberOfDimensions, horizon);
-		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
-
-		CorrelationSummary correlationSummary = null;
-		SubspaceBuilder subspaceBuilder = createSubspaceBuilder(buildup, numberOfDimensions, contrastEvaluator,
-				correlationSummary, threshold, cutoff);
-		ChangeChecker changeChecker = new TimeCountChecker(checkCount);
-		StreamHiCS streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-				subspaceBuilder, changeChecker, null, correlationSummary, stopwatch);
-		changeChecker.setCallback(streamHiCS);
-		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
-		// cscd.initOption.setValue(0);
+		// Creating the CSCD system
+		SummarisationAdapter adapter1 = createSummarisationAdapter(summarisation, numberOfDimensions, horizon);
+		Contrast contrastEvaluator1 = new Contrast(m, alpha, adapter1);
+		// CorrelationSummary correlationSummary1 = new CorrelationSummary(numberOfDimensions, horizon);
+		CorrelationSummary correlationSummary1 = null;
+		SubspaceBuilder subspaceBuilder1 = createSubspaceBuilder(buildup, numberOfDimensions, contrastEvaluator1,
+				correlationSummary1, threshold, cutoff);
+		ChangeChecker changeChecker1 = new TimeCountChecker(1000);
+		StreamHiCS streamHiCS1 = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator1,
+				subspaceBuilder1, changeChecker1, null, correlationSummary1, stopwatch1);
+		changeChecker1.setCallback(streamHiCS1);
+		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS1);
 		cscd.prepareForUse();
-		streamHiCS.setCallback(cscd);
+		streamHiCS1.setCallback(cscd);
 
+		// Creating the SCCD system
+		SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation, numberOfDimensions, horizon);
+		Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
+		//CorrelationSummary correlationSummary2 = new CorrelationSummary(numberOfDimensions, horizon);
+		CorrelationSummary correlationSummary2 = null;
+		SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, numberOfDimensions, contrastEvaluator2,
+				correlationSummary2, threshold, cutoff);
+		ChangeChecker changeChecker2 = new TimeCountChecker(1000);
+		StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator2,
+				subspaceBuilder2, changeChecker2, null, correlationSummary2, stopwatch2);
+		changeChecker2.setCallback(streamHiCS2);
+		sccd = new SubspaceClassifierChangeDetector(numberOfDimensions, streamHiCS2);
+		sccd.prepareForUse();
+		streamHiCS2.setCallback(sccd);
+
+		// Creating the reference detector
 		refDetector = new FullSpaceChangeDetector();
 		AbstractClassifier baseLearner = new HoeffdingTree();
 		baseLearner.prepareForUse();
 		refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 		refDetector.prepareForUse();
 
-		stopwatch.reset();
+		stopwatch1.reset();
+		stopwatch2.reset();
 		double cscdErrorRate = 0;
+		double sccdErrorRate = 0;
 		double refErrorRate = 0;
 		for (int i = 0; i < numberTestRuns; i++) {
 			System.out.println("Run: " + (i + 1));
 			double[] errorRates = testRun();
 			cscdErrorRate += errorRates[0];
-			refErrorRate += errorRates[1];
+			sccdErrorRate += errorRates[1];
+			refErrorRate += errorRates[2];
 		}
 
 		cscdErrorRate /= numberTestRuns;
+		sccdErrorRate /= numberTestRuns;
 		refErrorRate /= numberTestRuns;
-		System.out.println("CSCD: " + cscdErrorRate + ", REF: " + refErrorRate);
+		double cscdRuntime = stopwatch1.getTime("Total_CSCD") / numberTestRuns;
+		double sccdRuntime = stopwatch2.getTime("Total_SCCD") / numberTestRuns;
+		double refRuntime = stopwatch1.getTime("Total_REF") / numberTestRuns;
+		System.out.println("Validation: " + stopwatch1.getTime("Validation"));
+		System.out.println("CSCD Evaluation: " + stopwatch1.getTime("Evaluation") + "s, CSCD Adding: " + stopwatch1.getTime("Adding") + "s");
+		System.out.println("CSCD Evaluation: " + stopwatch2.getTime("Evaluation") + "s, CSCD Adding: " + stopwatch2.getTime("Adding") + "s");
+		System.out
+				.println("Error rates: CSCD: " + cscdErrorRate + ", SCCD: " + sccdErrorRate + ", REF: " + refErrorRate);
+		System.out.println("Runtimes: CSCD: " + cscdRuntime + ", SCCD: " + sccdRuntime + ", REF: " + refRuntime);
+
 	}
 
 	private double[] testRun() {
 		stream.restart();
 		cscd.resetLearning();
+		sccd.resetLearning();
 		refDetector.resetLearning();
 
 		int numberSamples = 0;
 
 		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 		int numberChangesCSCD = 0;
+		int numberChangesSCCD = 0;
 		int numberChangesREF = 0;
 
 		InstancesHeader header = null;
@@ -180,10 +216,10 @@ public class ElectricityNSW {
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
 
-			if(numberSamples % 1000 == 0){
-				//System.out.println(cscd.getNumberOfElements());
+			if (numberSamples % 1000 == 0) {
+				// System.out.println(cscd.getNumberOfElements());
 			}
-			
+
 			if (header == null) {
 				ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 				for (int i = 0; i < 8; i++) {
@@ -206,7 +242,7 @@ public class ElectricityNSW {
 				newData[i] = inst.value(i);
 			}
 			for (int i = 8; i < numberOfDimensions; i++) {
-				newData[i] = (rand.nextDouble() - 1)*2;
+				newData[i] = (rand.nextDouble() - 1) * 2;
 			}
 			// Setting the class label
 			newData[numberOfDimensions] = inst.value(inst.classIndex());
@@ -223,21 +259,35 @@ public class ElectricityNSW {
 			int prediction = cscd.getClassPrediction(inst);
 			cscdAccuracy.addClassLabel(trueClass);
 			cscdAccuracy.addPrediction(prediction);
+			prediction = sccd.getClassPrediction(inst);
+			sccdAccuracy.addClassLabel(trueClass);
+			sccdAccuracy.addPrediction(prediction);
 			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(prediction);
 
-			stopwatch.start("Total_CSCD");
+			stopwatch1.start("Total_CSCD");
 			cscd.trainOnInstance(inst);
-			stopwatch.stop("Total_CSCD");
-			stopwatch.start("Total_REF");
+			stopwatch1.stop("Total_CSCD");
+			stopwatch2.start("Total_SCCD");
+			sccd.trainOnInstance(inst);
+			stopwatch2.stop("Total_SCCD");
+			stopwatch1.start("Total_REF");
 			refDetector.trainOnInstance(inst);
-			stopwatch.stop("Total_REF");
+			stopwatch1.stop("Total_REF");
 
 			if (cscd.isWarningDetected()) {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (cscd.isChangeDetected()) {
 				numberChangesCSCD++;
+				// cscdDetectedChanges.add((double) numberSamples);
+				// System.out.println("cscd: CHANGE at " + numberSamples);
+			}
+
+			if (sccd.isWarningDetected()) {
+				// System.out.println("cscd: WARNING at " + numberSamples);
+			} else if (sccd.isChangeDetected()) {
+				numberChangesSCCD++;
 				// cscdDetectedChanges.add((double) numberSamples);
 				// System.out.println("cscd: CHANGE at " + numberSamples);
 			}
@@ -256,17 +306,21 @@ public class ElectricityNSW {
 		}
 
 		System.out.println("CSCD changes: " + numberChangesCSCD);
+		System.out.println("SCCD changes: " + numberChangesSCCD);
 		System.out.println("REF changes: " + numberChangesREF);
 
-		double[] errorRates = new double[2];
+		double[] errorRates = new double[3];
 		errorRates[0] = cscdAccuracy.calculateOverallErrorRate();
-		errorRates[1] = refAccuracy.calculateOverallErrorRate();
+		errorRates[1] = sccdAccuracy.calculateOverallErrorRate();
+		errorRates[2] = refAccuracy.calculateOverallErrorRate();
 
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] cscdSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
 		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+			errorRatesList.add(i + "," + cscdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
+					+ refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates.csv";

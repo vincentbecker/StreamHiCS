@@ -21,11 +21,11 @@ import environment.Evaluator;
 import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
-import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.CorrelatedSubspacesChangeDetector;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
+import fullsystem.SubspaceClassifierChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.streams.ConceptDriftStream;
@@ -43,7 +43,6 @@ import weka.core.Utils;
 
 public class GaussianDriftTests {
 	private ConceptDriftStream conceptDriftStream;
-	private StreamHiCS streamHiCS;
 	private int numInstances;
 	private final int horizon = 1000;
 	private final int m = 50;
@@ -55,15 +54,8 @@ public class GaussianDriftTests {
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
-	private Callback callback = new Callback() {
-		@Override
-		public void onAlarm() {
-			// System.out.println("StreamHiCS: onAlarm()");
-		}
-	};
 	private static Stopwatch stopwatch;
-	private Contrast contrastEvaluator;
-	private static final int numberTestRuns = 1;
+	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -71,6 +63,7 @@ public class GaussianDriftTests {
 	private static final String path = "Tests/CovarianceMatrices/";
 	private double[][] resultSummary;
 	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceClassifierChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 
 	@BeforeClass
@@ -83,8 +76,6 @@ public class GaussianDriftTests {
 	public void test() {
 		// Output
 		results = new LinkedList<String>();
-		SummarisationAdapter adapter;
-		SubspaceBuilder subspaceBuilder;
 		for (StreamSummarisation summarisation : StreamSummarisation.values()) {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
@@ -92,10 +83,7 @@ public class GaussianDriftTests {
 				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS
 						&& buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
 					resultSummary = new double[2][7];
-					// int from = 1;
-					// int to = 1;
-					// int numberTests = from - to + 1;
-					for (int test = 3; test <= 3; test++) {
+					for (int test = 7; test <= 7; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
@@ -111,7 +99,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.25;
 								hierarchicalThreshold = 0.65;
-								connectedComponentThreshold = 0.5;
+								connectedComponentThreshold = 0.45;
 								break;
 							default:
 								break;
@@ -131,16 +119,13 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 5;
 							numInstances = 20000;
-							GaussianStream s1 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.675);
+							GaussianStream s1 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.5);
 
-							GaussianStream s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.9);
+							GaussianStream s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.0);
 
-							GaussianStream s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.2);
+							GaussianStream s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.5);
 
-							GaussianStream s4 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.6);
-
-							// GaussianStream s5 = new GaussianStream(null,
-							// csvReader.read(path + "Test2.csv"), 0.4);
+							GaussianStream s4 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 2.0);
 
 							ConceptDriftStream conceptDriftStream1 = new ConceptDriftStream();
 							conceptDriftStream1.streamOption.setCurrentObject(s1);
@@ -165,17 +150,6 @@ public class GaussianDriftTests {
 							conceptDriftStream.widthOption.setValue(1000);
 							conceptDriftStream.prepareForUse();
 							trueChanges.add(14500.0);
-							/*
-							 * conceptDriftStream = new ConceptDriftStream();
-							 * conceptDriftStream.streamOption.setCurrentObject(
-							 * conceptDriftStream3);
-							 * conceptDriftStream.driftstreamOption.
-							 * setCurrentObject(s5);
-							 * conceptDriftStream.positionOption.setValue(20000)
-							 * ; conceptDriftStream.widthOption.setValue(1000);
-							 * conceptDriftStream.prepareForUse();
-							 * trueChanges.add(19500.0);
-							 */
 							break;
 						case 2:
 							switch (summarisation) {
@@ -205,13 +179,13 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 5;
 							numInstances = 20000;
-							s1 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 0.675);
+							s1 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 0.5);
 
-							s2 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 0.9);
+							s2 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.0);
 
-							s3 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.2);
+							s3 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.5);
 
-							s4 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.6);
+							s4 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 2.0);
 
 							// s5 = new GaussianStream(null, csvReader.read(path
 							// + "Test5.csv"), 1.0);
@@ -231,7 +205,7 @@ public class GaussianDriftTests {
 							conceptDriftStream2.widthOption.setValue(1000);
 							conceptDriftStream2.prepareForUse();
 							trueChanges.add(9500.0);
-							
+
 							conceptDriftStream = new ConceptDriftStream();
 							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream2);
 							conceptDriftStream.driftstreamOption.setCurrentObject(s4);
@@ -250,7 +224,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.4;
 								hierarchicalThreshold = 0.55;
-								connectedComponentThreshold = 0.4;
+								connectedComponentThreshold = 0.45;
 								break;
 							default:
 								break;
@@ -270,17 +244,17 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 5;
 							numInstances = 30000;
-							s1 = new GaussianStream(null, csvReader.read(path + "Test1.csv"), 0.675);
+							s1 = new GaussianStream(null, csvReader.read(path + "Test1.csv"), 0.5);
 
-							s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.675);
+							s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.5);
 
-							s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.9);
+							s3 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 1.0);
 
-							s4 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 0.9);
+							s4 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 1.0);
 
-							GaussianStream s5 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 1.2);
+							GaussianStream s5 = new GaussianStream(null, csvReader.read(path + "Test12.csv"), 1.5);
 
-							GaussianStream s6 = new GaussianStream(null, csvReader.read(path + "Test13.csv"), 0.5);
+							GaussianStream s6 = new GaussianStream(null, csvReader.read(path + "Test13.csv"), 2.0);
 
 							conceptDriftStream1 = new ConceptDriftStream();
 							conceptDriftStream1.streamOption.setCurrentObject(s1);
@@ -352,15 +326,15 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 10;
 							numInstances = 25000;
-							s1 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 0.675);
+							s1 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 0.5);
 
-							s2 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 0.9);
+							s2 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.5);
 
-							s3 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.2);
+							s3 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 2.5);
 
-							s4 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.6);
+							s4 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 3.5);
 
-							s5 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 2.0);
+							s5 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 4.5);
 
 							conceptDriftStream1 = new ConceptDriftStream();
 							conceptDriftStream1.streamOption.setCurrentObject(s1);
@@ -404,7 +378,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.5;
-								connectedComponentThreshold = 0.5;
+								connectedComponentThreshold = 0.45;
 								break;
 							default:
 								break;
@@ -424,7 +398,8 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 10;
 							numInstances = 40000;
-							s1 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 0.675);
+							epsilon = 0.15;
+							s1 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 0.5);
 
 							s2 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 0.9);
 
@@ -432,13 +407,13 @@ public class GaussianDriftTests {
 
 							s4 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.2);
 
-							s5 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.6);
+							s5 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.5);
 
-							s6 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 1.6);
+							s6 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 1.5);
 
-							GaussianStream s7 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 2);
+							GaussianStream s7 = new GaussianStream(null, csvReader.read(path + "Test26.csv"), 1.8);
 
-							GaussianStream s8 = new GaussianStream(null, csvReader.read(path + "Test28.csv"), 2);
+							GaussianStream s8 = new GaussianStream(null, csvReader.read(path + "Test28.csv"), 1.8);
 
 							conceptDriftStream1 = new ConceptDriftStream();
 							conceptDriftStream1.streamOption.setCurrentObject(s1);
@@ -526,13 +501,14 @@ public class GaussianDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 25000;
 							epsilon = 0.2;
-							int[] blockBeginnings = {0, 10};
-							int[] blockSizes = {10, 10};
-							double[][] covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings, blockSizes, 0.9);
+							int[] blockBeginnings = { 0, 10 };
+							int[] blockSizes = { 10, 10 };
+							double[][] covarianceMatrix1 = CovarianceMatrixGenerator
+									.generateCovarianceMatrix(numberOfDimensions, blockBeginnings, blockSizes, 0.9);
 							s1 = new GaussianStream(null, covarianceMatrix1, 0.5);
 
 							s2 = new GaussianStream(null, covarianceMatrix1, 2.0);
-							
+
 							s3 = new GaussianStream(null, covarianceMatrix1, 4.0);
 
 							s4 = new GaussianStream(null, covarianceMatrix1, 6.0);
@@ -602,16 +578,18 @@ public class GaussianDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 30000;
 							epsilon = 0.15;
-							int[] blockBeginnings1 = {0, 10};
-							int[] blockSizes1 = {10, 10};
-							covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings1, blockSizes1, 0.9);
+							int[] blockBeginnings1 = { 0, 10 };
+							int[] blockSizes1 = { 10, 10 };
+							covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions,
+									blockBeginnings1, blockSizes1, 0.9);
 							s1 = new GaussianStream(null, covarianceMatrix1, 0.5);
 
 							s2 = new GaussianStream(null, covarianceMatrix1, 4.0);
-							
-							int[] blockBeginnings3 = {20, 30};
-							int[] blockSizes3 = {10, 10};
-							double[][] covarianceMatrix3 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions, blockBeginnings3, blockSizes3, 0.9);
+
+							int[] blockBeginnings3 = { 20, 30 };
+							int[] blockSizes3 = { 10, 10 };
+							double[][] covarianceMatrix3 = CovarianceMatrixGenerator
+									.generateCovarianceMatrix(numberOfDimensions, blockBeginnings3, blockSizes3, 0.9);
 							s3 = new GaussianStream(null, covarianceMatrix3, 4.0);
 
 							s4 = new GaussianStream(null, covarianceMatrix3, 6.0);
@@ -619,7 +597,7 @@ public class GaussianDriftTests {
 							s5 = new GaussianStream(null, covarianceMatrix1, 6.0);
 
 							s6 = new GaussianStream(null, covarianceMatrix1, 8.0);
-							
+
 							conceptDriftStream1 = new ConceptDriftStream();
 							conceptDriftStream1.streamOption.setCurrentObject(s1);
 							conceptDriftStream1.driftstreamOption.setCurrentObject(s2);
@@ -642,14 +620,14 @@ public class GaussianDriftTests {
 							conceptDriftStream3.widthOption.setValue(1000);
 							conceptDriftStream3.prepareForUse();
 							trueChanges.add(14500.0);
-							
+
 							conceptDriftStream4 = new ConceptDriftStream();
 							conceptDriftStream4.streamOption.setCurrentObject(conceptDriftStream3);
 							conceptDriftStream4.driftstreamOption.setCurrentObject(s5);
 							conceptDriftStream4.positionOption.setValue(20000);
 							conceptDriftStream4.widthOption.setValue(1000);
 							conceptDriftStream4.prepareForUse();
-							
+
 							conceptDriftStream = new ConceptDriftStream();
 							conceptDriftStream.streamOption.setCurrentObject(conceptDriftStream4);
 							conceptDriftStream.driftstreamOption.setCurrentObject(s6);
@@ -660,20 +638,37 @@ public class GaussianDriftTests {
 							break;
 						}
 
-						// Creating the StreamHiCS system
-						adapter = createSummarisationAdapter(summarisation);
-						contrastEvaluator = new Contrast(m, alpha, adapter);
-						CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
-						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
-						ChangeChecker changeChecker = new TimeCountChecker(1000);
-						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
-						changeChecker.setCallback(streamHiCS);
-
-						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
+						// Creating the CSCD system
+						SummarisationAdapter adapter1 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator1 = new Contrast(m, alpha, adapter1);
+						CorrelationSummary correlationSummary1 = new CorrelationSummary(numberOfDimensions, horizon);
+						SubspaceBuilder subspaceBuilder1 = createSubspaceBuilder(buildup, correlationSummary1,
+								contrastEvaluator1);
+						ChangeChecker changeChecker1 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS1 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator1, subspaceBuilder1, changeChecker1, null, correlationSummary1,
+								stopwatch);
+						changeChecker1.setCallback(streamHiCS1);
+						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS1);
 						cscd.prepareForUse();
-						streamHiCS.setCallback(cscd);
+						streamHiCS1.setCallback(cscd);
 
+						// Creating the SCCD system
+						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
+						CorrelationSummary correlationSummary2 = new CorrelationSummary(numberOfDimensions, horizon);
+						SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, correlationSummary2,
+								contrastEvaluator2);
+						ChangeChecker changeChecker2 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
+								stopwatch);
+						changeChecker2.setCallback(streamHiCS2);
+						sccd = new SubspaceClassifierChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd.prepareForUse();
+						streamHiCS2.setCallback(sccd);
+
+						// Creating the reference detector
 						refDetector = new FullSpaceChangeDetector();
 						AbstractClassifier baseLearner = new HoeffdingTree();
 						baseLearner.prepareForUse();
@@ -681,6 +676,7 @@ public class GaussianDriftTests {
 						refDetector.prepareForUse();
 
 						double[] cscdSums = new double[8];
+						double[] sccdSums = new double[8];
 						double[] refSums = new double[8];
 
 						stopwatch.reset();
@@ -689,7 +685,8 @@ public class GaussianDriftTests {
 							double[][] performanceMeasures = testRun(trueChanges, 1000);
 							for (int j = 0; j < 5; j++) {
 								cscdSums[j] += performanceMeasures[0][j];
-								refSums[j] += performanceMeasures[1][j];
+								sccdSums[j] += performanceMeasures[1][j];
+								refSums[j] += performanceMeasures[2][j];
 							}
 						}
 
@@ -697,10 +694,12 @@ public class GaussianDriftTests {
 						cscdSums[5] = stopwatch.getTime("Evaluation");
 						cscdSums[6] = stopwatch.getTime("Adding");
 						cscdSums[7] = stopwatch.getTime("Total_CSCD");
+						sccdSums[7] = stopwatch.getTime("Total_SCCD");
 						refSums[7] = stopwatch.getTime("Total_REF");
 
 						for (int j = 0; j < 8; j++) {
 							cscdSums[j] /= numberTestRuns;
+							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
@@ -709,11 +708,15 @@ public class GaussianDriftTests {
 						String cscdMeasures = "CSCD," + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
 								+ cscdSums[2] + ", " + cscdSums[3] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", "
 								+ cscdSums[6] + ", " + cscdSums[7];
+						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
+								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
 						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
 								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
 						System.out.println(cscdMeasures);
+						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
 						results.add(cscdMeasures);
+						results.add(sccdMeasures);
 						results.add(refMeasures);
 
 						for (int i = 0; i < 7; i++) {
@@ -727,7 +730,7 @@ public class GaussianDriftTests {
 		}
 
 		// Write the results
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/Gaussian/Tests.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/Gaussian/Tests_new.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);
@@ -767,7 +770,8 @@ public class GaussianDriftTests {
 		return adapter;
 	}
 
-	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, CorrelationSummary correlationSummary) {
+	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, CorrelationSummary correlationSummary,
+			Contrast contrastEvaluator) {
 		cutoff = 8;
 		pruningDifference = 0.15;
 		boolean addDescription = false;
@@ -804,31 +808,39 @@ public class GaussianDriftTests {
 	private double[][] testRun(ArrayList<Double> trueChanges, int changeLength) {
 		conceptDriftStream.restart();
 		cscd.resetLearning();
+		sccd.resetLearning();
 		refDetector.resetLearning();
 
 		int numberSamples = 0;
 
 		ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> sccdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
 		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {
 			Instance inst = conceptDriftStream.nextInstance();
 
-			if(numberSamples % 1000 == 0){
-				//System.out.println(cscd.getNumberOfElements());
+			if (numberSamples % 1000 == 0) {
+				// System.out.println(cscd.getNumberOfElements());
 			}
-			
+
 			// For accuracy
 			int trueClass = (int) inst.classValue();
 			cscdAccuracy.addClassLabel(trueClass);
 			cscdAccuracy.addPrediction(cscd.getClassPrediction(inst));
+			sccdAccuracy.addClassLabel(trueClass);
+			sccdAccuracy.addPrediction(sccd.getClassPrediction(inst));
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(Utils.maxIndex(refDetector.getVotesForInstance(inst)));
 
 			stopwatch.start("Total_CSCD");
 			cscd.trainOnInstance(inst);
 			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_SCCD");
+			sccd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCCD");
 			stopwatch.start("Total_REF");
 			refDetector.trainOnInstance(inst);
 			stopwatch.stop("Total_REF");
@@ -837,7 +849,14 @@ public class GaussianDriftTests {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (cscd.isChangeDetected()) {
 				cscdDetectedChanges.add((double) numberSamples);
-				System.out.println("cscd: CHANGE at " + numberSamples);
+				// System.out.println("cscd: CHANGE at " + numberSamples);
+			}
+
+			if (sccd.isWarningDetected()) {
+				// System.out.println("cscd: WARNING at " + numberSamples);
+			} else if (sccd.isChangeDetected()) {
+				sccdDetectedChanges.add((double) numberSamples);
+				//System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -854,32 +873,41 @@ public class GaussianDriftTests {
 
 		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
 				changeLength, numInstances);
+		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
+				changeLength, numInstances);
 		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, changeLength,
 				numInstances);
-		double[][] performanceMeasures = new double[2][5];
+		double[][] performanceMeasures = new double[3][5];
 		for (int i = 0; i < 4; i++) {
 			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
-			performanceMeasures[1][i] = refPerformanceMeasures[i];
+			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
+			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
 		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[1][4] = refAccuracy.calculateOverallErrorRate();
-		
+		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
+
 		String cscdP = "CSCD, ";
+		String sccdP = "SCCD, ";
 		String refP = "REF, ";
 		for (int i = 0; i < 5; i++) {
 			cscdP += performanceMeasures[0][i] + ", ";
-			refP += performanceMeasures[1][i] + ", ";
+			sccdP += performanceMeasures[1][i] + ", ";
+			refP += performanceMeasures[2][i] + ", ";
 		}
-		//System.out.println(cscdP);
-		//System.out.println(refP);
+		// System.out.println(cscdP);
+		// System.out.println(refP);
 		results.add(cscdP);
+		results.add(sccdP);
 		results.add(refP);
-		
+
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] cscdSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
 		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+			errorRatesList.add(i + "," + cscdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
+					+ refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_Gaussian.csv";
@@ -890,7 +918,7 @@ public class GaussianDriftTests {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return performanceMeasures;
 	}
 }

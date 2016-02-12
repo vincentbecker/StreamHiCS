@@ -5,7 +5,7 @@ import moa.classifiers.drift.SingleClassifierDrift;
 public class FullSpaceChangeDetector extends SingleClassifierDrift implements ChangeDetector{
 
 	/**
-	 * The serial versoin ID. 
+	 * The serial version ID. 
 	 */
 	private static final long serialVersionUID = 6901371320471962273L;
 

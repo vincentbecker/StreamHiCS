@@ -1,8 +1,7 @@
-package classification;
+package fullsystem;
 
 import java.util.ArrayList;
 
-import fullsystem.SubspaceChangeDetector;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.InstanceStream;

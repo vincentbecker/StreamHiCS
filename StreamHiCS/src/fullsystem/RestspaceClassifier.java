@@ -2,9 +2,7 @@ package fullsystem;
 
 import java.util.ArrayList;
 
-import moa.classifiers.Classifier;
-import moa.classifiers.drift.SingleClassifierDrift;
-import moa.classifiers.meta.WEKAClassifier;
+import moa.classifiers.bayes.NaiveBayes;
 import moa.core.InstancesHeader;
 import moa.streams.InstanceStream;
 import subspace.Subspace;
@@ -13,22 +11,14 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 
-/**
- * This class represents a change detector using the DDM method which only takes
- * a {@link Subspace} into account.
- * 
- * @author Vincent
- *
- */
-public class SubspaceChangeDetector extends SingleClassifierDrift implements ChangeDetector {
-
+public class RestspaceClassifier extends NaiveBayes {
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -2008369880916696270L;
 
 	/**
-	 * The subspace the {@link SubspaceChangeDetector} runs on.
+	 * The subsapce the {@link SubspaceChangeDetector} runs on.
 	 */
 	private Subspace subspace;
 
@@ -44,7 +34,7 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	 *            The {@link Subspace} the {@link SubspaceChangeDetector} should
 	 *            run on.
 	 */
-	public SubspaceChangeDetector(Subspace subspace) {
+	public RestspaceClassifier(Subspace subspace) {
 		this.subspace = subspace;
 	}
 
@@ -57,33 +47,14 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		return this.subspace;
 	}
 
-	public boolean isWarningDetected() {
-		return (this.ddmLevel == DDM_WARNING_LEVEL);
-	}
-
-	public boolean isChangeDetected() {
-		return (this.ddmLevel == DDM_OUTCONTROL_LEVEL);
-	}
-
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
-		// Create new instance that only contains the dimensions of the subspace
-		// and train on that
 		super.trainOnInstanceImpl(projectInstance(inst));
 	}
-
+	
 	@Override
 	public double[] getVotesForInstance(Instance inst) {
 		return super.getVotesForInstance(projectInstance(inst));
-	}
-
-	public void changeClassifier() {
-		this.classifier = this.newclassifier;
-		if (this.classifier instanceof WEKAClassifier) {
-			((WEKAClassifier) this.classifier).buildClassifier();
-		}
-		this.newclassifier = ((Classifier) getPreparedClassOption(this.baseLearnerOption)).copy();
-		this.newclassifier.resetLearning();
 	}
 
 	private Instance projectInstance(Instance instance) {

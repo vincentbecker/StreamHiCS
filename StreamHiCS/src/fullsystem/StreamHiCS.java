@@ -134,6 +134,10 @@ public class StreamHiCS implements Callback {
 	public int getNumberOfElements() {
 		return contrastEvaluator.getNumberOfElements();
 	}
+	
+	public Stopwatch getStopwatch(){
+		return this.stopwatch;
+	}
 
 	/**
 	 * Sets the callback.
