@@ -22,10 +22,10 @@ import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
-import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.SubspaceChangeDetectors;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
-import fullsystem.SubspaceClassifierChangeDetector;
+import fullsystem.SubspaceClassifiersChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import streamdatastructures.CentroidsAdapter;
@@ -60,8 +60,8 @@ public class SubspaceRBFDriftTests {
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
-	private CorrelatedSubspacesChangeDetector cscd;
-	private SubspaceClassifierChangeDetector sccd;
+	private SubspaceChangeDetectors scd;
+	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private Random random;
 
@@ -84,9 +84,6 @@ public class SubspaceRBFDriftTests {
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
 				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					// int from = 1;
-					// int to = 1;
-					// int numberTests = from - to + 1;
 					for (int test = 3; test <= 3; test++) {
 						stopwatch.reset();
 						double threshold = 1;
@@ -140,9 +137,6 @@ public class SubspaceRBFDriftTests {
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(10);							
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
 							changePoints = new int[4];
 							changePoints[0] = 5000;
 							changePoints[1] = 10000;
@@ -196,9 +190,6 @@ public class SubspaceRBFDriftTests {
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(5);
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
 							changePoints = new int[4];
 							changePoints[0] = 5000;
 							changePoints[1] = 10000;
@@ -211,7 +202,6 @@ public class SubspaceRBFDriftTests {
 							trueChanges.add(15000.0);
 							trueChanges.add(20000.0);
 							break;
-							
 						case 3:
 							switch (summarisation) {
 							case CLUSTREE_DEPTHFIRST:
@@ -315,14 +305,7 @@ public class SubspaceRBFDriftTests {
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
-							// stream.modelRandomSeedOption.setValue(random.nextInt());
-							// stream.instanceRandomSeedOption.setValue(random.nextInt());
-							// stream.prepareForUse();
 							changePoints = new int[4];
-							/*
-							 * changePoints[0] = 5000; changePoints[1] = 10000;
-							 * changePoints[2] = 15000; changePoints[3] = 20000;
-							 */
 							changePoints[0] = 10000;
 							changePoints[1] = 30000;
 							changePoints[2] = 50000;
@@ -334,12 +317,6 @@ public class SubspaceRBFDriftTests {
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
-							/*
-							 * virtualDriftPoints = new int[3];
-							 * virtualDriftPoints[0] = 7500;
-							 * virtualDriftPoints[1] = 12500;
-							 * virtualDriftPoints[2] = 17500;
-							 */
 
 							virtualDriftPoints = new int[4];
 							virtualDriftPoints[0] = 20000;
@@ -350,7 +327,7 @@ public class SubspaceRBFDriftTests {
 							break;
 						}
 
-						// Creating the CSCD system
+						// Creating the SCD system
 						SummarisationAdapter adapter1 = createSummarisationAdapter(summarisation);
 						Contrast contrastEvaluator1 = new Contrast(m, alpha, adapter1);
 						CorrelationSummary correlationSummary1 = null;
@@ -361,9 +338,10 @@ public class SubspaceRBFDriftTests {
 								contrastEvaluator1, subspaceBuilder1, changeChecker1, null, correlationSummary1,
 								stopwatch);
 						changeChecker1.setCallback(streamHiCS1);
-						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS1);
-						cscd.prepareForUse();
-						streamHiCS1.setCallback(cscd);
+						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
+						scd.useRestspaceOption.setValue(false);
+						scd.prepareForUse();
+						streamHiCS1.setCallback(scd);
 
 						// Creating the SCCD system
 						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
@@ -376,7 +354,8 @@ public class SubspaceRBFDriftTests {
 								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
 								stopwatch);
 						changeChecker2.setCallback(streamHiCS2);
-						sccd = new SubspaceClassifierChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd.useRestspaceOption.setValue(false);
 						sccd.prepareForUse();
 						streamHiCS2.setCallback(sccd);						
 						
@@ -387,7 +366,7 @@ public class SubspaceRBFDriftTests {
 						refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 						refDetector.prepareForUse();
 
-						double[] cscdSums = new double[8];
+						double[] scdSums = new double[8];
 						double[] sccdSums = new double[8];
 						double[] refSums = new double[8];
 
@@ -402,7 +381,7 @@ public class SubspaceRBFDriftTests {
 							stream.instanceRandomSeedOption.setValue(seed);
 							// stream.restart();
 							stream.prepareForUse();
-							cscd.resetLearning();
+							scd.resetLearning();
 							sccd.resetLearning();
 							refDetector.resetLearning();
 
@@ -410,38 +389,38 @@ public class SubspaceRBFDriftTests {
 							double[][] performanceMeasures = testRun(changePoints, changeLength, speed, trueChanges,
 									virtualDriftPoints);
 							for (int j = 0; j < 5; j++) {
-								cscdSums[j] += performanceMeasures[0][j];
+								scdSums[j] += performanceMeasures[0][j];
 								sccdSums[j] += performanceMeasures[1][j];
-								refSums[j] += performanceMeasures[1][j];
+								refSums[j] += performanceMeasures[2][j];
 							}
 						}
 
 						// Calculate results
-						cscdSums[5] = stopwatch.getTime("Evaluation");
-						cscdSums[6] = stopwatch.getTime("Adding");
-						cscdSums[7] = stopwatch.getTime("Total_CSCD");
+						scdSums[5] = stopwatch.getTime("Evaluation");
+						scdSums[6] = stopwatch.getTime("Adding");
+						scdSums[7] = stopwatch.getTime("Total_SCD");
 						sccdSums[7] = stopwatch.getTime("Total_SCCD");
 						refSums[7] = stopwatch.getTime("Total_REF");
 
 						for (int j = 0; j < 8; j++) {
-							cscdSums[j] /= numberTestRuns;
+							scdSums[j] /= numberTestRuns;
 							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
 						System.out.println(
 								"Test, MTFA, MTD, MDR, MTR, Error rate, Evaluation time, Adding time, Total time");
-						String cscdMeasures = "CSCD," + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
-								+ cscdSums[2] + ", " + cscdSums[3] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", "
-								+ cscdSums[6] + ", " + cscdSums[7];
-						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + cscdSums[1] + ", "
+						String scdMeasures = "SCD," + test + "," + scdSums[0] + ", " + scdSums[1] + ", "
+								+ scdSums[2] + ", " + scdSums[3] + ", " + scdSums[4] + ", " + scdSums[5] + ", "
+								+ scdSums[6] + ", " + scdSums[7];
+						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
 								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
 						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
 								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
-						System.out.println(cscdMeasures);
+						System.out.println(scdMeasures);
 						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
-						results.add(cscdMeasures);
+						results.add(scdMeasures);
 						results.add(sccdMeasures);
 						results.add(refMeasures);
 					}
@@ -464,10 +443,10 @@ public class SubspaceRBFDriftTests {
 			int[] virtualDriftPoints) {
 		int numberSamples = 0;
 
-		ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> scdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> sccdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
-		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator scdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 
@@ -523,9 +502,9 @@ public class SubspaceRBFDriftTests {
 
 			// For accuracy
 			int trueClass = (int) inst.classValue();
-			int prediction = cscd.getClassPrediction(inst);
-			cscdAccuracy.addClassLabel(trueClass);
-			cscdAccuracy.addPrediction(prediction);
+			int prediction = scd.getClassPrediction(inst);
+			scdAccuracy.addClassLabel(trueClass);
+			scdAccuracy.addPrediction(prediction);
 			prediction = sccd.getClassPrediction(inst);
 			sccdAccuracy.addClassLabel(trueClass);
 			sccdAccuracy.addPrediction(prediction);
@@ -533,9 +512,9 @@ public class SubspaceRBFDriftTests {
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(prediction);
 
-			stopwatch.start("Total_CSCD");
-			cscd.trainOnInstance(inst);
-			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_SCD");
+			scd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCD");
 			stopwatch.start("Total_SCCD");
 			sccd.trainOnInstance(inst);
 			stopwatch.stop("Total_SCCD");
@@ -543,11 +522,11 @@ public class SubspaceRBFDriftTests {
 			refDetector.trainOnInstance(inst);
 			stopwatch.stop("Total_REF");
 
-			if (cscd.isWarningDetected()) {
+			if (scd.isWarningDetected()) {
 				// System.out.println("cscd: WARNING at " + numberSamples);
-			} else if (cscd.isChangeDetected()) {
-				cscdDetectedChanges.add((double) numberSamples);
-				System.out.println("cscd: CHANGE at " + numberSamples);
+			} else if (scd.isChangeDetected()) {
+				scdDetectedChanges.add((double) numberSamples);
+				System.out.println("scd: CHANGE at " + numberSamples);
 			}
 			
 			if (sccd.isWarningDetected()) {
@@ -569,7 +548,7 @@ public class SubspaceRBFDriftTests {
 			numberSamples++;
 		}
 
-		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
+		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges,
 				changeLength, numInstances);
 		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
 				changeLength, numInstances);
@@ -577,34 +556,34 @@ public class SubspaceRBFDriftTests {
 				changeLength, numInstances);
 		double[][] performanceMeasures = new double[3][5];
 		for (int i = 0; i < 4; i++) {
-			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
+			performanceMeasures[0][i] = scdPerformanceMeasures[i];
 			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
 			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
-		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[0][4] = scdAccuracy.calculateOverallErrorRate();
 		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
 		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
-		String cscdP = "CSCD, ";
+		String scdP = "SCD, ";
 		String sccdP = "SCCD, ";
 		String refP = "REF, ";
 		for (int i = 0; i < 5; i++) {
-			cscdP += performanceMeasures[0][i] + ", ";
+			scdP += performanceMeasures[0][i] + ", ";
 			sccdP += performanceMeasures[1][i] + ", ";
 			refP += performanceMeasures[2][i] + ", ";
 		}
-		System.out.println(cscdP);
+		System.out.println(scdP);
 		System.out.println(sccdP);
 		System.out.println(refP);
-		results.add(cscdP);
+		results.add(scdP);
 		results.add(sccdP);
 		results.add(refP);
 
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscdSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] scdSmoothedErrorRates = scdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
-		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+		for (int i = 0; i < scdAccuracy.size(); i++) {
+			errorRatesList.add(i + "," + scdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_SubspaceRBF.csv";

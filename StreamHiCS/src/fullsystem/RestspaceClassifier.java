@@ -4,12 +4,15 @@ import java.util.ArrayList;
 
 import moa.classifiers.bayes.NaiveBayes;
 import moa.core.InstancesHeader;
+import moa.core.ObjectRepository;
 import moa.streams.InstanceStream;
+import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.Utils;
 
 public class RestspaceClassifier extends NaiveBayes {
 	/**
@@ -26,6 +29,10 @@ public class RestspaceClassifier extends NaiveBayes {
 	 * The {@link InstancesHeader}.
 	 */
 	private InstancesHeader header;
+
+	private double errorRate;
+
+	private int numberInstances;
 
 	/**
 	 * Creates an instance of this class.
@@ -48,13 +55,36 @@ public class RestspaceClassifier extends NaiveBayes {
 	}
 
 	@Override
+	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
+		errorRate = 1;
+		numberInstances = 0;
+		super.prepareForUseImpl(monitor, repository);
+	}
+
+	@Override
+	public void resetLearningImpl() {
+		errorRate = 1;
+		numberInstances = 0;
+		super.resetLearningImpl();
+	}
+
+	@Override
 	public void trainOnInstanceImpl(Instance inst) {
+		updateErrorRate(inst);
 		super.trainOnInstanceImpl(projectInstance(inst));
 	}
-	
+
 	@Override
 	public double[] getVotesForInstance(Instance inst) {
 		return super.getVotesForInstance(projectInstance(inst));
+	}
+
+	public int getClassPrediction(Instance instance) {
+		return Utils.maxIndex(getVotesForInstance(instance));
+	}
+
+	public double getAccuracy() {
+		return 1 - errorRate;
 	}
 
 	private Instance projectInstance(Instance instance) {
@@ -82,5 +112,20 @@ public class RestspaceClassifier extends NaiveBayes {
 		Instance subspaceInstance = new DenseInstance(instance.weight(), subspaceData);
 		subspaceInstance.setDataset(header);
 		return subspaceInstance;
+	}
+
+	// 0.0 = true
+	// 1.0 = false
+	private void updateErrorRate(Instance instance) {
+		int trueClass = (int) instance.classValue();
+		double prediction;
+		if (getClassPrediction(instance) == trueClass) {
+			prediction = 0.0;
+		} else {
+			prediction = 1.0;
+		}
+
+		numberInstances++;
+		errorRate = errorRate + (prediction - errorRate) / numberInstances;
 	}
 }

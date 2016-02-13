@@ -6,12 +6,15 @@ import moa.classifiers.Classifier;
 import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.WEKAClassifier;
 import moa.core.InstancesHeader;
+import moa.core.ObjectRepository;
 import moa.streams.InstanceStream;
+import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.Utils;
 
 /**
  * This class represents a change detector using the DDM method which only takes
@@ -36,6 +39,10 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	 * The {@link InstancesHeader}.
 	 */
 	private InstancesHeader header;
+
+	private double errorRate;
+
+	private int numberInstances;
 
 	/**
 	 * Creates an instance of this class.
@@ -66,7 +73,22 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	}
 
 	@Override
+	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
+		errorRate = 1;
+		numberInstances = 0;
+		super.prepareForUseImpl(monitor, repository);
+	}
+
+	@Override
+	public void resetLearningImpl() {
+		errorRate = 1;
+		numberInstances = 0;
+		super.resetLearningImpl();
+	}
+
+	@Override
 	public void trainOnInstanceImpl(Instance inst) {
+		updateErrorRate(inst);
 		// Create new instance that only contains the dimensions of the subspace
 		// and train on that
 		super.trainOnInstanceImpl(projectInstance(inst));
@@ -77,6 +99,10 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		return super.getVotesForInstance(projectInstance(inst));
 	}
 
+	public int getClassPrediction(Instance instance) {
+		return Utils.maxIndex(getVotesForInstance(instance));
+	}
+
 	public void changeClassifier() {
 		this.classifier = this.newclassifier;
 		if (this.classifier instanceof WEKAClassifier) {
@@ -84,6 +110,10 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		}
 		this.newclassifier = ((Classifier) getPreparedClassOption(this.baseLearnerOption)).copy();
 		this.newclassifier.resetLearning();
+	}
+
+	public double getAccuracy() {
+		return 1 - errorRate;
 	}
 
 	private Instance projectInstance(Instance instance) {
@@ -111,5 +141,19 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		Instance subspaceInstance = new DenseInstance(instance.weight(), subspaceData);
 		subspaceInstance.setDataset(header);
 		return subspaceInstance;
+	}
+
+	// 0.0 = true
+	// 1.0 = false
+	private void updateErrorRate(Instance instance) {
+		int trueClass = (int) instance.classValue();
+		double prediction;
+		if (getClassPrediction(instance) == trueClass) {
+			prediction = 0.0;
+		} else {
+			prediction = 1.0;
+		}
+		numberInstances++;
+		errorRate = errorRate + (prediction - errorRate) / numberInstances;
 	}
 }

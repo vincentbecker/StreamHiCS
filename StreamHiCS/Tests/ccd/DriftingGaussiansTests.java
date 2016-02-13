@@ -21,9 +21,9 @@ import environment.Evaluator;
 import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
-import fullsystem.Callback;
 import fullsystem.Contrast;
-import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.SubspaceChangeDetectors;
+import fullsystem.SubspaceClassifiersChangeDetector;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
@@ -44,7 +44,6 @@ import weka.core.Utils;
 
 public class DriftingGaussiansTests {
 	private SubspaceRandomRBFGeneratorDrift stream;
-	private StreamHiCS streamHiCS;
 	private int numInstances;
 	private final int horizon = 2000;
 	private final int m = 50;
@@ -57,19 +56,13 @@ public class DriftingGaussiansTests {
 	private int cutoff;
 	private double pruningDifference;
 	private int numberOfDimensions;
-	private Callback callback = new Callback() {
-		@Override
-		public void onAlarm() {
-			// System.out.println("StreamHiCS: onAlarm()");
-		}
-	};
 	private static Stopwatch stopwatch;
-	private Contrast contrastEvaluator;
 	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
-	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceChangeDetectors scd;
+	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private Random random;
 
@@ -87,8 +80,6 @@ public class DriftingGaussiansTests {
 	public void test() {
 		// Output
 		results = new LinkedList<String>();
-		SummarisationAdapter adapter;
-		SubspaceBuilder subspaceBuilder;
 		for (StreamSummarisation summarisation : StreamSummarisation.values()) {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
@@ -335,28 +326,47 @@ public class DriftingGaussiansTests {
 							break;
 						}
 
-						// Creating the StreamHiCS system
-						adapter = createSummarisationAdapter(summarisation);
-						contrastEvaluator = new Contrast(m, alpha, adapter);
-						CorrelationSummary correlationSummary = new CorrelationSummary(numberOfDimensions, horizon);
-						subspaceBuilder = createSubspaceBuilder(buildup, correlationSummary);
-						ChangeChecker changeChecker = new TimeCountChecker(1000);
-						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
-								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
-						changeChecker.setCallback(streamHiCS);
+						// Creating the SCD system
+						SummarisationAdapter adapter1 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator1 = new Contrast(m, alpha, adapter1);
+						CorrelationSummary correlationSummary1 = new CorrelationSummary(numberOfDimensions, horizon);
+						SubspaceBuilder subspaceBuilder1 = createSubspaceBuilder(buildup, contrastEvaluator1,
+								correlationSummary1);
+						ChangeChecker changeChecker1 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS1 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator1, subspaceBuilder1, changeChecker1, null, correlationSummary1,
+								stopwatch);
+						changeChecker1.setCallback(streamHiCS1);
+						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
+						scd.useRestspaceOption.setValue(false);
+						scd.prepareForUse();
+						streamHiCS1.setCallback(scd);
 
-						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
-						cscd.initOption.setValue(1000);
-						cscd.prepareForUse();
-						streamHiCS.setCallback(cscd);
+						// Creating the SCCD system
+						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
+						Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
+						CorrelationSummary correlationSummary2 = new CorrelationSummary(numberOfDimensions, horizon);
+						SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, contrastEvaluator2,
+								correlationSummary2);
+						ChangeChecker changeChecker2 = new TimeCountChecker(1000);
+						StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference,
+								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
+								stopwatch);
+						changeChecker2.setCallback(streamHiCS2);
+						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd.useRestspaceOption.setValue(false);
+						sccd.prepareForUse();
+						streamHiCS2.setCallback(sccd);
 
+						// Creating the reference detector
 						refDetector = new FullSpaceChangeDetector();
 						AbstractClassifier baseLearner = new HoeffdingTree();
 						baseLearner.prepareForUse();
 						refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 						refDetector.prepareForUse();
 
-						double[] cscdSums = new double[8];
+						double[] scdSums = new double[8];
+						double[] sccdSums = new double[8];
 						double[] refSums = new double[8];
 
 						stopwatch.reset();
@@ -370,39 +380,47 @@ public class DriftingGaussiansTests {
 							System.out.println("Seed2: " + seed);
 							// stream.restart();
 							stream.prepareForUse();
-							cscd.resetLearning();
+							scd.resetLearning();
+							sccd.resetLearning();
 							refDetector.resetLearning();
 
 							System.out.println("Run: " + (i + 1));
 							double[][] performanceMeasures = testRun(changePoints, changeLength, speed, trueChanges,
 									virtualDriftPoints);
 							for (int j = 0; j < 5; j++) {
-								cscdSums[j] += performanceMeasures[0][j];
-								refSums[j] += performanceMeasures[1][j];
+								scdSums[j] += performanceMeasures[0][j];
+								sccdSums[j] += performanceMeasures[1][j];
+								refSums[j] += performanceMeasures[2][j];
 							}
 						}
 
 						// Calculate results
-						cscdSums[5] = stopwatch.getTime("Evaluation");
-						cscdSums[6] = stopwatch.getTime("Adding");
-						cscdSums[7] = stopwatch.getTime("Total_CSCD");
+						scdSums[5] = stopwatch.getTime("Evaluation");
+						scdSums[6] = stopwatch.getTime("Adding");
+						scdSums[7] = stopwatch.getTime("Total_SCD");
+						sccdSums[7] = stopwatch.getTime("Total_SCCD");
 						refSums[7] = stopwatch.getTime("Total_REF");
 
 						for (int j = 0; j < 8; j++) {
-							cscdSums[j] /= numberTestRuns;
+							scdSums[j] /= numberTestRuns;
+							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
 						System.out.println(
 								"Test, MTFA, MTD, MDR, MTR, Error rate, Evaluation time, Adding time, Total time");
-						String cscdMeasures = "CSCD," + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
-								+ cscdSums[2] + ", " + cscdSums[3] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", "
-								+ cscdSums[6] + ", " + cscdSums[7];
+						String scdMeasures = "SCD," + test + "," + scdSums[0] + ", " + scdSums[1] + ", " + scdSums[2]
+								+ ", " + scdSums[3] + ", " + scdSums[4] + ", " + scdSums[5] + ", " + scdSums[6] + ", "
+								+ scdSums[7];
+						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
+								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
 						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
 								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
-						System.out.println(cscdMeasures);
+						System.out.println(scdMeasures);
+						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
-						results.add(cscdMeasures);
+						results.add(scdMeasures);
+						results.add(sccdMeasures);
 						results.add(refMeasures);
 					}
 				}
@@ -424,9 +442,11 @@ public class DriftingGaussiansTests {
 			int[] virtualDriftPoints) {
 		int numberSamples = 0;
 
-		ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> scdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> sccdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
-		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator scdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 
 		int changeCounter = 0;
@@ -441,16 +461,6 @@ public class DriftingGaussiansTests {
 		if (virtualDriftPoints != null) {
 			driftStart = changePoints[0];
 		}
-
-		int class1 = 0;
-		int class2 = 0;
-		String className;
-		int classNameMismatch = 0;
-
-		int correct1Prediction1 = 0;
-		int correct1Prediction2 = 0;
-		int correct2Prediction2 = 0;
-		int correct2Prediction1 = 0;
 
 		// cscd.onAlarm();
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
@@ -492,44 +502,38 @@ public class DriftingGaussiansTests {
 
 			// For accuracy
 			int trueClass = (int) inst.classValue();
-			if (trueClass == 0) {
-				class1++;
-			} else {
-				class2++;
-			}
-			String toStringClassName = inst.toString().split(",")[numberOfDimensions];
-			className = inst.attribute(inst.classIndex()).value(trueClass);
-			if (!className.equals(toStringClassName)) {
-				classNameMismatch++;
-			}
-			int prediction = cscd.getClassPrediction(inst);
-			if (trueClass == 0 && prediction == 0) {
-				correct1Prediction1++;
-			} else if (trueClass == 0 && prediction == 1) {
-				correct1Prediction2++;
-			} else if (trueClass == 1 && prediction == 1) {
-				correct2Prediction2++;
-			} else {
-				correct2Prediction1++;
-			}
-			cscdAccuracy.addClassLabel(trueClass);
-			cscdAccuracy.addPrediction(prediction);
+			int prediction = scd.getClassPrediction(inst);
+			scdAccuracy.addClassLabel(trueClass);
+			scdAccuracy.addPrediction(prediction);
+			prediction = sccd.getClassPrediction(inst);
+			sccdAccuracy.addClassLabel(trueClass);
+			sccdAccuracy.addPrediction(prediction);
 			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(prediction);
 
-			stopwatch.start("Total_CSCD");
-			cscd.trainOnInstance(inst);
-			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_SCD");
+			scd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCD");
+			stopwatch.start("Total_SCCD");
+			sccd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCCD");
 			stopwatch.start("Total_REF");
 			refDetector.trainOnInstance(inst);
 			stopwatch.stop("Total_REF");
 
-			if (cscd.isWarningDetected()) {
+			if (scd.isWarningDetected()) {
 				// System.out.println("cscd: WARNING at " + numberSamples);
-			} else if (cscd.isChangeDetected()) {
-				cscdDetectedChanges.add((double) numberSamples);
-				// System.out.println("cscd: CHANGE at " + numberSamples);
+			} else if (scd.isChangeDetected()) {
+				scdDetectedChanges.add((double) numberSamples);
+				System.out.println("scd: CHANGE at " + numberSamples);
+			}
+
+			if (sccd.isWarningDetected()) {
+				// System.out.println("cscd: WARNING at " + numberSamples);
+			} else if (sccd.isChangeDetected()) {
+				sccdDetectedChanges.add((double) numberSamples);
+				System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -544,40 +548,43 @@ public class DriftingGaussiansTests {
 			numberSamples++;
 		}
 
-		System.out
-				.println("Class 1: " + class1 + ", Class 2: " + class2 + ", class name mismatch: " + classNameMismatch);
-
-		System.out.println("Correct1Prediction1: " + correct1Prediction1 + ", Correct1Prediction2: "
-				+ correct1Prediction2 + ", Correct2Prediction2: " + correct2Prediction2 + ", Correct2Prediction1: "
-				+ correct2Prediction1);
-
-		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
+		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges, changeLength,
+				numInstances);
+		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
 				changeLength, numInstances);
 		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, changeLength,
 				numInstances);
-		double[][] performanceMeasures = new double[2][5];
+		double[][] performanceMeasures = new double[3][5];
 		for (int i = 0; i < 4; i++) {
-			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
-			performanceMeasures[1][i] = refPerformanceMeasures[i];
+			performanceMeasures[0][i] = scdPerformanceMeasures[i];
+			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
+			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
-		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[1][4] = refAccuracy.calculateOverallErrorRate();
-		String cscdP = "CSCD, ";
+		performanceMeasures[0][4] = scdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
+		String scdP = "SCD, ";
+		String sccdP = "SCCD, ";
 		String refP = "REF, ";
 		for (int i = 0; i < 5; i++) {
-			cscdP += performanceMeasures[0][i] + ", ";
-			refP += performanceMeasures[1][i] + ", ";
+			scdP += performanceMeasures[0][i] + ", ";
+			sccdP += performanceMeasures[1][i] + ", ";
+			refP += performanceMeasures[2][i] + ", ";
 		}
-		System.out.println(cscdP);
+		System.out.println(scdP);
+		System.out.println(sccdP);
 		System.out.println(refP);
-		results.add(cscdP);
+		results.add(scdP);
+		results.add(sccdP);
 		results.add(refP);
 
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] scdSmoothedErrorRates = scdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
-		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+		for (int i = 0; i < scdAccuracy.size(); i++) {
+			errorRatesList.add(i + "," + scdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
+					+ refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_DriftingGaussians.csv";
@@ -622,7 +629,8 @@ public class DriftingGaussiansTests {
 		return adapter;
 	}
 
-	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, CorrelationSummary correlationSummary) {
+	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, Contrast contrastEvaluator,
+			CorrelationSummary correlationSummary) {
 		cutoff = 3;
 		pruningDifference = 0.15;
 		boolean addDescription = false;

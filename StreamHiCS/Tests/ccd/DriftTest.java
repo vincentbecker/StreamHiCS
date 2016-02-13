@@ -12,7 +12,7 @@ import environment.CSVReader;
 import environment.Evaluator;
 import environment.Stopwatch;
 import fullsystem.Contrast;
-import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.SubspaceChangeDetectors;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
@@ -39,7 +39,7 @@ public class DriftTest {
 	private double threshold;
 	private int cutoff;
 	private double pruningDifference;
-	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceChangeDetectors cscd;
 	private FullSpaceChangeDetector refDetector;
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
@@ -75,7 +75,7 @@ public class DriftTest {
 				subspaceBuilder, changeChecker, null, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
 
-		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
+		cscd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS);
 		cscd.prepareForUse();
 		streamHiCS.setCallback(cscd);
 

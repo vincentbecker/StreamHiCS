@@ -21,7 +21,7 @@ import environment.AccuracyEvaluator;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
-import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.SubspaceChangeDetectors;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
@@ -46,7 +46,7 @@ public class IntrusionDetection {
 	private ArffFileStream stream;
 	private static Stopwatch stopwatch;
 	private static final int numberTestRuns = 1;
-	private CorrelatedSubspacesChangeDetector cscd;
+	private SubspaceChangeDetectors cscd;
 	private FullSpaceChangeDetector refDetector;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -150,7 +150,7 @@ public class IntrusionDetection {
 		//ChangeChecker changeChecker = new FullSpaceContrastChecker(checkCount, numberOfDimensions, contrastEvaluator, 0.2, 0.1);
 		StreamHiCS streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder, changeChecker, null, correlationSummary, stopwatch);
 		changeChecker.setCallback(streamHiCS);
-		cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS);
+		cscd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS);
 		//cscd.initOption.setValue(0);
 		cscd.prepareForUse();
 		streamHiCS.setCallback(cscd);

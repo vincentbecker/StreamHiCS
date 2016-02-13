@@ -22,10 +22,10 @@ import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
-import fullsystem.CorrelatedSubspacesChangeDetector;
+import fullsystem.SubspaceChangeDetectors;
 import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
-import fullsystem.SubspaceClassifierChangeDetector;
+import fullsystem.SubspaceClassifiersChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.streams.ConceptDriftStream;
@@ -62,8 +62,8 @@ public class GaussianDriftTests {
 	private static CSVReader csvReader;
 	private static final String path = "Tests/CovarianceMatrices/";
 	private double[][] resultSummary;
-	private CorrelatedSubspacesChangeDetector cscd;
-	private SubspaceClassifierChangeDetector sccd;
+	private SubspaceChangeDetectors scd;
+	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 
 	@BeforeClass
@@ -649,9 +649,10 @@ public class GaussianDriftTests {
 								contrastEvaluator1, subspaceBuilder1, changeChecker1, null, correlationSummary1,
 								stopwatch);
 						changeChecker1.setCallback(streamHiCS1);
-						cscd = new CorrelatedSubspacesChangeDetector(numberOfDimensions, streamHiCS1);
-						cscd.prepareForUse();
-						streamHiCS1.setCallback(cscd);
+						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
+						scd.useRestspaceOption.setValue(true);
+						scd.prepareForUse();
+						streamHiCS1.setCallback(scd);
 
 						// Creating the SCCD system
 						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
@@ -664,7 +665,8 @@ public class GaussianDriftTests {
 								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
 								stopwatch);
 						changeChecker2.setCallback(streamHiCS2);
-						sccd = new SubspaceClassifierChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS2);
+						sccd.useRestspaceOption.setValue(true);;
 						sccd.prepareForUse();
 						streamHiCS2.setCallback(sccd);
 
@@ -675,7 +677,7 @@ public class GaussianDriftTests {
 						refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 						refDetector.prepareForUse();
 
-						double[] cscdSums = new double[8];
+						double[] scdSums = new double[8];
 						double[] sccdSums = new double[8];
 						double[] refSums = new double[8];
 
@@ -684,30 +686,30 @@ public class GaussianDriftTests {
 							System.out.println("Run: " + (i + 1));
 							double[][] performanceMeasures = testRun(trueChanges, 1000);
 							for (int j = 0; j < 5; j++) {
-								cscdSums[j] += performanceMeasures[0][j];
+								scdSums[j] += performanceMeasures[0][j];
 								sccdSums[j] += performanceMeasures[1][j];
 								refSums[j] += performanceMeasures[2][j];
 							}
 						}
 
 						// Calculate results
-						cscdSums[5] = stopwatch.getTime("Evaluation");
-						cscdSums[6] = stopwatch.getTime("Adding");
-						cscdSums[7] = stopwatch.getTime("Total_CSCD");
+						scdSums[5] = stopwatch.getTime("Evaluation");
+						scdSums[6] = stopwatch.getTime("Adding");
+						scdSums[7] = stopwatch.getTime("Total_SCD");
 						sccdSums[7] = stopwatch.getTime("Total_SCCD");
 						refSums[7] = stopwatch.getTime("Total_REF");
 
 						for (int j = 0; j < 8; j++) {
-							cscdSums[j] /= numberTestRuns;
+							scdSums[j] /= numberTestRuns;
 							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
 						System.out.println(
 								"Test, MTFA, MTD, MDR, MTR, Accuracy, Evaluation time, Adding time, Total time");
-						String cscdMeasures = "CSCD," + test + "," + cscdSums[0] + ", " + cscdSums[1] + ", "
-								+ cscdSums[2] + ", " + cscdSums[3] + ", " + cscdSums[4] + ", " + cscdSums[5] + ", "
-								+ cscdSums[6] + ", " + cscdSums[7];
+						String cscdMeasures = "SCD," + test + "," + scdSums[0] + ", " + scdSums[1] + ", "
+								+ scdSums[2] + ", " + scdSums[3] + ", " + scdSums[4] + ", " + scdSums[5] + ", "
+								+ scdSums[6] + ", " + scdSums[7];
 						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
 								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
 						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
@@ -720,7 +722,7 @@ public class GaussianDriftTests {
 						results.add(refMeasures);
 
 						for (int i = 0; i < 7; i++) {
-							resultSummary[0][i] += cscdSums[i];
+							resultSummary[0][i] += scdSums[i];
 							resultSummary[1][i] += refSums[i];
 						}
 
@@ -807,16 +809,16 @@ public class GaussianDriftTests {
 
 	private double[][] testRun(ArrayList<Double> trueChanges, int changeLength) {
 		conceptDriftStream.restart();
-		cscd.resetLearning();
+		scd.resetLearning();
 		sccd.resetLearning();
 		refDetector.resetLearning();
 
 		int numberSamples = 0;
 
-		ArrayList<Double> cscdDetectedChanges = new ArrayList<Double>();
+		ArrayList<Double> scdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> sccdDetectedChanges = new ArrayList<Double>();
 		ArrayList<Double> refDetectedChanges = new ArrayList<Double>();
-		AccuracyEvaluator cscdAccuracy = new AccuracyEvaluator();
+		AccuracyEvaluator scdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator sccdAccuracy = new AccuracyEvaluator();
 		AccuracyEvaluator refAccuracy = new AccuracyEvaluator();
 		while (conceptDriftStream.hasMoreInstances() && numberSamples < numInstances) {
@@ -828,16 +830,16 @@ public class GaussianDriftTests {
 
 			// For accuracy
 			int trueClass = (int) inst.classValue();
-			cscdAccuracy.addClassLabel(trueClass);
-			cscdAccuracy.addPrediction(cscd.getClassPrediction(inst));
+			scdAccuracy.addClassLabel(trueClass);
+			scdAccuracy.addPrediction(scd.getClassPrediction(inst));
 			sccdAccuracy.addClassLabel(trueClass);
 			sccdAccuracy.addPrediction(sccd.getClassPrediction(inst));
 			refAccuracy.addClassLabel(trueClass);
 			refAccuracy.addPrediction(Utils.maxIndex(refDetector.getVotesForInstance(inst)));
 
-			stopwatch.start("Total_CSCD");
-			cscd.trainOnInstance(inst);
-			stopwatch.stop("Total_CSCD");
+			stopwatch.start("Total_SCD");
+			scd.trainOnInstance(inst);
+			stopwatch.stop("Total_SCD");
 			stopwatch.start("Total_SCCD");
 			sccd.trainOnInstance(inst);
 			stopwatch.stop("Total_SCCD");
@@ -845,10 +847,10 @@ public class GaussianDriftTests {
 			refDetector.trainOnInstance(inst);
 			stopwatch.stop("Total_REF");
 
-			if (cscd.isWarningDetected()) {
+			if (scd.isWarningDetected()) {
 				// System.out.println("cscd: WARNING at " + numberSamples);
-			} else if (cscd.isChangeDetected()) {
-				cscdDetectedChanges.add((double) numberSamples);
+			} else if (scd.isChangeDetected()) {
+				scdDetectedChanges.add((double) numberSamples);
 				// System.out.println("cscd: CHANGE at " + numberSamples);
 			}
 
@@ -856,7 +858,7 @@ public class GaussianDriftTests {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (sccd.isChangeDetected()) {
 				sccdDetectedChanges.add((double) numberSamples);
-				//System.out.println("sccd: CHANGE at " + numberSamples);
+				System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -871,7 +873,7 @@ public class GaussianDriftTests {
 			numberSamples++;
 		}
 
-		double[] cscdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, cscdDetectedChanges,
+		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges,
 				changeLength, numInstances);
 		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
 				changeLength, numInstances);
@@ -879,34 +881,35 @@ public class GaussianDriftTests {
 				numInstances);
 		double[][] performanceMeasures = new double[3][5];
 		for (int i = 0; i < 4; i++) {
-			performanceMeasures[0][i] = cscdPerformanceMeasures[i];
+			performanceMeasures[0][i] = scdPerformanceMeasures[i];
 			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
 			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
-		performanceMeasures[0][4] = cscdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[0][4] = scdAccuracy.calculateOverallErrorRate();
 		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
 		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
 
-		String cscdP = "CSCD, ";
+		String scdP = "SCD, ";
 		String sccdP = "SCCD, ";
 		String refP = "REF, ";
 		for (int i = 0; i < 5; i++) {
-			cscdP += performanceMeasures[0][i] + ", ";
+			scdP += performanceMeasures[0][i] + ", ";
 			sccdP += performanceMeasures[1][i] + ", ";
 			refP += performanceMeasures[2][i] + ", ";
 		}
-		// System.out.println(cscdP);
-		// System.out.println(refP);
-		results.add(cscdP);
+		System.out.println(scdP);
+		System.out.println(sccdP);
+		System.out.println(refP);
+		results.add(scdP);
 		results.add(sccdP);
 		results.add(refP);
 
 		List<String> errorRatesList = new ArrayList<String>();
-		double[] cscdSmoothedErrorRates = cscdAccuracy.calculateSmoothedErrorRates(1000);
+		double[] scdSmoothedErrorRates = scdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
-		for (int i = 0; i < cscdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + cscdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
+		for (int i = 0; i < scdAccuracy.size(); i++) {
+			errorRatesList.add(i + "," + scdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
 					+ refSmoothedErrorRates[i]);
 		}
 

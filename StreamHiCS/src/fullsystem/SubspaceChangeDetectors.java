@@ -8,6 +8,7 @@ import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.Measurement;
 import moa.core.ObjectRepository;
+import moa.options.FlagOption;
 import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
 import subspace.Subspace;
@@ -24,7 +25,7 @@ import weka.core.Utils;
  * @author Vincent
  *
  */
-public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implements Callback, ChangeDetector {
+public class SubspaceChangeDetectors extends AbstractClassifier implements Callback, ChangeDetector {
 
 	public enum State {
 		IN_CONTROL, WARNING, DRIFT
@@ -43,6 +44,9 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 			"The number of instances after which the correlated subspaces are evaluated the first time.", 500, 0,
 			Integer.MAX_VALUE);
 
+	public FlagOption useRestspaceOption = new FlagOption("useRestspace", 'u',
+			"Whether the restspace should be included in the change detection process.");
+	
 	/**
 	 * The {@link StreamHiCS} instance.
 	 */
@@ -89,7 +93,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	private State state;
 	
-	private boolean useRestspaceDetector = true;
+	private boolean useRestspace;
 
 	/**
 	 * Creates an instance of this class.
@@ -99,7 +103,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 	 * @param streamHiCS
 	 *            The {@link StreamHiCS} instance.
 	 */
-	public CorrelatedSubspacesChangeDetector(int numberOfDimensions, StreamHiCS streamHiCS) {
+	public SubspaceChangeDetectors(int numberOfDimensions, StreamHiCS streamHiCS) {
 		this.numberOfDimensions = numberOfDimensions;
 		this.streamHiCS = streamHiCS;
 	}
@@ -203,7 +207,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 				}
 			}
 			// Change in restspace?
-			if(restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspaceDetector)){
+			if(restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspace)){
 				restSpaceChangeDetector.trainOnInstance(inst);
 				if (restSpaceChangeDetector.isWarningDetected()) {
 					warning = true;
@@ -286,6 +290,7 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 
 	@Override
 	public void prepareForUseImpl(TaskMonitor arg0, ObjectRepository arg1) {
+		useRestspace = useRestspaceOption.isSet();
 		// ChangeDetectors
 		this.fullSpaceChangeDetector = new FullSpaceChangeDetector();
 		AbstractClassifier baseLearner = new HoeffdingTree();
@@ -358,21 +363,23 @@ public class CorrelatedSubspacesChangeDetector extends AbstractClassifier implem
 		} else {
 			int numberClasses = instance.classAttribute().numValues();
 			double[] totalVotes = new double[numberClasses];
-
+			double weight;
 			for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
 				double[] scdVotes = scd.getVotesForInstance(instance);
+				weight = scd.getAccuracy();
 				if (scdVotes.length == numberClasses) {
 					for (int i = 0; i < numberClasses; i++) {
-						totalVotes[i] += scdVotes[i];
+						totalVotes[i] += scdVotes[i] * weight;
 					}
 				}
 			}
 
-			if (restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspaceDetector)) {
+			if (restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspace)) {
 				double[] restSpacePredictions = restSpaceChangeDetector.getVotesForInstance(instance);
+				weight = restSpaceChangeDetector.getAccuracy();
 				if (restSpacePredictions.length == numberClasses) {
 					for (int i = 0; i < numberClasses; i++) {
-						totalVotes[i] += restSpacePredictions[i];
+						totalVotes[i] += restSpacePredictions[i] * weight;
 					}
 				}
 			}
