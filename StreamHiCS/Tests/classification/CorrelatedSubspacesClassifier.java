@@ -3,11 +3,11 @@ package classification;
 import java.util.ArrayList;
 import java.util.BitSet;
 
+import changedetection.FullSpaceChangeDetector;
+import changedetection.SubspaceChangeDetector;
+import changedetection.SubspaceClassifier;
 import fullsystem.Callback;
-import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
-import fullsystem.SubspaceChangeDetector;
-import fullsystem.SubspaceClassifier;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.Measurement;

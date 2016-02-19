@@ -17,7 +17,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.INTRUSION_DETECTION;
+		Dataset set = Dataset.COVERTYPE_FILTERED;
 
 		String headerPath = null;
 		String inputPath = null;
@@ -34,7 +34,7 @@ public class Main {
 		case COVERTYPE_FILTERED:
 			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeHeader_filtered.txt";
 			inputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm.txt";
-			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_sorted_filtered.arff";
+			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/covertypeNorm_filtered.arff";
 			comparator = new CovertypeComparator();
 			filterColumns = new int[44];
 			for (int i = 0; i < 44; i++) {
@@ -131,13 +131,13 @@ public class Main {
 							newLine += splitLine[j] + ",";
 						}
 					}
-					String classLabel = splitLine[splitLine.length - 1].replace(".", "");
-					// String classLabel = splitLine[splitLine.length - 1];
+					//String classLabel = splitLine[splitLine.length - 1].replace(".", "");
+					String classLabel = splitLine[splitLine.length - 1];
 					newLine += classLabel;
 					lines.set(i, newLine);
 				}
 			}
-			lines.sort(comparator);
+			//lines.sort(comparator);
 			Files.write(Paths.get(outputPath), lines, StandardOpenOption.APPEND);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

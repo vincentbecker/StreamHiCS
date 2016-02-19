@@ -10,8 +10,8 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </interface>  
-  <class id="2" language="java" name="fullsystem.SubspaceChangeDetectors" project="StreamHiCS" 
-    file="/StreamHiCS/src/fullsystem/SubspaceChangeDetectors.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="2" language="java" name="changedetection.SubspaceChangeDetectors" project="StreamHiCS" 
+    file="/StreamHiCS/src/changedetection/SubspaceChangeDetectors.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="259" y="-43"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -19,8 +19,8 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="3" language="java" name="fullsystem.SubspaceChangeDetector" project="StreamHiCS" 
-    file="/StreamHiCS/src/fullsystem/SubspaceChangeDetector.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="3" language="java" name="changedetection.SubspaceChangeDetector" project="StreamHiCS" 
+    file="/StreamHiCS/src/changedetection/SubspaceChangeDetector.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="220" y="246"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -28,8 +28,8 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <interface id="4" language="java" name="fullsystem.ChangeDetector" project="StreamHiCS" 
-    file="/StreamHiCS/src/fullsystem/ChangeDetector.java" binary="false" corner="BOTTOM_RIGHT">    
+  <interface id="4" language="java" name="changedetection.ChangeDetector" project="StreamHiCS" 
+    file="/StreamHiCS/src/changedetection/ChangeDetector.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="464" y="-284"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -64,8 +64,8 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="8" language="java" name="fullsystem.SubspaceClassifier" project="StreamHiCS" 
-    file="/StreamHiCS/src/fullsystem/SubspaceClassifier.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="8" language="java" name="changedetection.SubspaceClassifier" project="StreamHiCS" 
+    file="/StreamHiCS/src/changedetection/SubspaceClassifier.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="702" y="247"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -73,128 +73,65 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="9" language="java" name="fullsystem.SubspaceClassifiersChangeDetector" project="StreamHiCS" 
-    file="/StreamHiCS/src/fullsystem/SubspaceClassifiersChangeDetector.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="665" y="-42"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="false" static="true"/>      
-      <operations public="true" package="true" protected="true" private="false" static="true"/>    
-    </display>  
-  </class>  
-  <association id="10">    
-    <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="11" name="subspaceChangeDetectors">        
-        <position height="18" width="140" x="90" y="131"/>      
-      </attribute>      
-      <multiplicity id="12" minimum="0" maximum="2147483647">        
-        <position height="16" width="21" x="240" y="132"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="3" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="13">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="4"/>  
-  </realization>  
-  <association id="14">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="15" name="subspaceClassifiers">        
-        <position height="18" width="107" x="547" y="134"/>      
-      </attribute>      
-      <multiplicity id="16" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="8" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="17">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="18" name="newSubspaceClassifiers">        
-        <position height="18" width="130" x="699" y="135"/>      
-      </attribute>      
-      <multiplicity id="19" minimum="0" maximum="2147483647">        
-        <position height="16" width="21" x="635" y="155"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="8" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="20">    
+  <association id="9">    
     <end type="SOURCE" refId="5" navigable="false">      
-      <attribute id="21" name="contrastEvaluator">        
-        <position height="18" width="93" x="281" y="624"/>      
-      </attribute>      
-      <multiplicity id="22" minimum="0" maximum="1">        
-        <position height="16" width="23" x="384" y="630"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="6" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="23">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="24" name="streamHiCS">        
-        <position height="18" width="64" x="483" y="249"/>      
-      </attribute>      
-      <multiplicity id="25" minimum="0" maximum="1">        
-        <position height="16" width="23" x="512" y="267"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="5" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="26">    
-    <end type="SOURCE" refId="5" navigable="false">      
-      <attribute id="27" name="subspaceBuilder">        
+      <attribute id="10" name="subspaceBuilder">        
         <position height="18" width="89" x="462" y="627"/>      
       </attribute>      
-      <multiplicity id="28" minimum="0" maximum="1">        
+      <multiplicity id="11" minimum="0" maximum="1">        
         <position height="16" width="23" x="563" y="631"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="7" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <realization id="29">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="4"/>  
+  <realization id="12">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="1"/>  
   </realization>  
-  <realization id="30">    
+  <realization id="13">    
     <bendpoint x="465" y="96"/>    
     <end type="SOURCE" refId="3"/>    
     <end type="TARGET" refId="4"/>  
   </realization>  
-  <association id="31">    
+  <association id="14">    
     <end type="SOURCE" refId="5" navigable="false">      
-      <attribute id="32" name="callback">        
-        <position height="0" width="0" x="-403" y="-52"/>      
+      <attribute id="15" name="contrastEvaluator">        
+        <position height="18" width="93" x="281" y="624"/>      
       </attribute>      
-      <multiplicity id="33" minimum="0" maximum="1">        
-        <position height="16" width="23" x="442" y="282"/>      
+      <multiplicity id="16" minimum="0" maximum="1">        
+        <position height="16" width="23" x="384" y="630"/>      
       </multiplicity>    
     </end>    
-    <end type="TARGET" refId="1" navigable="true"/>    
+    <end type="TARGET" refId="6" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <realization id="34">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="1"/>  
+  <realization id="17">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="4"/>  
   </realization>  
-  <realization id="35">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="1"/>  
-  </realization>  
-  <realization id="36">    
+  <association id="18">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="19" name="subspaceChangeDetectors">        
+        <position height="18" width="140" x="90" y="131"/>      
+      </attribute>      
+      <multiplicity id="20" minimum="0" maximum="2147483647">        
+        <position height="16" width="21" x="240" y="132"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="3" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="21">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="1"/>  
   </realization>  
-  <association id="37">    
+  <association id="22">    
     <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="38" name="streamHiCS">        
+      <attribute id="23" name="streamHiCS">        
         <position height="18" width="64" x="331" y="316"/>      
       </attribute>      
-      <multiplicity id="39" minimum="0" maximum="1">        
+      <multiplicity id="24" minimum="0" maximum="1">        
         <position height="16" width="23" x="374" y="331"/>      
       </multiplicity>    
     </end>    

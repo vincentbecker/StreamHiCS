@@ -2,7 +2,7 @@ package classification;
 
 import java.util.ArrayList;
 
-import fullsystem.SubspaceChangeDetector;
+import changedetection.SubspaceChangeDetector;
 import moa.classifiers.bayes.NaiveBayes;
 import moa.core.InstancesHeader;
 import subspace.Subspace;

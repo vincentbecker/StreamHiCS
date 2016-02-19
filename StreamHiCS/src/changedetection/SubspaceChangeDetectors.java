@@ -1,8 +1,10 @@
-package fullsystem;
+package changedetection;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 
+import fullsystem.Callback;
+import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.HoeffdingTree;
@@ -46,7 +48,10 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 
 	public FlagOption useRestspaceOption = new FlagOption("useRestspace", 'u',
 			"Whether the restspace should be included in the change detection process.");
-	
+
+	public FlagOption addOption = new FlagOption("add", 'a',
+			"Whether arriving instances should be added to streamHiCS.");
+
 	/**
 	 * The {@link StreamHiCS} instance.
 	 */
@@ -92,8 +97,10 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	private int numberInit;
 
 	private State state;
-	
+
 	private boolean useRestspace;
+
+	private boolean add;
 
 	/**
 	 * Creates an instance of this class.
@@ -119,55 +126,72 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	@Override
 	public void onAlarm() {
 		// Change subspaces and reset ChangeDetection
-		SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
-		// System.out.println("Number of samples: " + numberSamples);
+		if (initialized) {
+			SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
+			// System.out.println("Number of samples: " + numberSamples);
 
-		ArrayList<SubspaceChangeDetector> temp = new ArrayList<SubspaceChangeDetector>();
-		// Mark which dimensions are contained in subspaces to add detectors for
-		// all the single dimensions which are not contained in subspaces.
-		BitSet marked = new BitSet(numberOfDimensions);
-		boolean found = false;
-		for (Subspace s : correlatedSubspaces.getSubspaces()) {
-			//s.sort();
-			for (int d : s.getDimensions()) {
-				marked.set(d);
-			}
-			found = false;
-			SubspaceChangeDetector scd;
-			for (int i = 0; i < subspaceChangeDetectors.size() && !found; i++) {
-				scd = subspaceChangeDetectors.get(i);
-				// If there is an 'old' change detector running on the subspace
-				// already we continue using that
-				if (s.equals(scd.getSubspace())) {
+			/*
+			 * Subspace s1 = new Subspace(0, 3, 4, 5, 9); s1.setContrast(0.35);
+			 * Subspace s2 = new Subspace(1, 2, 6, 7, 8); s2.setContrast(0.35);
+			 * correlatedSubspaces.clear(); correlatedSubspaces.addSubspace(s1);
+			 * correlatedSubspaces.addSubspace(s2);
+			 */
+
+			// System.out.println("SCD: Correlated: " +
+			// correlatedSubspaces.toString() + " at " + numberSamples);
+			ArrayList<SubspaceChangeDetector> temp = new ArrayList<SubspaceChangeDetector>();
+			// Mark which dimensions are contained in subspaces to add detectors
+			// for
+			// all the single dimensions which are not contained in subspaces.
+			BitSet marked = new BitSet(numberOfDimensions);
+			boolean found = false;
+			for (Subspace s : correlatedSubspaces.getSubspaces()) {
+				// s.sort();
+				for (int d : s.getDimensions()) {
+					marked.set(d);
+				}
+				found = false;
+				SubspaceChangeDetector scd;
+				for (int i = 0; i < subspaceChangeDetectors.size() && !found; i++) {
+					scd = subspaceChangeDetectors.get(i);
+					// If there is an 'old' change detector running on the
+					// subspace
+					// already we continue using that
+					if (s.equals(scd.getSubspace())) {
+						temp.add(scd);
+						found = true;
+					}
+				}
+				// If the subspace is new we start a new change detector on it
+				if (!found) {
+					scd = createSubspaceChangeDetector(s);
 					temp.add(scd);
-					found = true;
 				}
 			}
-			// If the subspace is new we start a new change detector on it
-			if (!found) {
-				scd = createSubspaceChangeDetector(s);
-				temp.add(scd);
+			// Handle left over dimensions
+			Subspace restSpace = new Subspace();
+			for (int i = 0; i < numberOfDimensions; i++) {
+				if (!marked.get(i)) {
+					restSpace.addDimension(i);
+				}
 			}
-		}
-		// Handle left over dimensions
-		Subspace restSpace = new Subspace();
-		for (int i = 0; i < numberOfDimensions; i++) {
-			if (!marked.get(i)) {
-				restSpace.addDimension(i);
+			if (!restSpace.isEmpty()) {
+				if ((useRestspace || correlatedSubspaces.isEmpty()) && (restSpaceChangeDetector == null
+						|| !restSpace.equals(restSpaceChangeDetector.getSubspace()))) {
+					restSpaceChangeDetector = createRestspaceDetector(restSpace);
+				}
+			} else {
+				restSpaceChangeDetector = null;
 			}
+			subspaceChangeDetectors = temp;
 		}
-		if (!restSpace.isEmpty()) {
-			restSpaceChangeDetector = createRestspaceDetector(restSpace);
-		}else{
-			restSpaceChangeDetector = null;
-		}
-		subspaceChangeDetectors = temp;
-		initialized = true;
 	}
 
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
-		streamHiCS.add(inst);
+		if (add) {
+			streamHiCS.add(inst);
+		}
 		if (numberSamples == numberInit) {
 			// Evaluate the correlated subspaces once
 			init();
@@ -178,8 +202,8 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				state = State.WARNING;
 			} else if (fullSpaceChangeDetector.isChangeDetected()) {
 				state = State.DRIFT;
-				//System.out.println(
-				//		"cscd: CHANGE in full space at " + numberSamples);
+				// System.out.println(
+				// "cscd: CHANGE in full space at " + numberSamples);
 			} else {
 				state = State.IN_CONTROL;
 			}
@@ -194,26 +218,30 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				if (scd.isWarningDetected()) {
 					warning = true;
 				} else if (scd.isChangeDetected()) {
-					if (streamHiCS.isValidSubspace(scd.getSubspace())) {
-						//System.out.println(
-						//		"cscd: CHANGE in subspace: " + scd.getSubspace().toString() + " at " + numberSamples);
-						drift = true;
-						driftDetectedIndexes.add(i);
-					} else {
-						//System.out.println("Would have been change in subspace: " + scd.getSubspace().toString()
-						//		+ " at " + numberSamples);
-						streamHiCS.evaluateCorrelatedSubspaces();
-					}
+					drift = true;
+					driftDetectedIndexes.add(i);
+					/*
+					 * if (streamHiCS.isValidSubspace(scd.getSubspace())) { //
+					 * System.out.println( // "cscd: CHANGE in subspace: " + //
+					 * scd.getSubspace().toString() + " at " + //
+					 * numberSamples); drift = true;
+					 * driftDetectedIndexes.add(i); } else { //
+					 * System.out.println("Would have been change in //
+					 * subspace: " + scd.getSubspace().toString() + " at // " +
+					 * numberSamples); streamHiCS.evaluateCorrelatedSubspaces();
+					 * }
+					 */
 				}
 			}
 			// Change in restspace?
-			if(restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspace)){
+			if (restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspace)) {
 				restSpaceChangeDetector.trainOnInstance(inst);
 				if (restSpaceChangeDetector.isWarningDetected()) {
 					warning = true;
 				} else if (restSpaceChangeDetector.isChangeDetected()) {
-					 //System.out.println("cscd: CHANGE in restspace: " + restSpaceChangeDetector.getSubspace().toString() + " at "
-					//		+ numberSamples);
+					// System.out.println("cscd: CHANGE in restspace: " +
+					// restSpaceChangeDetector.getSubspace().toString() + " at "
+					// + numberSamples);
 					drift = true;
 				}
 			}
@@ -233,7 +261,7 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	private void driftOccurred(ArrayList<Integer> driftDetectedIndexes) {
 		for (int i = 0; i < subspaceChangeDetectors.size(); i++) {
 			if (!driftDetectedIndexes.contains(i)) {
-				//subspaceChangeDetectors.get(i).changeClassifier();
+				// subspaceChangeDetectors.get(i).changeClassifier();
 				subspaceChangeDetectors.get(i).resetLearning();
 			}
 		}
@@ -244,17 +272,12 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	 * each of them, if there are any
 	 */
 	private void init() {
-		streamHiCS.onAlarm();
-		// SubspaceSet correlatedSubspaces =
-		// streamHiCS.getCurrentlyCorrelatedSubspaces();
-		if(streamHiCS.getCurrentlyCorrelatedSubspaces().isEmpty()){
-			Subspace restSpace = new Subspace();
-			for(int i = 0; i < numberOfDimensions; i++){
-				restSpace.addDimension(i);
-			}
-			restSpaceChangeDetector = createRestspaceDetector(restSpace);
-		}
 		initialized = true;
+		// streamHiCS.onAlarm();
+		if (subspaceChangeDetectors.isEmpty() && restSpaceChangeDetector == null) {
+			// onAlarm was not called
+			onAlarm();
+		}
 	}
 
 	/**
@@ -268,7 +291,8 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	private SubspaceChangeDetector createSubspaceChangeDetector(Subspace s) {
 		SubspaceChangeDetector scd = new SubspaceChangeDetector(s);
 		AbstractClassifier baseLearner = new HoeffdingTree();
-		//((HoeffdingTree) baseLearner).splitConfidenceOption.setValue(0.000000001);
+		// ((HoeffdingTree)
+		// baseLearner).splitConfidenceOption.setValue(0.000000001);
 		// AbstractClassifier baseLearner = new HoeffdingAdaptiveTree();
 		// AbstractClassifier baseLearner = new DecisionStump();
 		baseLearner.prepareForUse();
@@ -278,13 +302,11 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	}
 
 	private SubspaceChangeDetector createRestspaceDetector(Subspace restspace) {
-		streamHiCS.getStopwatch().start("Creating");
 		SubspaceChangeDetector restSpaceChangeDetector = new SubspaceChangeDetector(restspace);
 		AbstractClassifier baseLearner = new NaiveBayes();
 		baseLearner.prepareForUse();
 		restSpaceChangeDetector.baseLearnerOption.setCurrentObject(baseLearner);
 		restSpaceChangeDetector.prepareForUse();
-		streamHiCS.getStopwatch().stop("Creating");
 		return restSpaceChangeDetector;
 	}
 
@@ -302,6 +324,7 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 		// No correlated subspaces yet.
 		this.subspaceChangeDetectors = new ArrayList<SubspaceChangeDetector>();
 		this.numberInit = initOption.getValue();
+		this.add = addOption.isSet();
 		super.prepareForUseImpl(arg0, arg1);
 	}
 
@@ -330,6 +353,7 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 		fullSpaceChangeDetector.resetLearning();
 		numberSamples = 0;
 		subspaceChangeDetectors.clear();
+		restSpaceChangeDetector = null;
 		streamHiCS.clear();
 		initialized = false;
 	}
@@ -353,12 +377,12 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	}
 
 	public int getClassPrediction(Instance instance) {
-			return Utils.maxIndex(getVotesForInstance(instance));
-		}
-	
+		return Utils.maxIndex(getVotesForInstance(instance));
+	}
+
 	@Override
-	public double[] getVotesForInstance(Instance instance){
-		if (numberSamples <= numberInit) {
+	public double[] getVotesForInstance(Instance instance) {
+		if (numberSamples < numberInit) {
 			return fullSpaceChangeDetector.getVotesForInstance(instance);
 		} else {
 			int numberClasses = instance.classAttribute().numValues();
@@ -367,20 +391,22 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 			for (SubspaceChangeDetector scd : subspaceChangeDetectors) {
 				double[] scdVotes = scd.getVotesForInstance(instance);
 				weight = scd.getAccuracy();
-				if (scdVotes.length == numberClasses) {
-					for (int i = 0; i < numberClasses; i++) {
-						totalVotes[i] += scdVotes[i] * weight;
-					}
+				if (weight == 0.0) {
+					weight = 0.001;
+				}
+				for (int i = 0; i < scdVotes.length; i++) {
+					totalVotes[i] += scdVotes[i] * weight;
 				}
 			}
 
 			if (restSpaceChangeDetector != null && (subspaceChangeDetectors.isEmpty() || useRestspace)) {
-				double[] restSpacePredictions = restSpaceChangeDetector.getVotesForInstance(instance);
+				double[] restSpaceVotes = restSpaceChangeDetector.getVotesForInstance(instance);
 				weight = restSpaceChangeDetector.getAccuracy();
-				if (restSpacePredictions.length == numberClasses) {
-					for (int i = 0; i < numberClasses; i++) {
-						totalVotes[i] += restSpacePredictions[i] * weight;
-					}
+				if (weight == 0.0) {
+					weight = 0.001;
+				}
+				for (int i = 0; i < restSpaceVotes.length; i++) {
+					totalVotes[i] += restSpaceVotes[i] * weight;
 				}
 			}
 

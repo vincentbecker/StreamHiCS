@@ -1,9 +1,7 @@
-package fullsystem;
+package changedetection;
 
 import java.util.ArrayList;
-
 import moa.classifiers.Classifier;
-import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.WEKAClassifier;
 import moa.core.InstancesHeader;
 import moa.core.ObjectRepository;
@@ -65,11 +63,11 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	}
 
 	public boolean isWarningDetected() {
-		return (this.ddmLevel == DDM_WARNING_LEVEL);
+		return this.ddmLevel == DDM_WARNING_LEVEL;
 	}
 
 	public boolean isChangeDetected() {
-		return (this.ddmLevel == DDM_OUTCONTROL_LEVEL);
+		return this.ddmLevel == DDM_OUTCONTROL_LEVEL;
 	}
 
 	@Override

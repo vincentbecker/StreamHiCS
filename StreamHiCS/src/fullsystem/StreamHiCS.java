@@ -1,5 +1,7 @@
 package fullsystem;
 
+import java.util.ArrayList;
+
 import changechecker.ChangeChecker;
 import environment.Stopwatch;
 import pruning.AbstractPruner;
@@ -47,9 +49,9 @@ public class StreamHiCS implements Callback {
 	private ChangeChecker changeChecker;
 
 	/**
-	 * The @link{Callback} to notify on changes.
+	 * The @link{Callback}s to notify on changes.
 	 */
-	private Callback callback;
+	private ArrayList<Callback> callbacks;
 
 	/**
 	 * The {@link AbstractPruner} instance.
@@ -107,7 +109,7 @@ public class StreamHiCS implements Callback {
 		this.contrastEvaluator = contrastEvaluator;
 		this.subspaceBuilder = subspaceBuilder;
 		this.changeChecker = changeChecker;
-		this.callback = callback;
+		this.callbacks = new ArrayList<Callback>();
 		// this.pruner = new SimplePruner(pruningDifference);
 		if (pruningDifference >= 0) {
 			this.pruner = new TopDownPruner(pruningDifference);
@@ -145,8 +147,8 @@ public class StreamHiCS implements Callback {
 	 * @param callback
 	 *            The callback.
 	 */
-	public void setCallback(Callback callback) {
-		this.callback = callback;
+	public void addCallback(Callback callback) {
+		this.callbacks.add(callback);
 	}
 
 	/**
@@ -272,10 +274,11 @@ public class StreamHiCS implements Callback {
 		stopwatch.stop("Evaluation");
 		if (updated) {
 			// System.out.println(correlatedSubspaces.toString());
-			// Notify the callback
-			callback.onAlarm();
+			// Notify the callbacks
+			for(Callback callback : callbacks){
+				callback.onAlarm();
+			}
 		}
-
 	}
 
 	public boolean isValidSubspace(Subspace subspace) {

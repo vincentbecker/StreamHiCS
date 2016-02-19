@@ -148,7 +148,7 @@ public class Classification_RealWorldDatasets {
 		changeChecker.setCallback(streamHiCS);
 		csc = new CorrelatedSubspacesClassifier(numberOfDimensions, streamHiCS);
 		csc.prepareForUse();
-		streamHiCS.setCallback(csc);
+		streamHiCS.addCallback(csc);
 
 		refClassifier = new HoeffdingTree();
 		// refClassifier = new NaiveBayes();

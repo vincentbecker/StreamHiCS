@@ -1,4 +1,4 @@
-package fullsystem;
+package changedetection;
 
 /**
  * This interface represents the basic abilities for a concept change detector.

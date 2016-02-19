@@ -6,6 +6,8 @@ import moa.tasks.TaskMonitor;
 import subspace.Subspace;
 import subspace.SubspaceSet;
 import java.util.Random;
+
+import moa.core.MiscUtils;
 import moa.core.ObjectRepository;
 import moa.options.FlagOption;
 import moa.options.FloatOption;
@@ -78,7 +80,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 * irrelevant dimensions, i.e. dimensions which are not contained in the
 	 * corresponding subspace.
 	 */
-	private double scaleIrrelevant;
+	protected double scaleIrrelevant;
 
 	protected Random modelRandom;
 	
@@ -106,8 +108,8 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		}
 
 		// Create instance
-		//int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(centroidWeights, this.instanceRandom);
-		int centroidIndex = modelRandom.nextInt(numberCentroids);
+		int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(centroidWeights, this.instanceRandom);
+		//int centroidIndex = modelRandom.nextInt(numberCentroids);
 		Centroid centroid = this.centroids[centroidIndex];
 		double[] attVals = new double[numberDimensions + 1];
 		for (int i = 0; i < numberDimensions; i++) {
@@ -168,6 +170,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
 		generateHeader();
 		generateCentroids();
+		setClasses();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		numberDimensions = numAttsOption.getValue();
@@ -197,6 +200,7 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	@Override
 	public void restart() {
 		generateCentroids();
+		setClasses();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 
@@ -274,5 +278,16 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 			return false;
 		}
 		return true;
+	}
+	
+	protected void setClasses(){
+		int numClasses = numClassesOption.getValue();
+		for(int i = 0; i < centroids.length; i++){
+			if(i < numClasses){
+				this.centroids[i].classLabel = i;
+			}else{
+				this.centroids[i].classLabel = modelRandom.nextInt(numClasses);
+			}
+		}
 	}
 }

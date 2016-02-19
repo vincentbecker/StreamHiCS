@@ -1,6 +1,4 @@
-package fullsystem;
-
-import moa.classifiers.drift.SingleClassifierDrift;
+package changedetection;
 
 public class FullSpaceChangeDetector extends SingleClassifierDrift implements ChangeDetector{
 

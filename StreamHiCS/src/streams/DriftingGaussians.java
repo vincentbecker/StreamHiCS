@@ -32,6 +32,7 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 	private Subspace currentSubspace;
 
 	private Subspace newSubspace;
+	
 
 	@Override
 	public Instance nextInstance() {
@@ -88,7 +89,7 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 			if (s.contains(i)) {
 				attVals[i] = centroid.centre[i] + sample[i];
 			} else {
-				attVals[i] = (instanceRandom.nextDouble() - 1) * 2;
+				attVals[i] = (instanceRandom.nextDouble() - 1) * scaleIrrelevant;
 				//attVals[i] = -1;
 			}
 		}
@@ -106,8 +107,10 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
 		generateHeader();
 		generateCentroids();
+		setClasses();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
+		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
 		numberDimensions = numAttsOption.getValue();
 		// Generate distribution
 		this.sameSubspaceOption.set();
@@ -126,6 +129,7 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 	@Override
 	public void restart() {
 		generateCentroids();
+		setClasses();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		// Generate distribution

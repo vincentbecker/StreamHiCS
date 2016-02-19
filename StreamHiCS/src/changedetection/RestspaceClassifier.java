@@ -1,8 +1,9 @@
-package fullsystem;
+package changedetection;
 
 import java.util.ArrayList;
 
 import moa.classifiers.bayes.NaiveBayes;
+import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.core.ObjectRepository;
 import moa.streams.InstanceStream;

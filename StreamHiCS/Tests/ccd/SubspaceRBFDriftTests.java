@@ -15,6 +15,9 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import changedetection.FullSpaceChangeDetector;
+import changedetection.SubspaceChangeDetectors;
+import changedetection.SubspaceClassifiersChangeDetector;
 import clustree.ClusTree;
 import environment.AccuracyEvaluator;
 import environment.Evaluator;
@@ -22,10 +25,7 @@ import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
-import fullsystem.SubspaceChangeDetectors;
-import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
-import fullsystem.SubspaceClassifiersChangeDetector;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import streamdatastructures.CentroidsAdapter;
@@ -46,7 +46,7 @@ public class SubspaceRBFDriftTests {
 	private int numInstances;
 	private final int horizon = 2000;
 	private final int m = 50;
-	private final double alpha = 0.1;
+	private final double alpha = 0.05;
 	private double epsilon;
 	private double aprioriThreshold;
 	private double hierarchicalThreshold;
@@ -83,12 +83,14 @@ public class SubspaceRBFDriftTests {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					for (int test = 3; test <= 3; test++) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS
+						&& buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
+					for (int test = 3; test <= 4; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
 						ArrayList<Double> trueChanges = new ArrayList<Double>();
+						ArrayList<Double> trueChangesVirtualD = new ArrayList<Double>();
 						int[] changePoints = null;
 						int changeLength = 0;
 						double speed = 0;
@@ -136,7 +138,7 @@ public class SubspaceRBFDriftTests {
 							stream.numSubspaceCentroidsOption.setValue(10);
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
-							stream.numDriftCentroidsOption.setValue(10);							
+							stream.numDriftCentroidsOption.setValue(10);
 							changePoints = new int[4];
 							changePoints[0] = 5000;
 							changePoints[1] = 10000;
@@ -211,9 +213,9 @@ public class SubspaceRBFDriftTests {
 								cliqueThreshold = 0.55;
 								break;
 							case ADAPTINGCENTROIDS:
-								aprioriThreshold = 0.3;
+								aprioriThreshold = 0.25;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.35;
+								connectedComponentsThreshold = 0.3;
 								cliqueThreshold = 0.4;
 								break;
 							default:
@@ -234,13 +236,13 @@ public class SubspaceRBFDriftTests {
 								break;
 							}
 							numberOfDimensions = 50;
-							numInstances = 90000;
+							numInstances = 75000;
 							epsilon = 0.1;
 							stream = new SubspaceRandomRBFGeneratorDrift();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(5);
+							stream.scaleIrrelevantDimensionsOption.setValue(2);
 							stream.numCentroidsOption.setValue(2);
 							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
@@ -258,6 +260,11 @@ public class SubspaceRBFDriftTests {
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
+							
+							trueChangesVirtualD.add(10000.0);
+							trueChangesVirtualD.add(30000.0);
+							trueChangesVirtualD.add(50000.0);
+							trueChangesVirtualD.add(70000.0);
 
 							virtualDriftPoints = null;
 							break;
@@ -270,9 +277,15 @@ public class SubspaceRBFDriftTests {
 								cliqueThreshold = 0.55;
 								break;
 							case ADAPTINGCENTROIDS:
-								aprioriThreshold = 0.3;
+								aprioriThreshold = 0.45;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.4;
+								connectedComponentsThreshold = 0.3;
+								cliqueThreshold = 0.5;
+								break;
+							case RADIUSCENTROIDS:
+								aprioriThreshold = 0.45;
+								hierarchicalThreshold = 0.65;
+								connectedComponentsThreshold = 0.55;
 								cliqueThreshold = 0.5;
 								break;
 							default:
@@ -293,13 +306,13 @@ public class SubspaceRBFDriftTests {
 								break;
 							}
 							numberOfDimensions = 50;
-							numInstances = 90000;
+							numInstances = 75000;
 							epsilon = 0.1;
 							stream = new SubspaceRandomRBFGeneratorDrift();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(5);
+							stream.scaleIrrelevantDimensionsOption.setValue(2);
 							stream.numCentroidsOption.setValue(2);
 							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
@@ -318,12 +331,19 @@ public class SubspaceRBFDriftTests {
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
 
-							virtualDriftPoints = new int[4];
+							virtualDriftPoints = new int[3];
 							virtualDriftPoints[0] = 20000;
 							virtualDriftPoints[1] = 40000;
 							virtualDriftPoints[2] = 60000;
-							virtualDriftPoints[3] = 80000;
 
+							trueChangesVirtualD.add(10000.0);
+							trueChangesVirtualD.add(30000.0);
+							trueChangesVirtualD.add(50000.0);
+							trueChangesVirtualD.add(70000.0);
+							trueChangesVirtualD.add(20000.0);
+							trueChangesVirtualD.add(40000.0);
+							trueChangesVirtualD.add(60000.0);
+							// virtualDriftPoints[3] = 80000;
 							break;
 						}
 
@@ -339,26 +359,32 @@ public class SubspaceRBFDriftTests {
 								stopwatch);
 						changeChecker1.setCallback(streamHiCS1);
 						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
+						scd.initOption.setValue(2000);
 						scd.useRestspaceOption.setValue(false);
 						scd.prepareForUse();
-						streamHiCS1.setCallback(scd);
+						streamHiCS1.addCallback(scd);
 
 						// Creating the SCCD system
-						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
-						Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
-						CorrelationSummary correlationSummary2 = null;
-						SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, contrastEvaluator2,
-								correlationSummary2);
-						ChangeChecker changeChecker2 = new TimeCountChecker(1000);
-						StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference,
-								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
-								stopwatch);
-						changeChecker2.setCallback(streamHiCS2);
-						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS2);
+						/*
+						 * SummarisationAdapter adapter2 =
+						 * createSummarisationAdapter(summarisation); Contrast
+						 * contrastEvaluator2 = new Contrast(m, alpha,
+						 * adapter2); CorrelationSummary correlationSummary2 =
+						 * null; SubspaceBuilder subspaceBuilder2 =
+						 * createSubspaceBuilder(buildup, contrastEvaluator2,
+						 * correlationSummary2); ChangeChecker changeChecker2 =
+						 * new TimeCountChecker(1000); StreamHiCS streamHiCS2 =
+						 * new StreamHiCS(epsilon, threshold, pruningDifference,
+						 * contrastEvaluator2, subspaceBuilder2, changeChecker2,
+						 * null, correlationSummary2, stopwatch);
+						 * changeChecker2.setCallback(streamHiCS2);
+						 */
+						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS1);
+						sccd.initOption.setValue(2000);
 						sccd.useRestspaceOption.setValue(false);
 						sccd.prepareForUse();
-						streamHiCS2.setCallback(sccd);						
-						
+						streamHiCS1.addCallback(sccd);
+
 						// Creating the reference detector
 						refDetector = new FullSpaceChangeDetector();
 						AbstractClassifier baseLearner = new HoeffdingTree();
@@ -366,18 +392,20 @@ public class SubspaceRBFDriftTests {
 						refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 						refDetector.prepareForUse();
 
-						double[] scdSums = new double[8];
-						double[] sccdSums = new double[8];
-						double[] refSums = new double[8];
+						double[] scdSums = new double[12];
+						double[] sccdSums = new double[12];
+						double[] refSums = new double[12];
 
 						stopwatch.reset();
 						for (int i = 0; i < numberTestRuns; i++) {
 							// Reset the stream and the change detectors
 							int seed = random.nextInt();
-							// System.out.println(seed);
+							// int seed = -1987740184;
+							System.out.println(seed);
 							stream.modelRandomSeedOption.setValue(seed);
 							seed = random.nextInt();
-							// System.out.println(seed);
+							// seed = 1679120529;
+							System.out.println(seed);
 							stream.instanceRandomSeedOption.setValue(seed);
 							// stream.restart();
 							stream.prepareForUse();
@@ -387,8 +415,8 @@ public class SubspaceRBFDriftTests {
 
 							System.out.println("Run: " + (i + 1));
 							double[][] performanceMeasures = testRun(changePoints, changeLength, speed, trueChanges,
-									virtualDriftPoints);
-							for (int j = 0; j < 5; j++) {
+									trueChangesVirtualD, virtualDriftPoints);
+							for (int j = 0; j < 9; j++) {
 								scdSums[j] += performanceMeasures[0][j];
 								sccdSums[j] += performanceMeasures[1][j];
 								refSums[j] += performanceMeasures[2][j];
@@ -396,27 +424,30 @@ public class SubspaceRBFDriftTests {
 						}
 
 						// Calculate results
-						scdSums[5] = stopwatch.getTime("Evaluation");
-						scdSums[6] = stopwatch.getTime("Adding");
-						scdSums[7] = stopwatch.getTime("Total_SCD");
-						sccdSums[7] = stopwatch.getTime("Total_SCCD");
-						refSums[7] = stopwatch.getTime("Total_REF");
+						scdSums[9] = stopwatch.getTime("Evaluation");
+						scdSums[10] = stopwatch.getTime("Adding");
+						scdSums[11] = stopwatch.getTime("Total_SCD");
+						sccdSums[9] = stopwatch.getTime("Evaluation");
+						sccdSums[10] = stopwatch.getTime("Adding");
+						sccdSums[11] = stopwatch.getTime("Total_SCCD");
+						refSums[11] = stopwatch.getTime("Total_REF");
 
-						for (int j = 0; j < 8; j++) {
+						for (int j = 0; j < 12; j++) {
 							scdSums[j] /= numberTestRuns;
 							sccdSums[j] /= numberTestRuns;
 							refSums[j] /= numberTestRuns;
 						}
 
 						System.out.println(
-								"Test, MTFA, MTD, MDR, MTR, Error rate, Evaluation time, Adding time, Total time");
-						String scdMeasures = "SCD," + test + "," + scdSums[0] + ", " + scdSums[1] + ", "
-								+ scdSums[2] + ", " + scdSums[3] + ", " + scdSums[4] + ", " + scdSums[5] + ", "
-								+ scdSums[6] + ", " + scdSums[7];
-						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
-								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
-						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
-								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
+								"Test, MTFA, MTD, MDR, MTR, MTFA_V, MTD_V, MTR_V, Error rate, Evaluation time, Adding time, Total time");
+						String scdMeasures = "SCD," + test;
+						String sccdMeasures = "SCCD," + test;
+						String refMeasures = "REF," + test;
+						for (int i = 0; i < scdSums.length; i++) {
+							scdMeasures += ", " + scdSums[i];
+							sccdMeasures += ", " + sccdSums[i];
+							refMeasures += ", " + refSums[i];
+						}
 						System.out.println(scdMeasures);
 						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
@@ -440,7 +471,7 @@ public class SubspaceRBFDriftTests {
 	}
 
 	private double[][] testRun(int[] changePoints, int changeLength, double speed, ArrayList<Double> trueChanges,
-			int[] virtualDriftPoints) {
+			ArrayList<Double> trueChangesVirtualDrift, int[] virtualDriftPoints) {
 		int numberSamples = 0;
 
 		ArrayList<Double> scdDetectedChanges = new ArrayList<Double>();
@@ -462,12 +493,12 @@ public class SubspaceRBFDriftTests {
 		if (virtualDriftPoints != null) {
 			driftStart = changePoints[0];
 		}
-		
-		//cscd.onAlarm();
+
 		while (stream.hasMoreInstances() && numberSamples < numInstances) {
 			if (numberSamples % 1000 == 0) {
-				//System.out.println(streamHiCS.getNumberOfElements());
-				//System.out.println("Found: " + cscd.getCurrentlyCorrelatedSubspaces().toString());
+				//System.out.println(scd.getNumberOfElements());
+				// System.out.println("Found: " +
+				// cscd.getCurrentlyCorrelatedSubspaces().toString());
 			}
 
 			// Carry out the concept drift at the relevant points
@@ -484,7 +515,6 @@ public class SubspaceRBFDriftTests {
 					} else {
 						finishedDrifts = true;
 					}
-
 				}
 			}
 
@@ -492,7 +522,7 @@ public class SubspaceRBFDriftTests {
 				if (numberSamples == virtualDriftPoints[virtualDriftCounter]) {
 					stream.subspaceChange(changeLength);
 					virtualDriftCounter++;
-					if (changeCounter >= changePoints.length - 1) {
+					if (virtualDriftCounter > virtualDriftPoints.length - 1) {
 						finishedVirtualDrifts = true;
 					}
 				}
@@ -502,15 +532,15 @@ public class SubspaceRBFDriftTests {
 
 			// For accuracy
 			int trueClass = (int) inst.classValue();
-			int prediction = scd.getClassPrediction(inst);
+			int scdPrediction = scd.getClassPrediction(inst);
 			scdAccuracy.addClassLabel(trueClass);
-			scdAccuracy.addPrediction(prediction);
-			prediction = sccd.getClassPrediction(inst);
+			scdAccuracy.addPrediction(scdPrediction);
+			int sccdPrediction = sccd.getClassPrediction(inst);
 			sccdAccuracy.addClassLabel(trueClass);
-			sccdAccuracy.addPrediction(prediction);
-			prediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
+			sccdAccuracy.addPrediction(sccdPrediction);
+			int refPrediction = Utils.maxIndex(refDetector.getVotesForInstance(inst));
 			refAccuracy.addClassLabel(trueClass);
-			refAccuracy.addPrediction(prediction);
+			refAccuracy.addPrediction(refPrediction);
 
 			stopwatch.start("Total_SCD");
 			scd.trainOnInstance(inst);
@@ -523,17 +553,17 @@ public class SubspaceRBFDriftTests {
 			stopwatch.stop("Total_REF");
 
 			if (scd.isWarningDetected()) {
-				// System.out.println("cscd: WARNING at " + numberSamples);
+				// System.out.println("scd: WARNING at " + numberSamples);
 			} else if (scd.isChangeDetected()) {
 				scdDetectedChanges.add((double) numberSamples);
-				System.out.println("scd: CHANGE at " + numberSamples);
+				//System.out.println("scd: CHANGE at " + numberSamples);
 			}
-			
+
 			if (sccd.isWarningDetected()) {
-				// System.out.println("cscd: WARNING at " + numberSamples);
+				// System.out.println("sccd: WARNING at " + numberSamples);
 			} else if (sccd.isChangeDetected()) {
 				sccdDetectedChanges.add((double) numberSamples);
-				System.out.println("sccd: CHANGE at " + numberSamples);
+				//System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -548,28 +578,39 @@ public class SubspaceRBFDriftTests {
 			numberSamples++;
 		}
 
-		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges,
+		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges, changeLength,
+				numInstances);
+		double[] scdPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift, scdDetectedChanges,
 				changeLength, numInstances);
 		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
 				changeLength, numInstances);
-		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges,
+		double[] sccdPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift,
+				sccdDetectedChanges, changeLength, numInstances);
+		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, changeLength,
+				numInstances);
+		double[] refPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift, refDetectedChanges,
 				changeLength, numInstances);
-		double[][] performanceMeasures = new double[3][5];
+		double[][] performanceMeasures = new double[3][9];
 		for (int i = 0; i < 4; i++) {
 			performanceMeasures[0][i] = scdPerformanceMeasures[i];
 			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
 			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
-		performanceMeasures[0][4] = scdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
-		String scdP = "SCD, ";
-		String sccdP = "SCCD, ";
-		String refP = "REF, ";
-		for (int i = 0; i < 5; i++) {
-			scdP += performanceMeasures[0][i] + ", ";
-			sccdP += performanceMeasures[1][i] + ", ";
-			refP += performanceMeasures[2][i] + ", ";
+		for (int i = 4; i < 8; i++) {
+			performanceMeasures[0][i] = scdPerformanceMeasuresVD[i - 4];
+			performanceMeasures[1][i] = sccdPerformanceMeasuresVD[i - 4];
+			performanceMeasures[2][i] = refPerformanceMeasuresVD[i - 4];
+		}
+		performanceMeasures[0][8] = scdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[1][8] = sccdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[2][8] = refAccuracy.calculateOverallErrorRate();
+		String scdP = "SCD";
+		String sccdP = "SCCD";
+		String refP = "REF";
+		for (int i = 0; i < 9; i++) {
+			scdP += ", " + performanceMeasures[0][i];
+			sccdP += ", " + performanceMeasures[1][i];
+			refP += ", " + performanceMeasures[2][i];
 		}
 		System.out.println(scdP);
 		System.out.println(sccdP);
@@ -583,7 +624,8 @@ public class SubspaceRBFDriftTests {
 		double[] sccdSmoothedErrorRates = sccdAccuracy.calculateSmoothedErrorRates(1000);
 		double[] refSmoothedErrorRates = refAccuracy.calculateSmoothedErrorRates(1000);
 		for (int i = 0; i < scdAccuracy.size(); i++) {
-			errorRatesList.add(i + "," + scdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + "," + refSmoothedErrorRates[i]);
+			errorRatesList.add(i + "," + scdSmoothedErrorRates[i] + "," + sccdSmoothedErrorRates[i] + ","
+					+ refSmoothedErrorRates[i]);
 		}
 
 		String filePath = "C:/Users/Vincent/Desktop/ErrorRates_SubspaceRBF.csv";
@@ -613,10 +655,18 @@ public class SubspaceRBFDriftTests {
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			double radius = 10* Math.sqrt(numberOfDimensions) - 1;
+			// double radius = 10* Math.sqrt(numberOfDimensions) - 1;
+			double radius = 2 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 1;
 			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
+					+ ", learning rate: " + learningRate;
+			break;
+		case RADIUSCENTROIDS:
+			radius = 0.5;
+			learningRate = 1;
+			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		default:
@@ -628,7 +678,8 @@ public class SubspaceRBFDriftTests {
 		return adapter;
 	}
 
-	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, Contrast contrastEvaluator, CorrelationSummary correlationSummary) {
+	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb, Contrast contrastEvaluator,
+			CorrelationSummary correlationSummary) {
 		cutoff = 3;
 		pruningDifference = 0.15;
 		boolean addDescription = false;
@@ -649,7 +700,8 @@ public class SubspaceRBFDriftTests {
 			break;
 		case CONNECTED_COMPONENTS:
 			pruningDifference = 0.15;
-			builder = new ComponentBuilder(numberOfDimensions, connectedComponentsThreshold, contrastEvaluator, correlationSummary);
+			builder = new ComponentBuilder(numberOfDimensions, connectedComponentsThreshold, contrastEvaluator,
+					correlationSummary);
 			builderDescription = "Connnected Components, threshold: " + connectedComponentsThreshold;
 			break;
 		case CLIQUE:

@@ -1,6 +1,7 @@
 package environment;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import subspace.Subspace;
 import subspace.SubspaceSet;
@@ -152,6 +153,19 @@ public class Evaluator {
 
 	public static double[] evaluateConceptChange(ArrayList<Double> trueChanges, ArrayList<Double> detectedChanges,
 			int changeLength, int streamLength) {
+		Comparator<Double> comp = new Comparator<Double>() {
+
+			@Override
+			public int compare(Double d1, Double d2) {
+				if(d1 <= d2){
+					return -1;
+				}else if(d1== d2){
+					return 0;
+				}
+				return 1;
+			}};
+		trueChanges.sort(comp);
+		detectedChanges.sort(comp);
 		double sumTimeToDetection = 0;
 		int missedDetections = 0;
 		int t = trueChanges.size();

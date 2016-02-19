@@ -15,6 +15,9 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import changedetection.FullSpaceChangeDetector;
+import changedetection.SubspaceChangeDetectors;
+import changedetection.SubspaceClassifiersChangeDetector;
 import clustree.ClusTree;
 import environment.AccuracyEvaluator;
 import environment.Evaluator;
@@ -22,9 +25,6 @@ import environment.Stopwatch;
 import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import fullsystem.Contrast;
-import fullsystem.SubspaceChangeDetectors;
-import fullsystem.SubspaceClassifiersChangeDetector;
-import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
@@ -57,7 +57,7 @@ public class DriftingGaussiansTests {
 	private double pruningDifference;
 	private int numberOfDimensions;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -65,6 +65,12 @@ public class DriftingGaussiansTests {
 	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private Random random;
+	private int scdValidCount = 0;
+	private int sccdValidCount = 0;
+	private int refValidCount = 0;
+	private int scdValidCountVD = 0;
+	private int sccdValidCountVD = 0;
+	private int refValidCountVD = 0;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
@@ -91,6 +97,7 @@ public class DriftingGaussiansTests {
 						double threshold = 1;
 
 						ArrayList<Double> trueChanges = new ArrayList<Double>();
+						ArrayList<Double> trueChangesVirtualDrift = new ArrayList<Double>();
 						int[] changePoints = null;
 						int changeLength = 0;
 						double speed = 0;
@@ -150,6 +157,11 @@ public class DriftingGaussiansTests {
 							trueChanges.add(10000.0);
 							trueChanges.add(15000.0);
 							trueChanges.add(20000.0);
+
+							trueChangesVirtualDrift.add(5000.0);
+							trueChangesVirtualDrift.add(10000.0);
+							trueChangesVirtualDrift.add(15000.0);
+							trueChangesVirtualDrift.add(20000.0);
 							break;
 						case 2:
 							switch (summarisation) {
@@ -203,8 +215,11 @@ public class DriftingGaussiansTests {
 							trueChanges.add(10000.0);
 							trueChanges.add(15000.0);
 							trueChanges.add(20000.0);
+							trueChangesVirtualDrift.add(5000.0);
+							trueChangesVirtualDrift.add(10000.0);
+							trueChangesVirtualDrift.add(15000.0);
+							trueChangesVirtualDrift.add(20000.0);
 							break;
-
 						case 3:
 							switch (summarisation) {
 							case CLUSTREE_DEPTHFIRST:
@@ -237,17 +252,17 @@ public class DriftingGaussiansTests {
 								break;
 							}
 							numberOfDimensions = 50;
-							numInstances = 90000;
+							numInstances = 75000;
 							epsilon = 0.1;
 							stream = new DriftingGaussians();
 							stream.numAttsOption.setValue(numberOfDimensions);
-							stream.numClassesOption.setValue(2);
+							stream.numClassesOption.setValue(4);
 							stream.avgSubspaceSizeOption.setValue(5);
-							stream.numCentroidsOption.setValue(2);
-							stream.numSubspaceCentroidsOption.setValue(2);
+							stream.numCentroidsOption.setValue(4);
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
+							stream.scaleIrrelevantDimensionsOption.setValue(10);
 							changePoints = new int[4];
 							changePoints[0] = 10000;
 							changePoints[1] = 30000;
@@ -255,12 +270,15 @@ public class DriftingGaussiansTests {
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 5;
+							speed = 1;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
-
+							trueChangesVirtualDrift.add(10000.0);
+							trueChangesVirtualDrift.add(30000.0);
+							trueChangesVirtualDrift.add(50000.0);
+							trueChangesVirtualDrift.add(70000.0);
 							virtualDriftPoints = null;
 							break;
 						case 4:
@@ -295,16 +313,17 @@ public class DriftingGaussiansTests {
 								break;
 							}
 							numberOfDimensions = 50;
-							numInstances = 90000;
+							numInstances = 75000;
 							epsilon = 0.1;
 							stream = new DriftingGaussians();
 							stream.numAttsOption.setValue(numberOfDimensions);
-							stream.numClassesOption.setValue(2);
+							stream.numClassesOption.setValue(4);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.numCentroidsOption.setValue(2);
+							stream.numCentroidsOption.setValue(4);
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
+							stream.scaleIrrelevantDimensionsOption.setValue(10);
 							changePoints = new int[4];
 							changePoints[0] = 10000;
 							changePoints[1] = 30000;
@@ -312,17 +331,24 @@ public class DriftingGaussiansTests {
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 5;
+							speed = 1;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
 							trueChanges.add(70000.0);
 
-							virtualDriftPoints = new int[4];
+							virtualDriftPoints = new int[3];
 							virtualDriftPoints[0] = 20000;
 							virtualDriftPoints[1] = 40000;
 							virtualDriftPoints[2] = 60000;
-							virtualDriftPoints[3] = 80000;
+
+							trueChangesVirtualDrift.add(10000.0);
+							trueChangesVirtualDrift.add(30000.0);
+							trueChangesVirtualDrift.add(50000.0);
+							trueChangesVirtualDrift.add(70000.0);
+							trueChangesVirtualDrift.add(20000.0);
+							trueChangesVirtualDrift.add(40000.0);
+							trueChangesVirtualDrift.add(60000.0);
 							break;
 						}
 
@@ -339,24 +365,31 @@ public class DriftingGaussiansTests {
 						changeChecker1.setCallback(streamHiCS1);
 						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
 						scd.useRestspaceOption.setValue(false);
+						scd.initOption.setValue(1000);
 						scd.prepareForUse();
-						streamHiCS1.setCallback(scd);
+						streamHiCS1.addCallback(scd);
 
 						// Creating the SCCD system
-						SummarisationAdapter adapter2 = createSummarisationAdapter(summarisation);
-						Contrast contrastEvaluator2 = new Contrast(m, alpha, adapter2);
-						CorrelationSummary correlationSummary2 = new CorrelationSummary(numberOfDimensions, horizon);
-						SubspaceBuilder subspaceBuilder2 = createSubspaceBuilder(buildup, contrastEvaluator2,
-								correlationSummary2);
-						ChangeChecker changeChecker2 = new TimeCountChecker(1000);
-						StreamHiCS streamHiCS2 = new StreamHiCS(epsilon, threshold, pruningDifference,
-								contrastEvaluator2, subspaceBuilder2, changeChecker2, null, correlationSummary2,
-								stopwatch);
-						changeChecker2.setCallback(streamHiCS2);
-						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS2);
+						/*
+						 * SummarisationAdapter adapter2 =
+						 * createSummarisationAdapter(summarisation); Contrast
+						 * contrastEvaluator2 = new Contrast(m, alpha,
+						 * adapter2); CorrelationSummary correlationSummary2 =
+						 * new CorrelationSummary(numberOfDimensions, horizon);
+						 * SubspaceBuilder subspaceBuilder2 =
+						 * createSubspaceBuilder(buildup, contrastEvaluator2,
+						 * correlationSummary2); ChangeChecker changeChecker2 =
+						 * new TimeCountChecker(1000); StreamHiCS streamHiCS2 =
+						 * new StreamHiCS(epsilon, threshold, pruningDifference,
+						 * contrastEvaluator2, subspaceBuilder2, changeChecker2,
+						 * null, correlationSummary2, stopwatch);
+						 * changeChecker2.setCallback(streamHiCS2);
+						 */
+						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS1);
 						sccd.useRestspaceOption.setValue(false);
+						sccd.initOption.setValue(1000);
 						sccd.prepareForUse();
-						streamHiCS2.setCallback(sccd);
+						streamHiCS1.addCallback(sccd);
 
 						// Creating the reference detector
 						refDetector = new FullSpaceChangeDetector();
@@ -365,17 +398,19 @@ public class DriftingGaussiansTests {
 						refDetector.baseLearnerOption.setCurrentObject(baseLearner);
 						refDetector.prepareForUse();
 
-						double[] scdSums = new double[8];
-						double[] sccdSums = new double[8];
-						double[] refSums = new double[8];
+						double[] scdSums = new double[12];
+						double[] sccdSums = new double[12];
+						double[] refSums = new double[12];
 
 						stopwatch.reset();
 						for (int i = 0; i < numberTestRuns; i++) {
 							// Reset the stream and the change detectors
 							int seed = random.nextInt();
+							// int seed = 621679749;
 							stream.modelRandomSeedOption.setValue(seed);
 							System.out.println("Seed1: " + seed);
 							seed = random.nextInt();
+							// seed = -1017244866;
 							stream.instanceRandomSeedOption.setValue(seed);
 							System.out.println("Seed2: " + seed);
 							// stream.restart();
@@ -386,8 +421,8 @@ public class DriftingGaussiansTests {
 
 							System.out.println("Run: " + (i + 1));
 							double[][] performanceMeasures = testRun(changePoints, changeLength, speed, trueChanges,
-									virtualDriftPoints);
-							for (int j = 0; j < 5; j++) {
+									trueChangesVirtualDrift, virtualDriftPoints);
+							for (int j = 0; j < 9; j++) {
 								scdSums[j] += performanceMeasures[0][j];
 								sccdSums[j] += performanceMeasures[1][j];
 								refSums[j] += performanceMeasures[2][j];
@@ -395,27 +430,39 @@ public class DriftingGaussiansTests {
 						}
 
 						// Calculate results
-						scdSums[5] = stopwatch.getTime("Evaluation");
-						scdSums[6] = stopwatch.getTime("Adding");
-						scdSums[7] = stopwatch.getTime("Total_SCD");
-						sccdSums[7] = stopwatch.getTime("Total_SCCD");
-						refSums[7] = stopwatch.getTime("Total_REF");
+						scdSums[9] = stopwatch.getTime("Evaluation");
+						scdSums[10] = stopwatch.getTime("Adding");
+						scdSums[11] = stopwatch.getTime("Total_SCD");
+						sccdSums[9] = stopwatch.getTime("Evaluation");
+						sccdSums[10] = stopwatch.getTime("Adding");
+						sccdSums[11] = stopwatch.getTime("Total_SCCD");
+						refSums[11] = stopwatch.getTime("Total_REF");
 
-						for (int j = 0; j < 8; j++) {
-							scdSums[j] /= numberTestRuns;
-							sccdSums[j] /= numberTestRuns;
-							refSums[j] /= numberTestRuns;
+						for (int j = 0; j < 12; j++) {
+							if (j != 1 && j != 5) {
+								scdSums[j] /= numberTestRuns;
+								sccdSums[j] /= numberTestRuns;
+								refSums[j] /= numberTestRuns;
+							}
 						}
 
+						scdSums[1] /= scdValidCount;
+						sccdSums[1] /= sccdValidCount;
+						refSums[1] /= refValidCount;
+						scdSums[5] /= scdValidCountVD;
+						sccdSums[5] /= sccdValidCountVD;
+						refSums[5] /= refValidCountVD;
+
 						System.out.println(
-								"Test, MTFA, MTD, MDR, MTR, Error rate, Evaluation time, Adding time, Total time");
-						String scdMeasures = "SCD," + test + "," + scdSums[0] + ", " + scdSums[1] + ", " + scdSums[2]
-								+ ", " + scdSums[3] + ", " + scdSums[4] + ", " + scdSums[5] + ", " + scdSums[6] + ", "
-								+ scdSums[7];
-						String sccdMeasures = "SCCD," + test + "," + sccdSums[0] + ", " + sccdSums[1] + ", "
-								+ sccdSums[2] + ", " + sccdSums[3] + ", " + sccdSums[4] + ", " + sccdSums[7];
-						String refMeasures = "REF," + test + "," + refSums[0] + ", " + refSums[1] + ", " + refSums[2]
-								+ ", " + refSums[3] + ", " + refSums[4] + ", " + refSums[7];
+								"Test, MTFA, MTD, MDR, MTR, MTFA_V, MTD_V, MTR_V, Error rate, Evaluation time, Adding time, Total time");
+						String scdMeasures = "SCD," + test;
+						String sccdMeasures = "SCCD," + test;
+						String refMeasures = "REF," + test;
+						for (int i = 0; i < scdSums.length; i++) {
+							scdMeasures += ", " + scdSums[i];
+							sccdMeasures += ", " + sccdSums[i];
+							refMeasures += ", " + refSums[i];
+						}
 						System.out.println(scdMeasures);
 						System.out.println(sccdMeasures);
 						System.out.println(refMeasures);
@@ -439,7 +486,7 @@ public class DriftingGaussiansTests {
 	}
 
 	private double[][] testRun(int[] changePoints, int changeLength, double speed, ArrayList<Double> trueChanges,
-			int[] virtualDriftPoints) {
+			ArrayList<Double> trueChangesVirtualDrift, int[] virtualDriftPoints) {
 		int numberSamples = 0;
 
 		ArrayList<Double> scdDetectedChanges = new ArrayList<Double>();
@@ -526,14 +573,14 @@ public class DriftingGaussiansTests {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (scd.isChangeDetected()) {
 				scdDetectedChanges.add((double) numberSamples);
-				System.out.println("scd: CHANGE at " + numberSamples);
+				// System.out.println("scd: CHANGE at " + numberSamples);
 			}
 
 			if (sccd.isWarningDetected()) {
 				// System.out.println("cscd: WARNING at " + numberSamples);
 			} else if (sccd.isChangeDetected()) {
 				sccdDetectedChanges.add((double) numberSamples);
-				System.out.println("sccd: CHANGE at " + numberSamples);
+				// System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -550,26 +597,58 @@ public class DriftingGaussiansTests {
 
 		double[] scdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, scdDetectedChanges, changeLength,
 				numInstances);
+		double[] scdPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift, scdDetectedChanges,
+				changeLength, numInstances);
 		double[] sccdPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, sccdDetectedChanges,
 				changeLength, numInstances);
+		double[] sccdPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift,
+				sccdDetectedChanges, changeLength, numInstances);
 		double[] refPerformanceMeasures = Evaluator.evaluateConceptChange(trueChanges, refDetectedChanges, changeLength,
 				numInstances);
-		double[][] performanceMeasures = new double[3][5];
+		double[] refPerformanceMeasuresVD = Evaluator.evaluateConceptChange(trueChangesVirtualDrift, refDetectedChanges,
+				changeLength, numInstances);
+		double[][] performanceMeasures = new double[3][9];
 		for (int i = 0; i < 4; i++) {
 			performanceMeasures[0][i] = scdPerformanceMeasures[i];
 			performanceMeasures[1][i] = sccdPerformanceMeasures[i];
 			performanceMeasures[2][i] = refPerformanceMeasures[i];
 		}
-		performanceMeasures[0][4] = scdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[1][4] = sccdAccuracy.calculateOverallErrorRate();
-		performanceMeasures[2][4] = refAccuracy.calculateOverallErrorRate();
-		String scdP = "SCD, ";
-		String sccdP = "SCCD, ";
-		String refP = "REF, ";
-		for (int i = 0; i < 5; i++) {
-			scdP += performanceMeasures[0][i] + ", ";
-			sccdP += performanceMeasures[1][i] + ", ";
-			refP += performanceMeasures[2][i] + ", ";
+		for (int i = 4; i < 8; i++) {
+			performanceMeasures[0][i] = scdPerformanceMeasuresVD[i - 4];
+			performanceMeasures[1][i] = sccdPerformanceMeasuresVD[i - 4];
+			performanceMeasures[2][i] = refPerformanceMeasuresVD[i - 4];
+		}
+		
+		if (performanceMeasures[0][1] > 0) {
+			scdValidCount++;
+		}
+		if (performanceMeasures[1][1] > 0) {
+			sccdValidCount++;
+		}
+		if (performanceMeasures[2][1] > 0) {
+			refValidCount++;
+		}
+		if (performanceMeasures[0][5] > 0) {
+			scdValidCountVD++;
+		}
+		if (performanceMeasures[1][5] > 0) {
+			sccdValidCountVD++;
+		}
+		if (performanceMeasures[2][5] > 0) {
+			refValidCountVD++;
+		}
+		
+		performanceMeasures[0][8] = scdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[1][8] = sccdAccuracy.calculateOverallErrorRate();
+		performanceMeasures[2][8] = refAccuracy.calculateOverallErrorRate();
+		String scdP = "SCD";
+		String sccdP = "SCCD";
+		String refP = "REF";
+
+		for (int i = 0; i < 9; i++) {
+			scdP += ", " + performanceMeasures[0][i];
+			sccdP += ", " + performanceMeasures[1][i];
+			refP += ", " + performanceMeasures[2][i];
 		}
 		System.out.println(scdP);
 		System.out.println(sccdP);

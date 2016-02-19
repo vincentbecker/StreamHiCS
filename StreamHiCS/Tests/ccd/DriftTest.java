@@ -7,13 +7,13 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import changedetection.FullSpaceChangeDetector;
+import changedetection.SubspaceChangeDetectors;
 import clustree.ClusTree;
 import environment.CSVReader;
 import environment.Evaluator;
 import environment.Stopwatch;
 import fullsystem.Contrast;
-import fullsystem.SubspaceChangeDetectors;
-import fullsystem.FullSpaceChangeDetector;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
@@ -77,7 +77,7 @@ public class DriftTest {
 
 		cscd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS);
 		cscd.prepareForUse();
-		streamHiCS.setCallback(cscd);
+		streamHiCS.addCallback(cscd);
 
 		refDetector = new FullSpaceChangeDetector();
 		AbstractClassifier baseLearner = new HoeffdingTree();
