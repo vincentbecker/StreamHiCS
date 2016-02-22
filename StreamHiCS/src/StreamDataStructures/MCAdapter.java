@@ -1,66 +1,66 @@
 package streamdatastructures;
 
-import centroids.FadingCentroids;
-import centroids.Centroid;
+import microclusters.Microcluster;
+import microclusters.FadingMicroclusters;
 import weka.core.Instance;
 
 /**
- * This class represents an adapter to access data from a {@link Centroid}s
+ * This class represents an adapter to access data from a {@link Microcluster}s
  * implementation.
  * 
  * @author Vincent
  *
  */
-public class CentroidsAdapter extends SummarisationAdapter {
+public class MCAdapter extends SummarisationAdapter {
 
 	/**
-	 * The {@link FadingCentroids} instance holding the {@link Centroid}s.
+	 * The {@link FadingMicroclusters} instance holding the {@link Microcluster}s.
 	 */
-	private FadingCentroids centroidsImplementation;
+	private FadingMicroclusters centroidsImplementation;
 
 	/**
 	 * Creates an instance of this class. The horizon is the amount of time a
-	 * single {@link Centroid} would "survive" (not being faded away) without
+	 * single {@link Microcluster} would "survive" (not being faded away) without
 	 * any reinforcement through added points. The learning rate determines how
-	 * fast a {@link Centroid} adapts to a new point in its environment (depends
-	 * on the {@link Centroid} implementation).
+	 * fast a {@link Microcluster} adapts to a new point in its environment (depends
+	 * on the {@link Microcluster} implementation).
 	 * 
 	 * @param horizon
 	 *            The horizon
 	 * @param radius
-	 *            The radius of a {@link Centroid}
+	 *            The radius of a {@link Microcluster}
 	 * @param learningRate
 	 *            The learning rate
 	 */
-	public CentroidsAdapter(int horizon, double radius, double learningRate, String version) {
-		centroidsImplementation = new FadingCentroids();
+	public MCAdapter(int horizon, double radius, double learningRate, String version) {
+		centroidsImplementation = new FadingMicroclusters();
 		centroidsImplementation.horizonOption.setValue(horizon);
 		centroidsImplementation.radiusOption.setValue(radius);
 		centroidsImplementation.learningRateOption.setValue(learningRate);
-		centroidsImplementation.centroidVersionOption.setValue(version);
+		centroidsImplementation.microclusterVersionOption.setValue(version);
 		centroidsImplementation.prepareForUse();
 	}
 
 	@Override
 	public void addImpl(Instance instance) {
-		centroidsImplementation.add(instance);
+		centroidsImplementation.trainOnInstance(instance);
 	}
 
 	@Override
 	public void clearImpl() {
-		centroidsImplementation.clear();
+		centroidsImplementation.resetLearning();
 	}
 
 	@Override
 	public DataBundle[] getData() {
-		Centroid[] centroids = centroidsImplementation.getCentroids();
+		Microcluster[] centroids = centroidsImplementation.getMicroclusters();
 
 		int n = centroids.length;
 		if (n > 0) {
 			int d = centroids[0].getCentre().length;
 			double[][] points = new double[n][];
 			double[] weights = new double[n];
-			Centroid c;
+			Microcluster c;
 			for (int i = 0; i < n; i++) {
 				c = centroids[i];
 				points[i] = c.getCentre();
@@ -94,19 +94,19 @@ public class CentroidsAdapter extends SummarisationAdapter {
 	}
 
 	/**
-	 * Returns the array of {@link Centroid}s.
+	 * Returns the array of {@link Microcluster}s.
 	 * 
-	 * @return The {@link Centroid}s array.
+	 * @return The {@link Microcluster}s array.
 	 */
-	public Centroid[] getCentroids() {
-		return centroidsImplementation.getCentroids();
+	public Microcluster[] getCentroids() {
+		return centroidsImplementation.getMicroclusters();
 	}
 
 	/**
-	 * Returns the number of faded {@link Centroid}s throughout the streaming
+	 * Returns the number of faded {@link Microcluster}s throughout the streaming
 	 * process.
 	 * 
-	 * @return The number of faded {@link Centroid}s throughout the streaming
+	 * @return The number of faded {@link Microcluster}s throughout the streaming
 	 *         process.
 	 */
 	public int getFadedCount() {

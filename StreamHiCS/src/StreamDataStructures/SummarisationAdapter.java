@@ -141,14 +141,10 @@ public abstract class SummarisationAdapter {
 
 			BitSet dimSelected;
 			Selection selection = new Selection(n, selectionAlpha);
-			int card = 0;
-			int card2 = 0;
 			for (int i = 0; i < shuffledDimensions.length - 1; i++) {
 				dimSelected = selection.selectRandomBlock(data[shuffledDimensions[i]]);
-				card = dimSelected.cardinality();
 				// boolean conjunction
 				selected.and(dimSelected);
-				card2 = selected.cardinality();
 			}
 
 			int l = selected.cardinality();

@@ -110,11 +110,6 @@ public class ComponentBuilder extends SubspaceBuilder {
 				}
 			}
 		}
-		/*
-		 * set.selectTopK(cutoff); for (Subspace s : set.getSubspaces()) { int
-		 * dim1 = s.getDimension(0); int dim2 = s.getDimension(1);
-		 * adjacencyMatrix[dim1][dim2] = 1; }
-		 */
 		// Finding the connected components using depth-first search
 		SubspaceSet correlatedSubspaces = new SubspaceSet();
 		boolean[] visited = new boolean[numberOfDimensions];
@@ -141,16 +136,19 @@ public class ComponentBuilder extends SubspaceBuilder {
 				s.setContrast(contrast);
 				correlatedSubspaces.addSubspace(s);
 			}
-			/*
-			 * if(s.size() == 2 && s.getContrast() < threshold){
-			 * System.out.println("Hello"); }
-			 */
 			nextStart = nextVisit(visited);
 		}
 
 		return correlatedSubspaces;
 	}
 
+	/**
+	 * Determines the index of the next node, which was not visited yet.
+	 * 
+	 * @param visited
+	 *            The boolean[] marking the visited nodes.
+	 * @return The index of the node to visit next.
+	 */
 	private int nextVisit(boolean[] visited) {
 		for (int i = 0; i < visited.length; i++) {
 			if (!visited[i]) {

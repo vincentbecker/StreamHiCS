@@ -1,11 +1,8 @@
 package streams;
 
 import java.util.ArrayList;
-
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
-import org.apache.commons.math3.ml.distance.ManhattanDistance;
-
 import moa.MOAObject;
 import moa.core.InstancesHeader;
 import moa.streams.InstanceStream;
@@ -51,9 +48,7 @@ public class GaussianStream implements InstanceStream {
 	 * The {@link EuclideanDistance} instance. 
 	 */
 	private EuclideanDistance euclideanDistance;
-	
-	private ManhattanDistance manhattanDistance;
-	
+		
 	/**
 	 * The radius  to determine the label. 
 	 */
@@ -76,7 +71,6 @@ public class GaussianStream implements InstanceStream {
 		init(covarianceMatrix);
 		this.covarianceMatrix = covarianceMatrix;
 		this.euclideanDistance = new EuclideanDistance();
-		this.manhattanDistance = new ManhattanDistance();
 		this.classRadius = classRadius;
 	}
 

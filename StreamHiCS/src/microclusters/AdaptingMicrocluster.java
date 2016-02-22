@@ -1,14 +1,16 @@
-package centroids;
+package microclusters;
+
+import weka.core.Instance;
 
 /**
- * This class implements a micro-clustering approach where the {@link Centroid}s
+ * This class implements a micro-clustering approach where the {@link Microcluster}s
  * adapt to the incoming {@link Instance}s by moving towards them. Here, the
  * radius is fixed.
  * 
  * @author Vincent
  *
  */
-public class AdaptingCentroid extends Centroid {
+public class AdaptingMicrocluster extends Microcluster {
 
 	/**
 	 * The centre.
@@ -16,12 +18,12 @@ public class AdaptingCentroid extends Centroid {
 	private double[] centre;
 
 	/**
-	 * The learning rate for the adaptation of the {@link AdaptingCentroid}.
+	 * The learning rate for the adaptation of the {@link AdaptingMicrocluster}.
 	 */
 	private double learningRate;
 
 	/**
-	 * The radius of the {@link AdaptingCentroid}.
+	 * The radius of the {@link AdaptingMicrocluster}.
 	 */
 	private double radius;
 
@@ -29,18 +31,18 @@ public class AdaptingCentroid extends Centroid {
 	 * Creates an instance of this class.
 	 * 
 	 * @param vector
-	 *            The initial centre of the {@ AdaptingCentroid}
+	 *            The initial centre of the {@ AdaptingMicrocluster}
 	 * @param negLambda
 	 *            The negative lambda value for the fading procedure
 	 * @param currentTime
-	 *            The current time at which this instance is created
+	 *            The current time at which this {@ AdaptingMicrocluster} is created
 	 * @param radius
-	 *            The radius of this {@link AdaptingCentroid}
+	 *            The radius of this {@link AdaptingMicrocluster}
 	 * @param learningRate
 	 *            The learning rate for the adaptation of the
-	 *            {@link AdaptingCentroid}
+	 *            {@link AdaptingMicrocluster}
 	 */
-	public AdaptingCentroid(double[] vector, double negLambda, int currentTime, double radius, double learningRate) {
+	public AdaptingMicrocluster(double[] vector, double negLambda, int currentTime, double radius, double learningRate) {
 		super(negLambda, currentTime);
 		this.centre = vector;
 		this.radius = radius;
@@ -61,13 +63,15 @@ public class AdaptingCentroid extends Centroid {
 			return false;
 		}
 
+		/*
 		for (int i = 0; i < centre.length; i++) {
 			centre[i] += point[i];
 		}
+		*/
 
 		weight++;
 
-		// Adapt according to the weight of the centroid
+		// Adapt according to the weight of the micro-cluster
 		double adaptationRate = h(point) / (weight);
 		for (int i = 0; i < centre.length; i++) {
 			centre[i] += adaptationRate * (point[i] - centre[i]);
@@ -87,15 +91,16 @@ public class AdaptingCentroid extends Centroid {
 	}
 
 	/**
-	 * Calculates a factor how strongly a {@link AdaptingCentroid} should be
+	 * Calculates a factor how strongly a {@link AdaptingMicrocluster} should be
 	 * adapted to a vector.
 	 * 
 	 * @param vector
 	 *            The input vector.
-	 * @return The factor how strongly the given {@link AdaptingCentroid} should
+	 * @return The factor how strongly the given {@link AdaptingMicrocluster} should
 	 *         be adapted to the input vector.
 	 */
 	private double h(double[] vector) {
+		// Here simply use the learning rate by itself
 		return learningRate;
 	}
 }

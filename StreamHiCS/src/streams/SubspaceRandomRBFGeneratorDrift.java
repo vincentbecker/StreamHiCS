@@ -30,10 +30,19 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		return "Generates a subspace random radial basis function stream with drift.";
 	}
 
+	/**
+	 * The serial version ID. 
+	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * The number of dimensions. 
+	 */
 	protected int numberDimensions;
 
+	/**
+	 * The number of centroids using {@link Subspace}s.
+	 */
 	protected int numberSubspaceCentroids;
 
 	/**
@@ -60,19 +69,31 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	public IntOption numSubspaceCentroidsOption = new IntOption("numSubspaceCentroids", 'e',
 			"The number of centroids with a subspace.", 0, 0, Integer.MAX_VALUE);
 
+	/**
+	 * Determines how strongly to scale the random values from the interval [0, 1) in dimensions which are not contained in the {@link Subspace}.
+	 */
 	public FloatOption scaleIrrelevantDimensionsOption = new FloatOption("scaleIrrelevantDimensions", 'd',
 			"The scale the uniformly random value (-1, 1) is scaled with for irrelevant dimensions, i.e. dimensions not contained in the subspace.",
 			5, 0, Double.MAX_VALUE);
 
 	/**
-	 * The subspaces, indexed by the labels of the centroids, which use them.
+	 * The {@link Subspace}s, indexed by the labels of the centroids, which use them.
 	 */
 	private Subspace[] currentSubspaces;
 
+	/**
+	 * The new {@link Subspace}s in case of virtual concept drift. 
+	 */
 	private Subspace[] newSubspaces;
 
+	/**
+	 * Counter for the period of the change. 
+	 */
 	protected int changeCounter = -1;
 
+	/**
+	 * The length of a drift. 
+	 */
 	protected int changeLength;
 
 	/**
@@ -82,8 +103,14 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	 */
 	protected double scaleIrrelevant;
 
+	/**
+	 * {@link Random} instance. 
+	 */
 	protected Random modelRandom;
 	
+	/**
+	 * The number of centroids. 
+	 */
 	protected int numberCentroids;
 
 	@Override
@@ -218,6 +245,10 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	}
 
+	/**
+	 * Creates a random {@link Subspace}. 
+	 * @return The created {@link Subspace}.
+	 */
 	protected Subspace createSubspace() {
 		int numRelevantDims = 0;
 		if (randomSubspaceSizeOption.isSet()) {
@@ -247,6 +278,10 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		return s;
 	}
 
+	/**
+	 * Returns the {@link Subspace}s.
+	 * @return The {@link Subspace}s.
+	 */
 	public SubspaceSet getSubspaces() {
 		SubspaceSet set = new SubspaceSet();
 		for (int i = 0; i < currentSubspaces.length; i++) {
@@ -255,6 +290,11 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		return set;
 	}
 
+	/**
+	 * Change the {@link Subspace}s using a sigmoidal change. 
+	 * 
+	 * @param changeLength The length of the change. 
+	 */
 	public void subspaceChange(int changeLength) {
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
@@ -271,6 +311,10 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		this.changeLength = changeLength;
 	}
 
+	/**
+	 * Whether to use the new {@link Subspace}s. Function for the sigmoidal change. 
+	 * @return True, if to use the new {@link Subspace}s, false otherwise. 
+	 */
 	protected boolean useNewSubspaces() {
 		double x = -4.0 * (double) (changeCounter) / changeLength;
 		double probabilityDrift = 1.0 / (1.0 + Math.exp(x));
@@ -280,6 +324,9 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 		return true;
 	}
 	
+	/**
+	 * Set the centroids's labels. 
+	 */
 	protected void setClasses(){
 		int numClasses = numClassesOption.getValue();
 		for(int i = 0; i < centroids.length; i++){

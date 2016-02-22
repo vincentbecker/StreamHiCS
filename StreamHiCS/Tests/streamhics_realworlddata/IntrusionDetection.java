@@ -22,7 +22,7 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.SubspaceBuilder;
@@ -113,7 +113,7 @@ public class IntrusionDetection {
 		double pruningDifference = 0.15;
 		int horizon = 1000;
 		int numberSamples = 0;
-		CentroidsAdapter adapter = new CentroidsAdapter(horizon, 20, 0.1, "radius");
+		MCAdapter adapter = new MCAdapter(horizon, 20, 0.1, "radius");
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		CorrelationSummary correlationSummary = null;

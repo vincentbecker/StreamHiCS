@@ -100,7 +100,7 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 		Subspace fullSpace = new Subspace();
 		if (correlationSummary != null) {
 			contrastMatrix = correlationSummary.getCorrelationMatrix();
-			
+
 			boolean add = false;
 			for (int i = 0; i < numberOfDimensions; i++) {
 				add = false;
@@ -113,10 +113,9 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 				}
 			}
 			/*
-			for (int i = 0; i < numberOfDimensions; i++) {
-				fullSpace.addDimension(i);
-			}
-			*/
+			 * for (int i = 0; i < numberOfDimensions; i++) {
+			 * fullSpace.addDimension(i); }
+			 */
 		} else {
 			contrastMatrix = new double[numberOfDimensions][numberOfDimensions];
 			double contrast = 0;
@@ -135,7 +134,7 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 					contrastMatrix[j][i] = contrast;
 				}
 			}
-			// Create the full space		
+			// Create the full space
 			for (int i = 0; i < numberOfDimensions; i++) {
 				fullSpace.addDimension(i);
 			}
@@ -143,11 +142,11 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 
 		// System.out.println(fullSpace.toString());
 
-		if(fullSpace.size() < 2){
+		if (fullSpace.size() < 2) {
 			return correlatedSubspaces;
 		}
 		fullSpace.setContrast(contrastEvaluator.evaluateSubspaceContrast(fullSpace));
-		
+
 		// Start the recursive procedure
 		SubspaceSet c_K = new SubspaceSet();
 		c_K.addSubspace(fullSpace);
@@ -156,6 +155,12 @@ public class HierarchicalBuilderCutoff extends SubspaceBuilder {
 		return correlatedSubspaces;
 	}
 
+	/**
+	 * Recursive part.
+	 * 
+	 * @param c_K
+	 *            The candidate set.
+	 */
 	private void hierarchicalBuildup(SubspaceSet c_K) {
 		SubspaceSet c_Kplus1 = new SubspaceSet();
 		for (Subspace s : c_K.getSubspaces()) {

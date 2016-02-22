@@ -21,7 +21,7 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
@@ -356,7 +356,7 @@ public class HighDimensional_full {
 			// double radius = 5;
 			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
@@ -369,7 +369,7 @@ public class HighDimensional_full {
 			}else{
 				radius = 2.1;
 			}
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
+			adapter = new MCAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

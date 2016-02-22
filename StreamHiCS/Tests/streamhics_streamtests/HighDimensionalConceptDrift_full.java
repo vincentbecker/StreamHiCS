@@ -25,7 +25,7 @@ import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
 import clustree.ClusTree;
 import moa.streams.ConceptDriftStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
@@ -355,7 +355,7 @@ public class HighDimensionalConceptDrift_full {
 			hierarchicalThreshold = 0.35;
 			double radius = 45;
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
@@ -363,7 +363,7 @@ public class HighDimensionalConceptDrift_full {
 			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.3;
 			radius = 5.5;
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
+			adapter = new MCAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

@@ -22,7 +22,7 @@ import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.clusterers.clustream.Clustream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
@@ -338,7 +338,7 @@ public class StreamHiCS_full {
 			hierarchicalThreshold = 0.3;
 			double radius = 3.5;
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
@@ -346,7 +346,7 @@ public class StreamHiCS_full {
 			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.3;
 			radius = 0.75;
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
+			adapter = new MCAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

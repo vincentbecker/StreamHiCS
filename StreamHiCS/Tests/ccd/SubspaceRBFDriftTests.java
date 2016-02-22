@@ -28,7 +28,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -658,14 +658,14 @@ public class SubspaceRBFDriftTests {
 			// double radius = 10* Math.sqrt(numberOfDimensions) - 1;
 			double radius = 2 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
 			radius = 0.5;
 			learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;

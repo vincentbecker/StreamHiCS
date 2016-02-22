@@ -31,7 +31,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -51,7 +51,7 @@ public class ElectricityNSW {
 	private ArffFileStream stream;
 	private static Stopwatch stopwatch1;
 	private static Stopwatch stopwatch2;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private SubspaceChangeDetectors scd;
 	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
@@ -426,7 +426,7 @@ public class ElectricityNSW {
 
 			}
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
@@ -438,7 +438,7 @@ public class ElectricityNSW {
 
 			}
 			learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			summarisationDescription = "RADIUS centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;

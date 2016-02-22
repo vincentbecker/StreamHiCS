@@ -523,20 +523,14 @@ public class ClusTree extends AbstractClusterer {
 		// Set the other node into the tree.
 		parentEntry.setChild(node);
 		parentEntry.recalculateData();
-		int count = 0;
 		for (Entry e : node.getEntries()) {
 			e.setParentEntry(parentEntry);
-			if (e.getData().getN() != 0)
-				count++;
 		}
 		// System.out.println(count);
 		// Generate a new entry for the residual node.
 		Entry residualEntry = new Entry(this.numberDimensions, residualNode, timestamp, parentEntry, node);
-		count = 0;
 		for (Entry e : residualNode.getEntries()) {
 			e.setParentEntry(residualEntry);
-			if (e.getData().getN() != 0)
-				count++;
 		}
 		// System.out.println(count);
 		return residualEntry;

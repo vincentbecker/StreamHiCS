@@ -31,7 +31,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -54,7 +54,7 @@ public class RealWorldDatasets {
 	private String path;
 	private ArffFileStream stream;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private SubspaceChangeDetectors scd;
 	private SubspaceChangeDetectors scdr;
 	private SubspaceClassifiersChangeDetector sccd;
@@ -129,7 +129,8 @@ public class RealWorldDatasets {
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 10) {
 					threshold = 0.3;
-					radius = 14 * Math.sqrt(numberOfDimensions);
+					//radius = 14 * Math.sqrt(numberOfDimensions);
+					radius = 0.2;
 				} else {
 					threshold = 0.25;
 					radius = 14 * Math.sqrt(numberOfDimensions);
@@ -227,7 +228,8 @@ public class RealWorldDatasets {
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 8) {
 					threshold = 0.4;
-					radius = 3 * Math.sqrt(numberOfDimensions) - 1;
+					//radius = 3 * Math.sqrt(numberOfDimensions) - 1;
+					radius = 0.1;
 				} else {
 					threshold = 0.4;
 					radius = 3 * Math.sqrt(numberOfDimensions) - 1;
@@ -408,7 +410,7 @@ public class RealWorldDatasets {
 			Instance inst = stream.nextInstance();
 
 			if (numberSamples % 10000 == 0) {
-				// System.out.println(scd.getNumberOfElements());
+				System.out.println(scd.getNumberOfElements());
 			}
 
 			if (numberOfDimensions > originalNumDimensions) {
@@ -617,13 +619,13 @@ public class RealWorldDatasets {
 			break;
 		case ADAPTINGCENTROIDS:
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
 			learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;

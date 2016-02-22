@@ -1,4 +1,4 @@
-package centroids;
+package microclusters;
 
 /**
  * This class implements a micro-clustering approach similar to DenStream, but
@@ -8,7 +8,7 @@ package centroids;
  * @author Vincent
  *
  */
-public class RadiusCentroid extends Centroid {
+public class RadiusMicrocluster extends Microcluster {
 	private static final double RADIUS_FACTOR = 1.8;
 	private double[] LS;
 	private double[] SS;
@@ -18,15 +18,15 @@ public class RadiusCentroid extends Centroid {
 	 * Creates an instance of this class.
 	 * 
 	 * @param vector
-	 *            The initial centre of the new {@link Centroid}
+	 *            The initial centre of the new {@link Microcluster}
 	 * @param negLambda
 	 *            The negative lambda for fading
 	 * @param currentTime
 	 *            The current time
 	 * @param maxRadius
-	 *            The maximum radius of a centroid
+	 *            The maximum radius of a {@link Microcluster}
 	 */
-	public RadiusCentroid(double[] vector, double negLambda, int currentTime, double maxRadius) {
+	public RadiusMicrocluster(double[] vector, double negLambda, int currentTime, double maxRadius) {
 		super(negLambda, currentTime);
 		this.LS = vector;
 		int l = LS.length;
@@ -91,6 +91,13 @@ public class RadiusCentroid extends Centroid {
 		return calculateRadius(LS, SS, weight);
 	}
 
+	/**
+	 * Calculate the radius of a {@link Microcluster}.
+	 * @param LS Linear sums cluster feature
+	 * @param SS Square sums cluster feature
+	 * @param weight The weight
+	 * @return The radius of the {@link Microcluster} with the given characteristics. 
+	 */
 	private double calculateRadius(double[] LS, double[] SS, double weight) {
 		double max = 0;
 		double r = 0;
@@ -100,7 +107,6 @@ public class RadiusCentroid extends Centroid {
 				max = r;
 			}
 		}
-
 		return RADIUS_FACTOR * max;
 	}
 }

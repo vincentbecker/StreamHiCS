@@ -46,9 +46,17 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 			"The number of instances after which the correlated subspaces are evaluated the first time.", 500, 0,
 			Integer.MAX_VALUE);
 
+	/**
+	 * The option determining whether to use the restspace or not.
+	 */
 	public FlagOption useRestspaceOption = new FlagOption("useRestspace", 'u',
 			"Whether the restspace should be included in the change detection process.");
 
+	/**
+	 * The option determining whether to forward the arriving {@link Instance}s
+	 * to {@link StreamHiCS}. Only for test reasons, should always be set
+	 * otherwise.
+	 */
 	public FlagOption addOption = new FlagOption("add", 'a',
 			"Whether arriving instances should be added to streamHiCS.");
 
@@ -96,10 +104,19 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	 */
 	private int numberInit;
 
+	/**
+	 * The current {@link State}.
+	 */
 	private State state;
 
+	/**
+	 * Whether to use the restspace or not.
+	 */
 	private boolean useRestspace;
 
+	/**
+	 * Whether to forward instances to StreamHiCS or not.
+	 */
 	private boolean add;
 
 	/**
@@ -115,10 +132,18 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 		this.streamHiCS = streamHiCS;
 	}
 
+	/**
+	 * Checks for the warning state. 
+	 * @return True, if in warning state, false otherwise. 
+	 */
 	public boolean isWarningDetected() {
 		return (state == State.WARNING);
 	}
 
+	/**
+	 * Checks for the drift state. 
+	 * @return True, if in drift state, false otherwise. 
+	 */
 	public boolean isChangeDetected() {
 		return (state == State.DRIFT);
 	}
@@ -128,25 +153,15 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 		// Change subspaces and reset ChangeDetection
 		if (initialized) {
 			SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
-			// System.out.println("Number of samples: " + numberSamples);
-
-			/*
-			 * Subspace s1 = new Subspace(0, 3, 4, 5, 9); s1.setContrast(0.35);
-			 * Subspace s2 = new Subspace(1, 2, 6, 7, 8); s2.setContrast(0.35);
-			 * correlatedSubspaces.clear(); correlatedSubspaces.addSubspace(s1);
-			 * correlatedSubspaces.addSubspace(s2);
-			 */
-
 			// System.out.println("SCD: Correlated: " +
 			// correlatedSubspaces.toString() + " at " + numberSamples);
 			ArrayList<SubspaceChangeDetector> temp = new ArrayList<SubspaceChangeDetector>();
 			// Mark which dimensions are contained in subspaces to add detectors
-			// for
-			// all the single dimensions which are not contained in subspaces.
+			// for all the single dimensions which are not contained in
+			// subspaces.
 			BitSet marked = new BitSet(numberOfDimensions);
 			boolean found = false;
 			for (Subspace s : correlatedSubspaces.getSubspaces()) {
-				// s.sort();
 				for (int d : s.getDimensions()) {
 					marked.set(d);
 				}
@@ -155,8 +170,7 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				for (int i = 0; i < subspaceChangeDetectors.size() && !found; i++) {
 					scd = subspaceChangeDetectors.get(i);
 					// If there is an 'old' change detector running on the
-					// subspace
-					// already we continue using that
+					// subspace already we continue using that
 					if (s.equals(scd.getSubspace())) {
 						temp.add(scd);
 						found = true;
@@ -202,8 +216,6 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				state = State.WARNING;
 			} else if (fullSpaceChangeDetector.isChangeDetected()) {
 				state = State.DRIFT;
-				// System.out.println(
-				// "cscd: CHANGE in full space at " + numberSamples);
 			} else {
 				state = State.IN_CONTROL;
 			}
@@ -239,13 +251,9 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				if (restSpaceChangeDetector.isWarningDetected()) {
 					warning = true;
 				} else if (restSpaceChangeDetector.isChangeDetected()) {
-					// System.out.println("cscd: CHANGE in restspace: " +
-					// restSpaceChangeDetector.getSubspace().toString() + " at "
-					// + numberSamples);
 					drift = true;
 				}
 			}
-
 			if (drift) {
 				state = State.DRIFT;
 				driftOccurred(driftDetectedIndexes);
@@ -258,6 +266,13 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 		numberSamples++;
 	}
 
+	/**
+	 * The reaction to the detection fo a drift.
+	 * 
+	 * @param driftDetectedIndexes
+	 *            The indexes of the {@link SubspaceChangeDetector}s which
+	 *            detected the drift (there may be several).
+	 */
 	private void driftOccurred(ArrayList<Integer> driftDetectedIndexes) {
 		for (int i = 0; i < subspaceChangeDetectors.size(); i++) {
 			if (!driftDetectedIndexes.contains(i)) {
@@ -268,14 +283,11 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	}
 
 	/**
-	 * Calculate the correlated {@link Subspace}s and adds a change detector for
-	 * each of them, if there are any
+	 * Initialise the {@link SubspaceChangeDetector}s.
 	 */
 	private void init() {
 		initialized = true;
-		// streamHiCS.onAlarm();
 		if (subspaceChangeDetectors.isEmpty() && restSpaceChangeDetector == null) {
-			// onAlarm was not called
 			onAlarm();
 		}
 	}
@@ -291,16 +303,20 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 	private SubspaceChangeDetector createSubspaceChangeDetector(Subspace s) {
 		SubspaceChangeDetector scd = new SubspaceChangeDetector(s);
 		AbstractClassifier baseLearner = new HoeffdingTree();
-		// ((HoeffdingTree)
-		// baseLearner).splitConfidenceOption.setValue(0.000000001);
-		// AbstractClassifier baseLearner = new HoeffdingAdaptiveTree();
-		// AbstractClassifier baseLearner = new DecisionStump();
 		baseLearner.prepareForUse();
 		scd.baseLearnerOption.setCurrentObject(baseLearner);
 		scd.prepareForUse();
 		return scd;
 	}
 
+	/**
+	 * The same procedure as above for creating a {@link SubspaceChangeDetector}
+	 * for the restspace. The only difference is that {@link NaiveBayes} instead
+	 * of the {@link HoeffdingTree} is used.
+	 * 
+	 * @param restspace The {@link Subspace} representing the restspace
+	 * @return A {@link SubspaceChangeDetector} for the restspace. 
+	 */
 	private SubspaceChangeDetector createRestspaceDetector(Subspace restspace) {
 		SubspaceChangeDetector restSpaceChangeDetector = new SubspaceChangeDetector(restspace);
 		AbstractClassifier baseLearner = new NaiveBayes();
@@ -409,7 +425,6 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 					totalVotes[i] += restSpaceVotes[i] * weight;
 				}
 			}
-
 			return totalVotes;
 		}
 	}

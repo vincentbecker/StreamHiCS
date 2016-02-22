@@ -1,9 +1,7 @@
 package changedetection;
 
 import java.util.ArrayList;
-
 import moa.classifiers.bayes.NaiveBayes;
-import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.core.ObjectRepository;
 import moa.streams.InstanceStream;
@@ -15,14 +13,14 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 
-public class RestspaceClassifier extends NaiveBayes {
+public class RestspaceClassifier extends NaiveBayes implements SubspaceModel {
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -2008369880916696270L;
 
 	/**
-	 * The subsapce the {@link SubspaceChangeDetector} runs on.
+	 * The subspace the {@link SubspaceChangeDetector} runs on.
 	 */
 	private Subspace subspace;
 
@@ -31,8 +29,14 @@ public class RestspaceClassifier extends NaiveBayes {
 	 */
 	private InstancesHeader header;
 
+	/**
+	 * The error rate of this classifier. 
+	 */
 	private double errorRate;
 
+	/**
+	 * The number of instances observed. 
+	 */
 	private int numberInstances;
 
 	/**
@@ -80,15 +84,18 @@ public class RestspaceClassifier extends NaiveBayes {
 		return super.getVotesForInstance(projectInstance(inst));
 	}
 
+	@Override
 	public int getClassPrediction(Instance instance) {
 		return Utils.maxIndex(getVotesForInstance(instance));
 	}
 
+	@Override
 	public double getAccuracy() {
 		return 1 - errorRate;
 	}
 
-	private Instance projectInstance(Instance instance) {
+	@Override
+	public Instance projectInstance(Instance instance) {
 		int l = subspace.size();
 		if (header == null) {
 			ArrayList<Attribute> attributes = new ArrayList<Attribute>();

@@ -23,7 +23,7 @@ import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import moa.clusterers.clustream.Clustream;
 import moa.clusterers.denstream.WithDBSCAN;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CoresetAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
@@ -400,7 +400,7 @@ public class StreamHiCSTest {
 			double radius = 0.2;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 		} else if (method.equals("DenStreamMC")) {
 			alpha = 0.1;
 			epsilon = 0;

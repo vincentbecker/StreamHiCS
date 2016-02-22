@@ -8,7 +8,7 @@ import org.junit.Test;
 import environment.CSVReader;
 import environment.Stopwatch;
 import fullsystem.Contrast;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
 import subspace.Subspace;
@@ -45,7 +45,7 @@ public class AlphaVariation {
 		double radius = 0.3;
 		double learningRate = 0.1;
 
-		adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+		adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 
 		subspace = new Subspace();
 		for (int i = 0; i < 5; i++) {

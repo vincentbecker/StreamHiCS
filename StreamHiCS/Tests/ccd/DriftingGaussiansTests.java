@@ -28,7 +28,7 @@ import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -57,7 +57,7 @@ public class DriftingGaussiansTests {
 	private double pruningDifference;
 	private int numberOfDimensions;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 1;
+	private static final int numberTestRuns = 10;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -695,7 +695,7 @@ public class DriftingGaussiansTests {
 		case ADAPTINGCENTROIDS:
 			double radius = 10 * Math.sqrt(numberOfDimensions) - 1;
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;

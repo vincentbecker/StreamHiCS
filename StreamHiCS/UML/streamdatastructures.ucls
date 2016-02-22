@@ -37,8 +37,8 @@
       <operations public="true" package="true" protected="true" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="5" language="java" name="streamdatastructures.CentroidsAdapter" project="StreamHiCS" 
-    file="/StreamHiCS/src/streamdatastructures/CentroidsAdapter.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="5" language="java" name="streamdatastructures.MCAdapter" project="StreamHiCS" 
+    file="/StreamHiCS/src/streamdatastructures/MCAdapter.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="189" width="200" x="1010" y="141"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -47,11 +47,11 @@
     </display>  
   </class>  
   <generalization id="6">    
-    <end type="SOURCE" refId="4"/>    
+    <end type="SOURCE" refId="3"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <generalization id="7">    
-    <end type="SOURCE" refId="3"/>    
+    <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <generalization id="8">    

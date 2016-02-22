@@ -14,14 +14,14 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 
-public class SubspaceClassifier extends HoeffdingTree {
+public class SubspaceClassifier extends HoeffdingTree implements SubspaceModel {
 	/**
 	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -2008369880916696270L;
 
 	/**
-	 * The subsapce the {@link SubspaceChangeDetector} runs on.
+	 * The subspace the {@link SubspaceChangeDetector} runs on.
 	 */
 	private Subspace subspace;
 
@@ -83,11 +83,13 @@ public class SubspaceClassifier extends HoeffdingTree {
 		return Utils.maxIndex(getVotesForInstance(instance));
 	}
 
+	@Override
 	public double getAccuracy() {
 		return 1 - errorRate;
 	}
 
-	private Instance projectInstance(Instance instance) {
+	@Override
+	public Instance projectInstance(Instance instance) {
 		int l = subspace.size();
 		if (header == null) {
 			ArrayList<Attribute> attributes = new ArrayList<Attribute>();

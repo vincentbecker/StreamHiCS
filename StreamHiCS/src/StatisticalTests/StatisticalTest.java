@@ -30,7 +30,7 @@ public abstract class StatisticalTest {
 	 *            Contains the first sample with the appropriate weights
 	 * @param dataBundle2
 	 *            Contains the second sample with the appropriate weights
-	 * @return The deivation.
+	 * @return The deviation.
 	 */
 	public abstract double calculateWeightedDeviation(DataBundle dataBundle1, DataBundle dataBundle2);
 }

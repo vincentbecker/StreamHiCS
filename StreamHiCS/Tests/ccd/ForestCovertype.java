@@ -31,7 +31,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.InstancesHeader;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -425,7 +425,7 @@ public class ForestCovertype {
 				radius = 14 * Math.sqrt(numberOfDimensions);
 			}
 			double learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
@@ -433,7 +433,7 @@ public class ForestCovertype {
 			//double radius = 4 * Math.sqrt(numberOfDimensions);
 			radius = 0.25;
 			learningRate = 1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;

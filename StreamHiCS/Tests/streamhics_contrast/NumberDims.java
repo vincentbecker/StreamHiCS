@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import environment.Stopwatch;
 import fullsystem.Contrast;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.SummarisationAdapter;
 import subspace.Subspace;
 import weka.core.DenseInstance;
@@ -36,7 +36,7 @@ public class NumberDims {
 		double radius = 0.001;
 		double learningRate = 0.1;
 
-		adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+		adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 		
 		contrastEvaluator = new Contrast(m, alpha, adapter);
 		subspace = new Subspace();

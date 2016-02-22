@@ -19,7 +19,7 @@ import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
@@ -74,7 +74,7 @@ public class HighDimRuntime {
 		for (int d = 5; d <= 100; d += 5) {
 			double radius = 4 * Math.sqrt(d) - 1;
 			double learningRate = 1;
-			SummarisationAdapter adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			SummarisationAdapter adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			if (summarisationDescription == null) {
 				addDescription = true;
 			}

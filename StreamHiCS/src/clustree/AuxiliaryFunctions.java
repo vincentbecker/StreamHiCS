@@ -88,37 +88,6 @@ public class AuxiliaryFunctions {
 		System.out.println("]");
 	}
 
-	private static double incompleteGamma(double a, double x) {
-		assert (!Double.isNaN(a));
-		assert (!Double.isNaN(x));
-		double sum = 0.0;
-
-		double xPow = 1; // Start with x^0
-		for (int n = 0; n < GAMMA_ITERATIONS; n++) {
-			double denom = a;
-			for (int i = 1; i <= n; i++) {
-				denom *= (a + i);
-			}
-
-			assert (denom != 0.0);
-			sum += xPow / denom;
-			xPow *= x;
-		}
-
-		double res = Math.pow(x, a) * Math.exp(-x) * sum;
-
-		if (Double.isNaN(res)) {
-			System.err.println("a " + a);
-			System.err.println("x " + x);
-			System.err.println("x^a " + Math.pow(x, a));
-			System.err.println("e^-x " + Math.exp(-x));
-			System.err.println("sum " + sum);
-			assert (false);
-		}
-
-		return res;
-	}
-
 	public static double gammaHalf(int n) {
 		int[] doubleFac = new int[] { 1, 1, 2, 3, 8, 15, 48, 105, 384, 945, 3840, 10395, 46080, 135135, 645120, 2027025,
 				10321920, 34459425, 185794560, 654729075 };

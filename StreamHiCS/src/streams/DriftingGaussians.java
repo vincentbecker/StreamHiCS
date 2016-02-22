@@ -27,10 +27,19 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 	 */
 	private MultivariateNormalDistribution newNormalDistribution;
 
+	/**
+	 * The covariance value every entry of the covariance matrix is set to except the diagonal. 
+	 */
 	private final double covariance = 0.9;
 
+	/**
+	 * The current {@link Subspace} used. 
+	 */
 	private Subspace currentSubspace;
 
+	/**
+	 * the new {@link Subspace} used on case of a virtual drift. 
+	 */
 	private Subspace newSubspace;
 	
 

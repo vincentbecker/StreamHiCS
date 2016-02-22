@@ -217,7 +217,6 @@ public class ClusKernel extends CFCluster {
 
 	// ???????
 	private double calcNormalizedDistance(double[] point) {
-		double[] variance = getVarianceVector();
 		double[] center = getCenter();
 		double res = 0.0;
 

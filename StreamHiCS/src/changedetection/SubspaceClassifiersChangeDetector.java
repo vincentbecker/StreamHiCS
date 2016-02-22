@@ -7,6 +7,7 @@ import changedetection.SubspaceChangeDetectors.State;
 import fullsystem.Callback;
 import fullsystem.StreamHiCS;
 import moa.classifiers.AbstractClassifier;
+import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.core.Measurement;
 import moa.core.ObjectRepository;
@@ -97,10 +98,19 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 	 */
 	private int numberInit;
 
+	/**
+	 * The current {@link State}.
+	 */
 	private State state;
 
-	private boolean useRestspace = true;
+	/**
+	 * Whether to use the restspace or not.
+	 */
+	private boolean useRestspace;
 
+	/**
+	 * The {@link DDM} instance.
+	 */
 	private DDM ddm;
 
 	/**
@@ -116,10 +126,20 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		this.streamHiCS = streamHiCS;
 	}
 
+	/**
+	 * Checks for the warning state.
+	 * 
+	 * @return True, if in warning state, false otherwise.
+	 */
 	public boolean isWarningDetected() {
 		return (this.state == State.WARNING);
 	}
 
+	/**
+	 * Checks for the drift state.
+	 * 
+	 * @return True, if in drift state, false otherwise.
+	 */
 	public boolean isChangeDetected() {
 		return (this.state == State.DRIFT);
 	}
@@ -129,18 +149,7 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		// Change subspaces and reset classifiers
 		if (initialized) {
 			SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
-
-			/*
-			Subspace s1 = new Subspace(0, 3, 4, 5, 9);
-			s1.setContrast(0.35);
-			Subspace s2 = new Subspace(1, 2, 6, 7, 8);
-			s2.setContrast(0.35);
-			correlatedSubspaces.clear();
-			correlatedSubspaces.addSubspace(s1);
-			correlatedSubspaces.addSubspace(s2);
-			*/
-
-			//System.out.println("SCCD: Correlated: " + correlatedSubspaces.toString() + " at " + numberSamples);
+			 System.out.println("SCCD: Correlated: " + correlatedSubspaces.toString() + " at " + numberSamples);
 			if (createSubspaceClassifiers(correlatedSubspaces)) {
 				ddm.resetLearning();
 			}
@@ -149,7 +158,7 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
-		//streamHiCS.add(inst);
+		// streamHiCS.add(inst);
 		if (numberSamples == numberInit) {
 			// Evaluate the correlated subspaces once
 			init();
@@ -197,6 +206,9 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		numberSamples++;
 	}
 
+	/**
+	 * The reaction to a state. 
+	 */
 	private void handleState() {
 		switch (this.state) {
 		case WARNING:
@@ -240,6 +252,14 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		}
 	}
 
+	/**
+	 * Creates and initialises a {@link SubspaceClassifier}s for a given
+	 * {@link SubspaceSet}, including the classifier for the restspace.
+	 * 
+	 * @param s
+	 *            The {@link SubspaceSet}
+	 * @return True, if anything has changed since the last call of this method, false otherwise. 
+	 */
 	private boolean createSubspaceClassifiers(SubspaceSet subspaceSet) {
 		ArrayList<SubspaceClassifier> temp = new ArrayList<SubspaceClassifier>();
 		ArrayList<SubspaceClassifier> newTemp = new ArrayList<SubspaceClassifier>();
@@ -280,7 +300,8 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 			}
 		}
 		if (!restSpace.isEmpty()) {
-			if ((useRestspace || subspaceSet.isEmpty()) && (restSpaceClassifier == null || !restSpace.equals(restSpaceClassifier.getSubspace()))) {
+			if ((useRestspace || subspaceSet.isEmpty())
+					&& (restSpaceClassifier == null || !restSpace.equals(restSpaceClassifier.getSubspace()))) {
 				restSpaceClassifier = createRestspaceClassifier(restSpace);
 				newRestSpaceClassifier = createRestspaceClassifier(restSpace);
 				update = true;
@@ -298,14 +319,11 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 	}
 
 	/**
-	 * Calculate the correlated {@link Subspace}s and adds a change detector for
-	 * each of them, if there are any
+	 * Initialise the {@link SubspaceClassifier}s.
 	 */
 	private void init() {
 		initialized = true;
-		//streamHiCS.onAlarm();
 		if (subspaceClassifiers.isEmpty() && restSpaceClassifier == null) {
-			// onAlarm was not called
 			onAlarm();
 		}
 		// Reset the DDM instance?
@@ -313,12 +331,12 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 	}
 
 	/**
-	 * Creates and initialises a {@link SubspaceChangeDetector} for a given
+	 * Creates and initialises a {@link SubspaceClassifier} for a given
 	 * {@link Subspace}.
 	 * 
 	 * @param s
 	 *            The subspace
-	 * @return The {@link SubspaceChangeDetector}.
+	 * @return The {@link SubspaceClassifier}.
 	 */
 	private SubspaceClassifier createSubspaceClassifier(Subspace s) {
 		SubspaceClassifier sc = new SubspaceClassifier(s);
@@ -326,6 +344,14 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		return sc;
 	}
 
+	/**
+	 * The same procedure as above for creating a {@link SubspaceClassifier}
+	 * for the restspace. The only difference is that {@link NaiveBayes} instead
+	 * of the {@link HoeffdingTree} is used.
+	 * 
+	 * @param restspace The {@link Subspace} representing the restspace
+	 * @return A {@link SubspaceClsasifier} for the restspace. 
+	 */
 	private RestspaceClassifier createRestspaceClassifier(Subspace restspace) {
 		RestspaceClassifier restSpaceClassifier = new RestspaceClassifier(restspace);
 		restSpaceClassifier.prepareForUse();

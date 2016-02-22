@@ -1,4 +1,4 @@
-package centroids;
+package microclusters;
 
 /**
  * An abstract class for a micro-clustering approach with fading micro-clusters.
@@ -8,10 +8,10 @@ package centroids;
  * @author Vincent
  *
  */
-public abstract class Centroid {
+public abstract class Microcluster {
 	/**
 	 * The time of the last update. Used to calculate how much to fade this
-	 * {@link Centroid}.
+	 * {@link Microcluster}.
 	 */
 	protected int lastUpdate;
 
@@ -33,26 +33,26 @@ public abstract class Centroid {
 	 * @param currentTime
 	 *            The current time of creation
 	 */
-	public Centroid(double negLambda, int currentTime) {
+	public Microcluster(double negLambda, int currentTime) {
 		this.negLambda = negLambda;
 		this.lastUpdate = currentTime;
 	}
 
 	/**
-	 * Returns the centre of the {@link Centroid}.
+	 * Returns the centre of the {@link Microcluster}.
 	 * 
-	 * @return The centre of the {@link Centroid}.
+	 * @return The centre of the {@link Microcluster}.
 	 */
 	public abstract double[] getCentre();
 
 	/**
-	 * Adds a point to the {@link Centroid}.
+	 * Adds a point to the {@link Microcluster}.
 	 * 
 	 * @param point
 	 *            The point to add
 	 * @param currentTime
 	 *            The current time
-	 * @return True, if the point could be added to the {@link Centroid}, false
+	 * @return True, if the point could be added to the {@link Microcluster}, false
 	 *         otherwise.
 	 */
 	public boolean addPoint(double[] point, int currentTime) {
@@ -66,19 +66,19 @@ public abstract class Centroid {
 	 * @param point
 	 *            The point to be added.
 	 * 
-	 * @return True, if the point could be added to the {@link Centroid}, false
+	 * @return True, if the point could be added to the {@link Microcluster}, false
 	 *         otherwise.
 	 */
 	public abstract boolean addPointImpl(double[] point);
 
 	/**
-	 * Returns the radius of the {@link Centroid}. The centroid is faded before
+	 * Returns the radius of the {@link Microcluster}. The {@link Microcluster} is faded before
 	 * calculating the radius.
 	 * 
 	 * @param currentTime
 	 *            The current time
 	 * 
-	 * @return The radius of the {@link Centroid}.
+	 * @return The radius of the {@link Microcluster}.
 	 */
 	public double getRadius(int currentTime) {
 		fade(currentTime);
@@ -88,12 +88,12 @@ public abstract class Centroid {
 	/**
 	 * The implementation of the radius calculation of the subclass.
 	 * 
-	 * @return The radius of the {@link Centroid}.
+	 * @return The radius of the {@link Microcluster}.
 	 */
 	public abstract double getRadiusImpl();
 
 	/**
-	 * Returns the weight of the {@link Centroid}.
+	 * Returns the weight of the {@link Microcluster}.
 	 * 
 	 * @param currentTime
 	 *            The current time
@@ -108,9 +108,9 @@ public abstract class Centroid {
 	}
 
 	/**
-	 * Fades the @{link Centroid} using exponential fading. Here the fading of
+	 * Fades the @link Microcluster} using exponential fading. Here the fading of
 	 * the weight is taken care of, the subclasses take care of the fading of
-	 * the other centroid-elements.
+	 * the other cluster features.
 	 * 
 	 * @param currentTime
 	 *            The current time
@@ -136,16 +136,16 @@ public abstract class Centroid {
 	 * 
 	 * @param vector
 	 *            The vector
-	 * @return The distance of the {@link Centroid} to the vector.
+	 * @return The distance of the {@link Microcluster} to the vector.
 	 * @throws {@link
 	 *             IllegalArgumentException} if the vector does not have the
-	 *             same number of dimensions as the centroid.
+	 *             same number of dimensions as the {@link Microcluster}.
 	 */
 	public double euclideanDistance(double[] vector) {
 		double[] v1 = getCentre();
 		double[] v2 = vector;
 		if (v1.length != v2.length) {
-			throw new IllegalArgumentException("Centroid vectors are of different length.");
+			throw new IllegalArgumentException("Vectors are of different length.");
 		}
 		double distance = 0;
 		for (int i = 0; i < v1.length; i++) {

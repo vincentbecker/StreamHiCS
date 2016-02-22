@@ -110,7 +110,6 @@ public class StreamHiCS implements Callback {
 		this.subspaceBuilder = subspaceBuilder;
 		this.changeChecker = changeChecker;
 		this.callbacks = new ArrayList<Callback>();
-		// this.pruner = new SimplePruner(pruningDifference);
 		if (pruningDifference >= 0) {
 			this.pruner = new TopDownPruner(pruningDifference);
 		}
@@ -136,16 +135,21 @@ public class StreamHiCS implements Callback {
 	public int getNumberOfElements() {
 		return contrastEvaluator.getNumberOfElements();
 	}
-	
-	public Stopwatch getStopwatch(){
+
+	/**
+	 * Returns the internal {@link Stopwatch}.
+	 * 
+	 * @return The {@link Stopwatch}
+	 */
+	public Stopwatch getStopwatch() {
 		return this.stopwatch;
 	}
 
 	/**
-	 * Sets the callback.
+	 * Sets the {@link Callback}.
 	 * 
 	 * @param callback
-	 *            The callback.
+	 *            The {@link Callback}.
 	 */
 	public void addCallback(Callback callback) {
 		this.callbacks.add(callback);
@@ -201,7 +205,7 @@ public class StreamHiCS implements Callback {
 		if (correlatedSubspaces.isEmpty()) {
 			// Find new correlated subspaces
 			correlatedSubspaces = subspaceBuilder.buildCorrelatedSubspaces();
-			if(pruner != null){
+			if (pruner != null) {
 				correlatedSubspaces = pruner.prune(correlatedSubspaces);
 			}
 			if (!correlatedSubspaces.isEmpty()) {
@@ -222,8 +226,6 @@ public class StreamHiCS implements Callback {
 				// If contrast has changed more than epsilon or has fallen below
 				// the threshold we start a new complete evaluation.
 				if (Math.abs(contrast - subspace.getContrast()) > epsilon || contrast < threshold) {
-					// if(subspace.getContrast() - contrast > epsilon ||
-					// contrast < threshold){
 					update = true;
 				} else {
 					keep.addSubspace(subspace);
@@ -237,8 +239,7 @@ public class StreamHiCS implements Callback {
 				correlatedSubspaces.addSubspaces(keep);
 				correlatedSubspaces.addSubspaces(subspaceBuilder.buildCorrelatedSubspaces());
 				// Carry out pruning as the last step. All those subspaces which
-				// are
-				// subspace to another subspace with higher contrast are
+				// are subspace to another subspace with higher contrast are
 				// discarded.
 				if (pruner != null) {
 					correlatedSubspaces = pruner.prune(correlatedSubspaces);
@@ -247,14 +248,6 @@ public class StreamHiCS implements Callback {
 		}
 
 		return update;
-
-		/*
-		 * TODO: Remove // Parallel version List<Double> res =
-		 * correlatedSubspaces.parallelStream().map(s -> { return
-		 * evaluateSubspaceContrast(s); }).collect(Collectors.toList());
-		 * 
-		 * for (Double d : res) { if (d < threshold) { update = true; } }
-		 */
 	}
 
 	/**
@@ -268,19 +261,26 @@ public class StreamHiCS implements Callback {
 
 	@Override
 	public void onAlarm() {
-		// System.out.println(getNumberOfElements());
 		stopwatch.start("Evaluation");
 		boolean updated = evaluateCorrelatedSubspaces();
 		stopwatch.stop("Evaluation");
 		if (updated) {
-			// System.out.println(correlatedSubspaces.toString());
 			// Notify the callbacks
-			for(Callback callback : callbacks){
+			for (Callback callback : callbacks) {
 				callback.onAlarm();
 			}
 		}
 	}
 
+	/**
+	 * Checks whether the given {@link Subspace} is still valid, i.e. its
+	 * contrast is calculated and checked if it is above or equal to the
+	 * threshold and it has not changed more than epsilon.
+	 * 
+	 * @param subspace
+	 *            The {@link Subspace}
+	 * @return True, if it is still valid, false otherwise.
+	 */
 	public boolean isValidSubspace(Subspace subspace) {
 		double contrast = contrastEvaluator.evaluateSubspaceContrast(subspace);
 		if (Math.abs(Math.abs(contrast - subspace.getContrast())) > epsilon || contrast < threshold) {

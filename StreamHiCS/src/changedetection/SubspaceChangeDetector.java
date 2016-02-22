@@ -21,7 +21,7 @@ import weka.core.Utils;
  * @author Vincent
  *
  */
-public class SubspaceChangeDetector extends SingleClassifierDrift implements ChangeDetector {
+public class SubspaceChangeDetector extends SingleClassifierDrift implements SubspaceModel, ChangeDetector {
 
 	/**
 	 * The serial version ID.
@@ -38,8 +38,14 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 	 */
 	private InstancesHeader header;
 
+	/**
+	 * The error rate of this classifier.
+	 */
 	private double errorRate;
 
+	/**
+	 * The number of instances observed.
+	 */
 	private int numberInstances;
 
 	/**
@@ -62,10 +68,12 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		return this.subspace;
 	}
 
+	@Override
 	public boolean isWarningDetected() {
 		return this.ddmLevel == DDM_WARNING_LEVEL;
 	}
 
+	@Override
 	public boolean isChangeDetected() {
 		return this.ddmLevel == DDM_OUTCONTROL_LEVEL;
 	}
@@ -97,10 +105,15 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		return super.getVotesForInstance(projectInstance(inst));
 	}
 
+	@Override
 	public int getClassPrediction(Instance instance) {
 		return Utils.maxIndex(getVotesForInstance(instance));
 	}
 
+	/**
+	 * Exchanges the classifier with a new classifier which was trained since
+	 * the warning level was reached.
+	 */
 	public void changeClassifier() {
 		this.classifier = this.newclassifier;
 		if (this.classifier instanceof WEKAClassifier) {
@@ -110,11 +123,13 @@ public class SubspaceChangeDetector extends SingleClassifierDrift implements Cha
 		this.newclassifier.resetLearning();
 	}
 
+	@Override
 	public double getAccuracy() {
 		return 1 - errorRate;
 	}
 
-	private Instance projectInstance(Instance instance) {
+	@Override
+	public Instance projectInstance(Instance instance) {
 		int l = subspace.size();
 		if (header == null) {
 			ArrayList<Attribute> attributes = new ArrayList<Attribute>();

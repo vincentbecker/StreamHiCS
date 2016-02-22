@@ -10,7 +10,7 @@ import org.junit.Test;
 import fullsystem.Contrast;
 import moa.clusterers.denstream.WithDBSCAN;
 import clustree.ClusTree;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindow;
 import streamdatastructures.SlidingWindowAdapter;
@@ -76,7 +76,7 @@ public class ContrastTest {
 			double radius = 0.001;
 			double learningRate = 0.1;
 
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "radius");
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			contrastEvaluator = new Contrast(m, alpha, adapter);
 
 			targetLowContrast = 0.1;

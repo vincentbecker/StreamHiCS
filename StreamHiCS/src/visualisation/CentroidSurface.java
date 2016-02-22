@@ -12,9 +12,9 @@ import javax.swing.Timer;
 
 import org.apache.commons.math3.util.MathArrays;
 
-import centroids.Centroid;
 import fullsystem.Contrast;
-import streamdatastructures.CentroidsAdapter;
+import microclusters.Microcluster;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.Selection;
 import streamdatastructures.SummarisationAdapter;
 import weka.core.DenseInstance;
@@ -38,7 +38,7 @@ class CentroidSurface extends JPanel implements ActionListener {
 	private SummarisationAdapter adapter;
 
 	public CentroidSurface() {
-		adapter = new CentroidsAdapter(1000, 0.2, 0.2, "adapting");
+		adapter = new MCAdapter(1000, 0.2, 0.2, "adapting");
 		this.contrast = new Contrast(20, 0.4, adapter);
 		r = new Random();
 		initTimer();
@@ -70,8 +70,8 @@ class CentroidSurface extends JPanel implements ActionListener {
 		int xPixel = 0;
 		int yPixel = 0;
 		int weight = 0;
-		Centroid[] cs = ((CentroidsAdapter) adapter).getCentroids();
-		Centroid c;
+		Microcluster[] cs = ((MCAdapter) adapter).getCentroids();
+		Microcluster c;
 		boolean drawSlice = (count % 100 == 0);
 		Selection s = null;
 		if (drawSlice) {

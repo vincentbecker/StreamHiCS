@@ -27,7 +27,7 @@ import moa.classifiers.Classifier;
 import moa.classifiers.trees.HoeffdingTree;
 import moa.clusterers.clustream.Clustream;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SlidingWindowAdapter;
@@ -289,13 +289,13 @@ public class Classification_RealWorldDatasets {
 		case ADAPTINGCENTROIDS:
 			double radius = 3.5;
 			double learningRate = 0.1;
-			adapter = new CentroidsAdapter(horizon, radius, learningRate, "adapting");
+			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
 			radius = 0.05;
-			adapter = new CentroidsAdapter(horizon, radius, 0.1, "radius");
+			adapter = new MCAdapter(horizon, radius, 0.1, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius;
 			break;
 		default:

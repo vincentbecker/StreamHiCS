@@ -14,7 +14,7 @@ import subspace.Subspace;
 public class FullSpaceContrastChecker extends ChangeChecker {
 
 	/**
-	 * The {@link Contrast} instance..
+	 * The {@link Contrast} instance.
 	 */
 	private Contrast contrastEvaluator;
 
@@ -22,16 +22,6 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	 * The full space.
 	 */
 	private Subspace fullSpace;
-
-	/**
-	 * The minimal contrast found.
-	 */
-	private double minContrast = Double.MIN_VALUE;
-
-	/**
-	 * The maximum contrast found.
-	 */
-	private double maxContrast = Double.MIN_VALUE;
 
 	/**
 	 * The weighted average of the contrast.
@@ -48,11 +38,6 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	 * average.
 	 */
 	private double threshold;
-
-	/**
-	 * Initialisation flag.
-	 */
-	private boolean init = false;
 
 	/**
 	 * Creates an instance of this class.
@@ -85,7 +70,7 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	 * Sets the {@link Contrast} instance.
 	 * 
 	 * @param contrastEvaluator
-	 *            The contrast claculator
+	 *            The contrast calculator
 	 */
 	public void setContrastEvaluator(Contrast contrastEvaluator) {
 		this.contrastEvaluator = contrastEvaluator;
@@ -94,46 +79,6 @@ public class FullSpaceContrastChecker extends ChangeChecker {
 	@Override
 	public boolean checkForChange() {
 		return weightedAverageMethod();
-	}
-
-	/**
-	 * The method to check for a change here is to continuously update a minimum
-	 * and maximum of the contrast. As soon as the contrast differs more than
-	 * the threshold in either direction, a change is detected.
-	 * 
-	 * @return True, if a change is detected, false otherwise.
-	 */
-	private boolean minMaxMethod() {
-		double contrast = contrastEvaluator.evaluateSubspaceContrast(fullSpace);
-
-		System.out.println("Contrast: " + contrast);
-
-		if (!init) {
-			minContrast = contrast;
-			maxContrast = contrast;
-			init = true;
-		}
-
-		double minDifference = minContrast - contrast;
-		double maxDifference = contrast - maxContrast;
-
-		if (contrast < minContrast) {
-			minContrast = contrast;
-		}
-		if (contrast > maxContrast) {
-			maxContrast = contrast;
-		}
-
-		// double difference = Math.abs(lastContrast - contrast);
-		// lastContrast = contrast;
-		System.out.println("MinDifference: " + minDifference + ", MaxDifference: " + maxDifference);
-		if (minDifference > threshold || maxDifference > threshold) {
-			minContrast = 0;
-			maxContrast = 0;
-			init = false;
-			return true;
-		}
-		return false;
 	}
 
 	/**

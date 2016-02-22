@@ -131,50 +131,9 @@ public class AprioriBuilder extends SubspaceBuilder {
 		return correlatedSubspaces;
 	}
 
+	
 	/**
-	 * Carries out the apriori-algorithm recursively.
-	 * 
-	 * @param c_K
-	 *            The current candidate set for correlated subspaces in the
-	 *            recursion.
-	 */
-	private void apriori(SubspaceSet c_K) {
-		SubspaceSet c_Kplus1 = new SubspaceSet();
-		c_K.sort();
-		// The subspaces in the set are sorted. To speed up the process we can
-		// stop looking
-		// for a merge as soon as we have found the first "no merge" case
-		boolean continueMerging = true;
-		double contrast = 0;
-		for (int i = 0; i < c_K.size() - 1; i++) {
-			continueMerging = true;
-			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
-				// Creating new candidates
-				Subspace kPlus1Candidate = Subspace.merge(c_K.getSubspace(i), c_K.getSubspace(j));
-
-				if (kPlus1Candidate != null) {
-					// Calculate the contrast of the subspace
-					contrast = contrastEvaluator.evaluateSubspaceContrast(kPlus1Candidate);
-					kPlus1Candidate.setContrast(contrast);
-					if (contrast >= threshold) {
-						c_Kplus1.addSubspace(kPlus1Candidate);
-					}
-				} else {
-					continueMerging = false;
-				}
-			}
-		}
-		if (!c_Kplus1.isEmpty()) {
-			// Select the subspaces with highest contrast
-			c_Kplus1.selectTopK(cutoff);
-			correlatedSubspaces.addSubspaces(c_Kplus1);
-			// Recurse
-			apriori(c_Kplus1);
-		}
-	}
-
-	/**
-	 * Does not only check from the beginning of a set for overlap of two
+	 * Recursive Apriori part. Does not only check from the beginning of a set for overlap of two
 	 * {@link Subspace}s in an iteration.
 	 * 
 	 * @param c_K
@@ -209,54 +168,6 @@ public class AprioriBuilder extends SubspaceBuilder {
 			correlatedSubspaces.addSubspaces(c_Kplus1);
 			// Recurse
 			aprioriFull(c_Kplus1);
-		}
-	}
-
-	/**
-	 * Parallel version.
-	 * 
-	 * @param c_K
-	 */
-	private void aprioriParallel(SubspaceSet c_K) {
-		SubspaceSet c_Kplus1 = new SubspaceSet();
-		SubspaceSet temp = new SubspaceSet();
-		c_K.sort();
-		// The subspaces in the set are sorted. To speed up the process we can
-		// stop looking
-		// for a merge as soon as we have found the first "no merge" case
-		boolean continueMerging = true;
-		for (int i = 0; i < c_K.size() - 1; i++) {
-			continueMerging = true;
-			for (int j = i + 1; j < c_K.size() && continueMerging; j++) {
-				// Creating new candidates
-				Subspace kPlus1Candidate = Subspace.mergeFull(c_K.getSubspace(i), c_K.getSubspace(j));
-				if (kPlus1Candidate != null) {
-					temp.addSubspace(kPlus1Candidate);
-				} else {
-					continueMerging = false;
-				}
-			}
-		}
-
-		// Parallel execution of the contrast calculation
-		temp.getSubspaces().parallelStream().forEach(candidate -> {
-			candidate.setContrast(contrastEvaluator.evaluateSubspaceContrast(candidate));
-
-		});
-
-		// Add the subspaces greater or equal to the threshold to c_Kplus1
-		for (Subspace candidate : temp.getSubspaces()) {
-			if (candidate.getContrast() >= threshold) {
-				c_Kplus1.addSubspace(candidate);
-			}
-		}
-
-		if (!c_Kplus1.isEmpty()) {
-			// Select the subspaces with highest contrast
-			c_Kplus1.selectTopK(cutoff);
-			correlatedSubspaces.addSubspaces(c_Kplus1);
-			// Recurse
-			aprioriParallel(c_Kplus1);
 		}
 	}
 }

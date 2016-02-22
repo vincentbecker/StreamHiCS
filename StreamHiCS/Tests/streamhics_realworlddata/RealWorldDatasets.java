@@ -21,7 +21,7 @@ import fullsystem.StreamHiCS;
 import clustree.ClusTree;
 import environment.Stopwatch;
 import moa.streams.ArffFileStream;
-import streamdatastructures.CentroidsAdapter;
+import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
@@ -408,7 +408,7 @@ public class RealWorldDatasets {
 		SummarisationAdapter adapter = new MicroclusteringAdapter(mcs);
 		*/
 		
-		CentroidsAdapter adapter = new CentroidsAdapter(10000, 0.1, 0.1, "radius");
+		MCAdapter adapter = new MCAdapter(10000, 0.1, 0.1, "radius");
 		Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
 		
 		//Contrast contrastEvaluator = new SlidingWindowContrast(numberOfDimensions, m, alpha, 10000);
