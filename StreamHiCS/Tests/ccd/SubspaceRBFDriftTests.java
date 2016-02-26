@@ -44,9 +44,9 @@ import weka.core.Utils;
 public class SubspaceRBFDriftTests {
 	private SubspaceRandomRBFGeneratorDrift stream;
 	private int numInstances;
-	private final int horizon = 2000;
+	private final int horizon = 1000;
 	private final int m = 50;
-	private final double alpha = 0.05;
+	private final double alpha = 0.1;
 	private double epsilon;
 	private double aprioriThreshold;
 	private double hierarchicalThreshold;
@@ -64,6 +64,7 @@ public class SubspaceRBFDriftTests {
 	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
 	private Random random;
+	private double radius;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
@@ -85,7 +86,7 @@ public class SubspaceRBFDriftTests {
 				builderDescription = null;
 				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS
 						&& buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					for (int test = 3; test <= 4; test++) {
+					for (int test = 3; test <= 3; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
@@ -209,14 +210,22 @@ public class SubspaceRBFDriftTests {
 							case CLUSTREE_DEPTHFIRST:
 								aprioriThreshold = 0.35;
 								hierarchicalThreshold = 0.5;
-								connectedComponentsThreshold = 0.5;
+								connectedComponentsThreshold = 0.45;
 								cliqueThreshold = 0.55;
 								break;
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.25;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.3;
+								connectedComponentsThreshold = 0.4;
 								cliqueThreshold = 0.4;
+								radius = 3.75;
+								break;
+							case RADIUSCENTROIDS:
+								aprioriThreshold = 0.25;
+								hierarchicalThreshold = 0.65;
+								connectedComponentsThreshold = 0.45;
+								cliqueThreshold = 0.4;
+								radius = 1.1;
 								break;
 							default:
 								break;
@@ -242,7 +251,7 @@ public class SubspaceRBFDriftTests {
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(2);
+							stream.scaleIrrelevantDimensionsOption.setValue(1);
 							stream.numCentroidsOption.setValue(2);
 							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
@@ -255,7 +264,7 @@ public class SubspaceRBFDriftTests {
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 1;
+							speed = 0.1;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
@@ -279,13 +288,14 @@ public class SubspaceRBFDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.45;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.3;
+								connectedComponentsThreshold = 0.4;
 								cliqueThreshold = 0.5;
+								radius = 3.75;
 								break;
 							case RADIUSCENTROIDS:
 								aprioriThreshold = 0.45;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.55;
+								connectedComponentsThreshold = 0.6;
 								cliqueThreshold = 0.5;
 								break;
 							default:
@@ -312,7 +322,7 @@ public class SubspaceRBFDriftTests {
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
-							stream.scaleIrrelevantDimensionsOption.setValue(2);
+							stream.scaleIrrelevantDimensionsOption.setValue(1);
 							stream.numCentroidsOption.setValue(2);
 							stream.numSubspaceCentroidsOption.setValue(2);
 							stream.sameSubspaceOption.setValue(true);
@@ -325,7 +335,7 @@ public class SubspaceRBFDriftTests {
 							changePoints[3] = 70000;
 
 							changeLength = 1000;
-							speed = 1;
+							speed = 0.1;
 							trueChanges.add(10000.0);
 							trueChanges.add(30000.0);
 							trueChanges.add(50000.0);
@@ -361,6 +371,7 @@ public class SubspaceRBFDriftTests {
 						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
 						scd.initOption.setValue(2000);
 						scd.useRestspaceOption.setValue(false);
+						scd.addOption.set();
 						scd.prepareForUse();
 						streamHiCS1.addCallback(scd);
 
@@ -563,7 +574,7 @@ public class SubspaceRBFDriftTests {
 				// System.out.println("sccd: WARNING at " + numberSamples);
 			} else if (sccd.isChangeDetected()) {
 				sccdDetectedChanges.add((double) numberSamples);
-				//System.out.println("sccd: CHANGE at " + numberSamples);
+				System.out.println("sccd: CHANGE at " + numberSamples);
 			}
 
 			if (refDetector.isWarningDetected()) {
@@ -656,14 +667,13 @@ public class SubspaceRBFDriftTests {
 			break;
 		case ADAPTINGCENTROIDS:
 			// double radius = 10* Math.sqrt(numberOfDimensions) - 1;
-			double radius = 2 * Math.sqrt(numberOfDimensions) - 1;
+			//double radius = 4;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		case RADIUSCENTROIDS:
-			radius = 0.5;
 			learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
 			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius

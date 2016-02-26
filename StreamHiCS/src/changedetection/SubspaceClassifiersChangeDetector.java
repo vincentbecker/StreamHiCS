@@ -149,9 +149,10 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 		// Change subspaces and reset classifiers
 		if (initialized) {
 			SubspaceSet correlatedSubspaces = streamHiCS.getCurrentlyCorrelatedSubspaces();
-			 System.out.println("SCCD: Correlated: " + correlatedSubspaces.toString() + " at " + numberSamples);
+			System.out.println("SCCD: Correlated: " + correlatedSubspaces.toString() + " at " + numberSamples);
 			if (createSubspaceClassifiers(correlatedSubspaces)) {
 				ddm.resetLearning();
+				//System.out.println("Reset");
 			}
 		}
 	}
@@ -287,6 +288,7 @@ public class SubspaceClassifiersChangeDetector extends AbstractClassifier implem
 			}
 			// If the subspace is new we start a new change detector on it
 			if (!found) {
+				//System.out.println("SCCD: Not found!");
 				update = true;
 				temp.add(createSubspaceClassifier(s));
 				newTemp.add(createSubspaceClassifier(s));

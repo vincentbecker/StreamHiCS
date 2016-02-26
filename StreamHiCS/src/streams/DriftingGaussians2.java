@@ -1,19 +1,35 @@
 package streams;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 import moa.core.ObjectRepository;
+import moa.options.FlagOption;
+import moa.options.IntOption;
 import moa.tasks.TaskMonitor;
 import subspace.Subspace;
+import subspace.SubspaceSet;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 
-public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
+public class DriftingGaussians2 extends SubspaceRandomRBFGeneratorDrift {
 
 	/**
-	 * 
+	 * Determines how many centroids use subspaces.
+	 */
+	public IntOption numSubspacesOption = new IntOption("numSubspaces", 'u', "The number of subspaces.", 1, 0,
+			Integer.MAX_VALUE);
+
+	/**
+	 * Determines whether the size of the subspaces is fixed or not.
+	 */
+	public FlagOption disjointSubspacesOption = new FlagOption("disjointSubspaces", 'j',
+			"Determines if the subspaces overlap or not.");
+
+	/**
+	 * The serial version ID.
 	 */
 	private static final long serialVersionUID = -8561104512189724401L;
 
@@ -28,20 +44,30 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 	private MultivariateNormalDistribution newNormalDistribution;
 
 	/**
-	 * The covariance value every entry of the covariance matrix is set to except the diagonal. 
+	 * The covariance value every entry of the covariance matrix is set to
+	 * except the diagonal.
 	 */
 	private final double covariance = 0.9;
 
 	/**
-	 * The current {@link Subspace} used. 
+	 * The current {@link Subspace} used.
 	 */
 	private Subspace currentSubspace;
 
 	/**
-	 * The new {@link Subspace} used on case of a virtual drift. 
+	 * The new {@link Subspace} used on case of a virtual drift.
 	 */
 	private Subspace newSubspace;
-	
+
+	/**
+	 * The number of subspaces.
+	 */
+	private int numberSubspaces;
+
+	/**
+	 * Whether the subspace overlap or not.
+	 */
+	private boolean disjointSubspaces;
 
 	@Override
 	public Instance nextInstance() {
@@ -65,7 +91,9 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 		}
 
 		// Create instance
-		//int centroidIndex = MiscUtils.chooseRandomIndexBasedOnWeights(this.centroidWeights, this.instanceRandom);
+		// int centroidIndex =
+		// MiscUtils.chooseRandomIndexBasedOnWeights(this.centroidWeights,
+		// this.instanceRandom);
 		int centroidIndex = modelRandom.nextInt(numberCentroids);
 		Centroid centroid = this.centroids[centroidIndex];
 		double[] attVals = new double[numberDimensions + 1];
@@ -99,7 +127,7 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 				attVals[i] = centroid.centre[i] + sample[i];
 			} else {
 				attVals[i] = (instanceRandom.nextDouble() - 1) * scaleIrrelevant;
-				//attVals[i] = -1;
+				// attVals[i] = -1;
 			}
 		}
 
@@ -118,22 +146,27 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
 		numberDimensions = numAttsOption.getValue();
-		
+		numberSubspaces = numSubspacesOption.getValue();
+		disjointSubspaces = disjointSubspacesOption.isSet();
+		if (disjointSubspaces && sameSubspaceOption.isSet()
+				&& numberSubspaces * avgSubspaceSizeOption.getValue() > numberDimensions) {
+			throw new IllegalArgumentException("Too many subspace or dimensions per subspace.");
+		}
 		generateHeader();
 		generateCentroids();
 		setClasses();
-		
+
 		// Generate distribution
 		this.sameSubspaceOption.set();
 		double[] means = new double[numberDimensions];
-		
-		//Centroid weights
+
+		// Centroid weights
 		numberCentroids = numCentroidsOption.getValue();
-		
-		Subspace s = createSubspace();
-		currentSubspace = s;
+
+		SubspaceSet subspaceSet = createSubspaces();
+		currentSubspace = createOneSubspace(subspaceSet);
 		currentNormalDistribution = new MultivariateNormalDistribution(means,
-				generateRandomCovarianceMatrix(s, covariance));
+				generateRandomCovarianceMatrix(subspaceSet, covariance));
 		newNormalDistribution = null;
 	}
 
@@ -145,40 +178,89 @@ public class DriftingGaussians extends SubspaceRandomRBFGeneratorDrift {
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		// Generate distribution
 		double[] means = new double[numberDimensions];
-		Subspace s = createSubspace();
-		currentSubspace = s;
+		SubspaceSet subspaceSet = createSubspaces();
+		currentSubspace = createOneSubspace(subspaceSet);
 		currentNormalDistribution = new MultivariateNormalDistribution(means,
-				generateRandomCovarianceMatrix(s, covariance));
+				generateRandomCovarianceMatrix(subspaceSet, covariance));
 		newNormalDistribution = null;
 	}
 
-	private double[][] generateRandomCovarianceMatrix(Subspace s, double covariance) {
+	private double[][] generateRandomCovarianceMatrix(SubspaceSet subspaceSet, double covariance) {
 		double[][] covarianceMatrix = new double[numberDimensions][numberDimensions];
 		for (int i = 0; i < numberDimensions; i++) {
 			covarianceMatrix[i][i] = 1;
 		}
-		int[] dimensions = s.getDimensions();
-		int d1;
-		int d2;
-		for (int i = 0; i < dimensions.length; i++) {
-			for (int j = i + 1; j < dimensions.length; j++) {
-				d1 = dimensions[i];
-				d2 = dimensions[j];
-				covarianceMatrix[d1][d2] = covariance;
-				covarianceMatrix[d2][d1] = covariance;
+		for (Subspace subspace : subspaceSet.getSubspaces()) {
+			int[] dimensions = subspace.getDimensions();
+			int d1;
+			int d2;
+			for (int i = 0; i < dimensions.length; i++) {
+				for (int j = i + 1; j < dimensions.length; j++) {
+					d1 = dimensions[i];
+					d2 = dimensions[j];
+					covarianceMatrix[d1][d2] = covariance;
+					covarianceMatrix[d2][d1] = covariance;
+				}
 			}
 		}
+
 		return covarianceMatrix;
 	}
 
 	@Override
 	public void subspaceChange(int changeLength) {
-		Subspace s = createSubspace();
-		newSubspace = s;
+		SubspaceSet subspaceSet = createSubspaces();
+		newSubspace = createOneSubspace(subspaceSet);
 		double[] means = new double[numberDimensions];
 		newNormalDistribution = new MultivariateNormalDistribution(means,
-				generateRandomCovarianceMatrix(s, covariance));
+				generateRandomCovarianceMatrix(subspaceSet, covariance));
 		changeCounter = 0;
 		this.changeLength = changeLength;
+	}
+
+	private Subspace createOneSubspace(SubspaceSet subspaceSet) {
+		Subspace s = new Subspace();
+		for (Subspace subspace : subspaceSet.getSubspaces()) {
+			for (Integer dim : subspace.getDimensions()) {
+				s.addDimension(dim);
+			}
+		}
+		return s;
+	}
+
+	private SubspaceSet createSubspaces() {
+		SubspaceSet subspaceSet = new SubspaceSet();
+		ArrayList<Integer> alreadyAdded = new ArrayList<Integer>();
+		for (int i = 0; i < numberSubspaces; i++) {
+			int numRelevantDims = 0;
+			if (randomSubspaceSizeOption.isSet()) {
+				numRelevantDims = (int) (avgSubspaceSizeOption.getValue() + (modelRandom.nextBoolean() ? -1 : 1)
+						* avgSubspaceSizeOption.getValue() * modelRandom.nextDouble());
+			} else {
+				numRelevantDims = avgSubspaceSizeOption.getValue();
+			}
+			if (numRelevantDims < 2) {
+				numRelevantDims = 2; // At least 2
+			}
+			if (numRelevantDims > numAttsOption.getValue()) {
+				numRelevantDims = numberDimensions;
+			}
+
+			Subspace s = new Subspace();
+
+			for (int j = 0; j < numRelevantDims; j++) {
+				int relevantDim = (int) (modelRandom.nextDouble() * (numAttsOption.getValue()));
+				while (s.contains(relevantDim) || (disjointSubspaces && alreadyAdded.contains(relevantDim))) {
+					relevantDim = (int) (modelRandom.nextDouble() * (numAttsOption.getValue()));
+				}
+				s.addDimension(relevantDim);
+				alreadyAdded.add(relevantDim);
+			}
+			subspaceSet.addSubspace(s);
+		}
+
+		System.out.println("Correlated Subspaces: " + subspaceSet.toString());
+
+		return subspaceSet;
 	}
 }

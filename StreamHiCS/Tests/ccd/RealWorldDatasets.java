@@ -54,7 +54,7 @@ public class RealWorldDatasets {
 	private String path;
 	private ArffFileStream stream;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 1;
+	private static final int numberTestRuns = 10;
 	private SubspaceChangeDetectors scd;
 	private SubspaceChangeDetectors scdr;
 	private SubspaceClassifiersChangeDetector sccd;
@@ -96,7 +96,7 @@ public class RealWorldDatasets {
 
 	@Test
 	public void runDataset() {
-		dataset = Dataset.COVERTYPE;
+		dataset = Dataset.ELECTRICITY;
 		StreamSummarisation summarisation = StreamSummarisation.ADAPTINGCENTROIDS;
 		SubspaceBuildup buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 		double threshold = 0;
@@ -117,14 +117,14 @@ public class RealWorldDatasets {
 
 			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/RealWorldData/ForestCovertype_Results.txt";
 			
-			summarisation = StreamSummarisation.ADAPTINGCENTROIDS;
+			summarisation = StreamSummarisation.CLUSTREE_DEPTHFIRST;
 			buildup = SubspaceBuildup.APRIORI;
 
 			numberOfDimensions = 10;
 			originalNumDimensions = 10;
 			switch (summarisation) {
 			case CLUSTREE_DEPTHFIRST:
-				threshold = 0.55;
+				threshold = 0.3;
 				break;
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 10) {
@@ -137,8 +137,14 @@ public class RealWorldDatasets {
 				}
 				break;
 			case RADIUSCENTROIDS:
-				threshold = 0.35;
-				radius = 0.25;
+				if(numberOfDimensions == originalNumDimensions){
+					threshold = 0.35;
+					radius = 0.25;
+				}else{
+					threshold = 0.35;
+					radius = 0.1;
+				}
+
 				break;
 			default:
 				break;
@@ -180,7 +186,7 @@ public class RealWorldDatasets {
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 23) {
 					threshold = 0.6;
-					radius = 1000 * Math.sqrt(numberOfDimensions) - 1;
+					radius = 180;
 				} else {
 					threshold = 0.6;
 					radius = 1000 * Math.sqrt(numberOfDimensions) - 1;
@@ -216,14 +222,14 @@ public class RealWorldDatasets {
 
 			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/RealWorldData/Electricity_Results.txt";
 			
-			summarisation = StreamSummarisation.ADAPTINGCENTROIDS;
+			summarisation = StreamSummarisation.RADIUSCENTROIDS;
 			buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 
 			numberOfDimensions = 8;
 			originalNumDimensions = 8;
 			switch (summarisation) {
 			case CLUSTREE_DEPTHFIRST:
-				threshold = 0.55;
+				threshold = 0.5;
 				break;
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 8) {
@@ -231,19 +237,22 @@ public class RealWorldDatasets {
 					//radius = 3 * Math.sqrt(numberOfDimensions) - 1;
 					radius = 0.1;
 				} else {
-					threshold = 0.4;
-					radius = 3 * Math.sqrt(numberOfDimensions) - 1;
+					threshold = 0.5;
+					radius = 2;
 				}
 				// threshold = 0.45 + alpha = 0.15 + apriori-> best for
 				// eight dimensions
 				break;
 			case RADIUSCENTROIDS:
 				if (numberOfDimensions == 8) {
-					threshold = 0.45;
+					threshold = 0.4;
+					radius = 0.1;
+				} else if(numberOfDimensions == 20) {
+					threshold = 0.4;
 					radius = 0.6;
-				} else {
-					threshold = 0.45;
-					radius = 0.6;
+				}else{
+					threshold = 0.4;
+					radius = 0.55;
 				}
 				// threshold = 0.45 + alpha = 0.15 + apriori-> best for
 				// eight dimensions
@@ -410,7 +419,7 @@ public class RealWorldDatasets {
 			Instance inst = stream.nextInstance();
 
 			if (numberSamples % 10000 == 0) {
-				System.out.println(scd.getNumberOfElements());
+				//System.out.println(scd.getNumberOfElements());
 			}
 
 			if (numberOfDimensions > originalNumDimensions) {

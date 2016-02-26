@@ -195,11 +195,11 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 	public void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
 		// super.prepareForUseImpl(monitor, repository);
 		monitor.setCurrentActivity("Preparing subspace random RBF...", -1.0);
+		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
+		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		generateHeader();
 		generateCentroids();
 		setClasses();
-		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
-		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 		numberDimensions = numAttsOption.getValue();
 		// Get scale
 		this.scaleIrrelevant = scaleIrrelevantDimensionsOption.getValue();
@@ -226,11 +226,12 @@ public class SubspaceRandomRBFGeneratorDrift extends RandomRBFGeneratorDrift {
 
 	@Override
 	public void restart() {
-		generateCentroids();
-		setClasses();
 		this.instanceRandom = new Random(this.instanceRandomSeedOption.getValue());
 		this.modelRandom = new Random(this.modelRandomSeedOption.getValue());
 
+		generateCentroids();
+		setClasses();
+		
 		if (sameSubspaceOption.isSet()) {
 			// Use the the same subspace for all centroids with subspaces
 			Subspace s = createSubspace();

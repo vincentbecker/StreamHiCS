@@ -12,14 +12,16 @@ import org.junit.Test;
 
 import changechecker.ChangeChecker;
 import changechecker.TimeCountChecker;
+import clustree.ClusTree;
 import environment.CovarianceMatrixGenerator;
 import environment.Evaluator;
+import environment.Parameters.StreamSummarisation;
 import environment.Parameters.SubspaceBuildup;
 import environment.Stopwatch;
 import fullsystem.Callback;
 import fullsystem.Contrast;
 import fullsystem.StreamHiCS;
-import streamdatastructures.MCAdapter;
+import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.SummarisationAdapter;
 import streams.GaussianStream;
@@ -59,119 +61,146 @@ public class HighDimRuntime {
 
 	@Test
 	public void test1() {
-		int horizon = 5000;
+		int horizon = 2000;
 		pruningDifference = 0.2;
 		double aprioriThreshold = 0.3;
 		double hierarchicalThreshold = 0.45;
-		double unionThreshold = 0.5;
+		double connectedComponentsThreshold = 0.5;
 		boolean useCorrSummary = false;
-		SubspaceBuildup buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
+		// SubspaceBuildup buildup = SubspaceBuildup.APRIORI;
 
 		results = new LinkedList<String>();
-		String summarisationDescription = null;
-		String builderDescription = null;
-		boolean addDescription = false;
-		for (int d = 5; d <= 100; d += 5) {
-			double radius = 4 * Math.sqrt(d) - 1;
-			double learningRate = 1;
-			SummarisationAdapter adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
-			if (summarisationDescription == null) {
-				addDescription = true;
+		for (int b = 0; b < 2; b++) {
+			if (b == 0) {
+				useCorrSummary = false;
+			} else {
+				useCorrSummary = true;
 			}
-			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: 4*sqrt(d) - 1"
-					+ ", learning rate: " + learningRate;
-			if (addDescription) {
-				results.add(summarisationDescription);
+			
+			results.add("Use correlation summary: " + useCorrSummary);
+
+			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
+				if (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL
+						|| buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
+					String summarisationDescription = null;
+					String builderDescription = null;
+					boolean addDescription = false;
+					for (int d = 5; d <= 100; d += 5) {
+						// double radius = 0.4 * Math.sqrt(d) + 0.1;
+						double radius = 1;
+						double learningRate = 1;
+						// SummarisationAdapter adapter = new MCAdapter(horizon,
+						// radius, learningRate, "radius");
+
+						ClusTree clusTree = new ClusTree();
+						clusTree.horizonOption.setValue(horizon);
+						clusTree.prepareForUse();
+						SummarisationAdapter adapter = new MicroclusteringAdapter(clusTree);
+
+						if (summarisationDescription == null) {
+							addDescription = true;
+						}
+						// summarisationDescription = "Radius centroids,
+						// horizon: " + horizon + ", radius: " + radius
+						// + ", learning rate: " + learningRate;
+						summarisationDescription = "ClusTree depth-first, horizon: " + horizon;
+						if (addDescription) {
+							results.add(summarisationDescription);
+						}
+						Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
+						CorrelationSummary correlationSummary = null;
+						if (useCorrSummary) {
+							correlationSummary = new CorrelationSummary(d, horizon);
+						}
+
+						SubspaceBuilder subspaceBuilder = null;
+						switch (buildup) {
+						case APRIORI:
+							threshold = aprioriThreshold;
+							cutoff = 100;
+							subspaceBuilder = new AprioriBuilder(d, threshold, cutoff, contrastEvaluator,
+									correlationSummary);
+							builderDescription = "Apriori, threshold: " + threshold + "cutoff: " + cutoff
+									+ ", correlationSummary: " + useCorrSummary;
+							break;
+						case HIERARCHICAL:
+							threshold = hierarchicalThreshold;
+							cutoff = 2;
+							subspaceBuilder = new HierarchicalBuilderCutoff(d, threshold, cutoff, contrastEvaluator,
+									correlationSummary, true);
+							builderDescription = "Hierarchical, threshold: " + threshold + ", cutoff: " + cutoff
+									+ ", correlationSummary: " + useCorrSummary;
+							break;
+						case CONNECTED_COMPONENTS:
+							threshold = connectedComponentsThreshold;
+							pruningDifference = -1;
+							subspaceBuilder = new ComponentBuilder(d, threshold, contrastEvaluator, correlationSummary);
+							builderDescription = "Union, threshold: " + threshold + ", correlationSummary: "
+									+ useCorrSummary;
+							break;
+						}
+						if (addDescription) {
+							results.add(builderDescription);
+							addDescription = false;
+						}
+
+						ChangeChecker changeChecker = new TimeCountChecker(numInstances);
+						streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator,
+								subspaceBuilder, changeChecker, callback, correlationSummary, stopwatch);
+						changeChecker.setCallback(streamHiCS);
+
+						int blockSize = d / 2;
+						int[] blockBeginnings = { 0, blockSize };
+						int[] blockSizes = { blockSize, blockSize };
+						SubspaceSet correctResult = new SubspaceSet();
+						Subspace s1 = new Subspace();
+						Subspace s2 = new Subspace();
+						for (int i = 0; i < blockSize; i++) {
+							s1.addDimension(i);
+							s2.addDimension(blockSize + i);
+						}
+						correctResult.addSubspace(s1);
+						correctResult.addSubspace(s2);
+
+						double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(d,
+								blockBeginnings, blockSizes, 0.9);
+						stream = new GaussianStream(null, covarianceMatrix, 1);
+
+						double sumTPvsFP = 0;
+						double sumAMJS = 0;
+						double sumAMSS = 0;
+						int sumElements = 0;
+
+						stopwatch.reset();
+
+						for (int i = 0; i < numberTestRuns; i++) {
+							double[] performanceMeasures = testRun(correctResult);
+							sumTPvsFP += performanceMeasures[0];
+							sumAMJS += performanceMeasures[1];
+							sumAMSS += performanceMeasures[2];
+							sumElements += performanceMeasures[3];
+						}
+
+						// Calculate results
+						double sumEvaluationTime = stopwatch.getTime("Evaluation");
+						double sumAddingTime = stopwatch.getTime("Adding");
+						double sumTotalTime = stopwatch.getTime("Total");
+
+						double avgTPvsFP = sumTPvsFP / numberTestRuns;
+						double avgAMJS = sumAMJS / numberTestRuns;
+						double avgAMSS = sumAMSS / numberTestRuns;
+						double avgNumElements = sumElements / numberTestRuns;
+						double avgEvalTime = sumEvaluationTime / numberTestRuns;
+						double avgAddingTime = sumAddingTime / numberTestRuns;
+						double avgTotalTime = sumTotalTime / numberTestRuns;
+
+						String measures = d + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", " + avgNumElements
+								+ ", " + avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
+						System.out.println(measures);
+						results.add(measures);
+					}
+				}
 			}
-			Contrast contrastEvaluator = new Contrast(m, alpha, adapter);
-			CorrelationSummary correlationSummary = null;
-			if (useCorrSummary) {
-				correlationSummary = new CorrelationSummary(d, horizon);
-			}
-
-			SubspaceBuilder subspaceBuilder = null;
-			switch (buildup) {
-			case APRIORI:
-				threshold = aprioriThreshold;
-				cutoff = 100;
-				subspaceBuilder = new AprioriBuilder(d, threshold, cutoff, contrastEvaluator, correlationSummary);
-				builderDescription = "Apriori, threshold: " + threshold + "cutoff: " + cutoff + ", correlationSummary: "
-						+ useCorrSummary;
-				break;
-			case HIERARCHICAL:
-				threshold = hierarchicalThreshold;
-				cutoff = 2;
-				subspaceBuilder = new HierarchicalBuilderCutoff(d, threshold, cutoff, contrastEvaluator,
-						correlationSummary, true);
-				builderDescription = "Hierarchical, threshold: " + threshold + ", cutoff: " + cutoff
-						+ ", correlationSummary: " + useCorrSummary;
-				break;
-			case CONNECTED_COMPONENTS:
-				threshold = unionThreshold;
-				pruningDifference = -1;
-				subspaceBuilder = new ComponentBuilder(d, threshold, contrastEvaluator, correlationSummary);
-				builderDescription = "Union, threshold: " + threshold + ", correlationSummary: " + useCorrSummary;
-				break;
-			}
-			if (addDescription) {
-				results.add(builderDescription);
-				addDescription = false;
-			}
-
-			ChangeChecker changeChecker = new TimeCountChecker(numInstances);
-			streamHiCS = new StreamHiCS(epsilon, threshold, pruningDifference, contrastEvaluator, subspaceBuilder,
-					changeChecker, callback, correlationSummary, stopwatch);
-			changeChecker.setCallback(streamHiCS);
-
-			int blockSize = d / 2;
-			int[] blockBeginnings = { 0, blockSize };
-			int[] blockSizes = { blockSize, blockSize };
-			SubspaceSet correctResult = new SubspaceSet();
-			Subspace s1 = new Subspace();
-			Subspace s2 = new Subspace();
-			for (int i = 0; i < blockSize; i++) {
-				s1.addDimension(i);
-				s2.addDimension(blockSize + i);
-			}
-			correctResult.addSubspace(s1);
-			correctResult.addSubspace(s2);
-
-			double[][] covarianceMatrix = CovarianceMatrixGenerator.generateCovarianceMatrix(d, blockBeginnings,
-					blockSizes, 0.9);
-			stream = new GaussianStream(null, covarianceMatrix, 1);
-
-			double sumTPvsFP = 0;
-			double sumAMJS = 0;
-			double sumAMSS = 0;
-			int sumElements = 0;
-
-			stopwatch.reset();
-
-			for (int i = 0; i < numberTestRuns; i++) {
-				double[] performanceMeasures = testRun(correctResult);
-				sumTPvsFP += performanceMeasures[0];
-				sumAMJS += performanceMeasures[1];
-				sumAMSS += performanceMeasures[2];
-				sumElements += performanceMeasures[3];
-			}
-
-			// Calculate results
-			double sumEvaluationTime = stopwatch.getTime("Evaluation");
-			double sumAddingTime = stopwatch.getTime("Adding");
-			double sumTotalTime = stopwatch.getTime("Total");
-
-			double avgTPvsFP = sumTPvsFP / numberTestRuns;
-			double avgAMJS = sumAMJS / numberTestRuns;
-			double avgAMSS = sumAMSS / numberTestRuns;
-			double avgNumElements = sumElements / numberTestRuns;
-			double avgEvalTime = sumEvaluationTime / numberTestRuns;
-			double avgAddingTime = sumAddingTime / numberTestRuns;
-			double avgTotalTime = sumTotalTime / numberTestRuns;
-
-			String measures = d + "," + avgTPvsFP + ", " + avgAMJS + ", " + avgAMSS + ", " + avgNumElements + ", "
-					+ avgEvalTime + ", " + avgAddingTime + ", " + avgTotalTime;
-			System.out.println(measures);
-			results.add(measures);
 		}
 
 		// Write the results
@@ -204,7 +233,7 @@ public class HighDimRuntime {
 		}
 		correctResult.sort();
 		double[] performanceMeasures = new double[4];
-		//Evaluator.displayResult(result, correctResult);
+		// Evaluator.displayResult(result, correctResult);
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
 		performanceMeasures[2] = Evaluator.evaluateStructuralSimilarity(result, correctResult);

@@ -16,7 +16,7 @@ public class MCAdapter extends SummarisationAdapter {
 	/**
 	 * The {@link FadingMicroclusters} instance holding the {@link Microcluster}s.
 	 */
-	private FadingMicroclusters centroidsImplementation;
+	private FadingMicroclusters microclusterImplementation;
 
 	/**
 	 * Creates an instance of this class. The horizon is the amount of time a
@@ -33,27 +33,27 @@ public class MCAdapter extends SummarisationAdapter {
 	 *            The learning rate
 	 */
 	public MCAdapter(int horizon, double radius, double learningRate, String version) {
-		centroidsImplementation = new FadingMicroclusters();
-		centroidsImplementation.horizonOption.setValue(horizon);
-		centroidsImplementation.radiusOption.setValue(radius);
-		centroidsImplementation.learningRateOption.setValue(learningRate);
-		centroidsImplementation.microclusterVersionOption.setValue(version);
-		centroidsImplementation.prepareForUse();
+		microclusterImplementation = new FadingMicroclusters();
+		microclusterImplementation.horizonOption.setValue(horizon);
+		microclusterImplementation.radiusOption.setValue(radius);
+		microclusterImplementation.learningRateOption.setValue(learningRate);
+		microclusterImplementation.microclusterVersionOption.setValue(version);
+		microclusterImplementation.prepareForUse();
 	}
 
 	@Override
 	public void addImpl(Instance instance) {
-		centroidsImplementation.trainOnInstance(instance);
+		microclusterImplementation.trainOnInstance(instance);
 	}
 
 	@Override
 	public void clearImpl() {
-		centroidsImplementation.resetLearning();
+		microclusterImplementation.resetLearning();
 	}
 
 	@Override
 	public DataBundle[] getData() {
-		Microcluster[] centroids = centroidsImplementation.getMicroclusters();
+		Microcluster[] centroids = microclusterImplementation.getMicroclusters();
 
 		int n = centroids.length;
 		if (n > 0) {
@@ -90,7 +90,7 @@ public class MCAdapter extends SummarisationAdapter {
 
 	@Override
 	public int getNumberOfElements() {
-		return centroidsImplementation.getNumberOfInstances();
+		return microclusterImplementation.getNumberOfInstances();
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class MCAdapter extends SummarisationAdapter {
 	 * @return The {@link Microcluster}s array.
 	 */
 	public Microcluster[] getCentroids() {
-		return centroidsImplementation.getMicroclusters();
+		return microclusterImplementation.getMicroclusters();
 	}
 
 	/**
@@ -110,7 +110,7 @@ public class MCAdapter extends SummarisationAdapter {
 	 *         process.
 	 */
 	public int getFadedCount() {
-		return centroidsImplementation.faded;
+		return microclusterImplementation.faded;
 	}
 
 }

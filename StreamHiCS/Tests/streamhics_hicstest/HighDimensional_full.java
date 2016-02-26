@@ -76,7 +76,7 @@ public class HighDimensional_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL)) {
 					for (int test = 1; test <= 10; test++) {
 						stopwatch.reset();
 						double sumTPvsFP = 0;
@@ -353,8 +353,8 @@ public class HighDimensional_full {
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.45;
-			// double radius = 5;
-			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
+			//double radius = 10.5;
+			double radius = 1.4 * Math.sqrt(numberOfDimensions) - 3.5;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius

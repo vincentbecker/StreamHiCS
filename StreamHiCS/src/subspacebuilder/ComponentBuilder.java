@@ -133,8 +133,12 @@ public class ComponentBuilder extends SubspaceBuilder {
 			}
 			if (s.size() > 1) {
 				contrast = contrastEvaluator.evaluateSubspaceContrast(s);
-				s.setContrast(contrast);
-				correlatedSubspaces.addSubspace(s);
+				//if(contrast >= threshold){
+					s.setContrast(contrast);
+					correlatedSubspaces.addSubspace(s);
+				//}else{
+				//	System.out.println("Discarded: " + s.toString());
+				//}
 			}
 			nextStart = nextVisit(visited);
 		}

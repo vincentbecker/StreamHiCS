@@ -94,7 +94,7 @@ public class ConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL)) {
 					stopwatch.reset();
 					double sumTPvsFP = 0;
 					double sumAMJS = 0;
@@ -308,7 +308,7 @@ public class ConceptDrift_full {
 			s.sort();
 		}
 		correctResult.sort();
-		//Evaluator.displayResult(result, correctResult);
+		Evaluator.displayResult(result, correctResult);
 		double[] performanceMeasures = new double[4];
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
@@ -384,12 +384,12 @@ public class ConceptDrift_full {
 			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.3;
+			aprioriThreshold = 0.25;
 			hierarchicalThreshold = 0.4;
 			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
 			// double radius = 6 * Math.sqrt(numberOfDimensions) - 1;
-			double radius = 10;
+			double radius = 1.5;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius

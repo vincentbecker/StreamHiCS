@@ -34,14 +34,14 @@ import weka.core.Instance;
 
 public class SubspaceRBF {
 
-	private static final boolean DRIFT = true;
+	private static final boolean DRIFT = false;
 	private static final boolean SAME_SUBSPACES = true;
 	private int numberSubspaceCentroids;
 
 	private SubspaceRandomRBFGeneratorDrift stream;
 	private StreamHiCS streamHiCS;
 	private final int numInstances = 10000;
-	private final int horizon = 2000;
+	private final int horizon = 1000;
 	private final int m = 50;
 	private final double alpha = 0.05;
 	private double epsilon = 0;
@@ -83,8 +83,8 @@ public class SubspaceRBF {
 				summarisationDescription = null;
 				for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 					builderDescription = null;
-					if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS) {
-						for (numberOfDimensions = 5; numberOfDimensions <= 50; numberOfDimensions += 5) {
+					if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && (buildup == SubspaceBuildup.CONNECTED_COMPONENTS)) {
+						for (numberOfDimensions = 20; numberOfDimensions <= 50; numberOfDimensions += 5) {
 							stopwatch.reset();
 							double sumTPvsFP = 0;
 							double sumAMJS = 0;
@@ -103,7 +103,6 @@ public class SubspaceRBF {
 								stream.numDriftCentroidsOption.setValue(10);
 								stream.speedChangeOption.setValue(0.1);
 							}
-							stream.prepareForUse();
 
 							// Creating the StreamHiCS system
 							adapter = createSummarisationAdapter(summarisation);
@@ -201,7 +200,7 @@ public class SubspaceRBF {
 				if (numberSubspaceCentroids == 5) {
 					aprioriThreshold = 0.3;
 					hierarchicalThreshold = 0.3;
-					connectedComponentsThreshold = 0.3;
+					connectedComponentsThreshold = 0.25;
 				} else if (numberSubspaceCentroids == 10) {
 					aprioriThreshold = 0.2;
 					hierarchicalThreshold = 0.2;
@@ -209,9 +208,9 @@ public class SubspaceRBF {
 				}
 			} else {
 				if (numberSubspaceCentroids == 5) {
-					aprioriThreshold = 0.3;
-					hierarchicalThreshold = 0.3;
-					connectedComponentsThreshold = 0.3;
+					aprioriThreshold = 0.4;
+					hierarchicalThreshold = 0.5;
+					connectedComponentsThreshold = 0.45;
 				} else if (numberSubspaceCentroids == 10) {
 					aprioriThreshold = 0.25;
 					hierarchicalThreshold = 0.25;
@@ -221,7 +220,7 @@ public class SubspaceRBF {
 
 			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
 			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
-			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
+			double radius = 1;
 			/*
 			 * if (numberSubspaceCentroids == 10) {
 			 * 
@@ -231,6 +230,43 @@ public class SubspaceRBF {
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
+					+ ", learning rate: " + learningRate;
+			break;
+		case RADIUSCENTROIDS:
+			if (DRIFT) {
+				if (numberSubspaceCentroids == 5) {
+					aprioriThreshold = 0.3;
+					hierarchicalThreshold = 0.3;
+					connectedComponentsThreshold = 0.25;
+				} else if (numberSubspaceCentroids == 10) {
+					aprioriThreshold = 0.2;
+					hierarchicalThreshold = 0.2;
+					connectedComponentsThreshold = 0.25;
+				}
+			} else {
+				if (numberSubspaceCentroids == 5) {
+					aprioriThreshold = 0.4;
+					hierarchicalThreshold = 0.5;
+					connectedComponentsThreshold = 0.5;
+				} else if (numberSubspaceCentroids == 10) {
+					aprioriThreshold = 0.25;
+					hierarchicalThreshold = 0.25;
+					connectedComponentsThreshold = 0.25;
+				}
+			}
+
+			// double radius = 7 * Math.log(numberOfDimensions) - 0.5;
+			// double radius = 8.38 * Math.log(numberOfDimensions) - 3.09;
+			radius = 0.5;
+			/*
+			 * if (numberSubspaceCentroids == 10) {
+			 * 
+			 * } else if (numberSubspaceCentroids == 5) { radius = 7 *
+			 * Math.sqrt(numberOfDimensions) - 1; }
+			 */
+			learningRate = 1;
+			adapter = new MCAdapter(horizon, radius, learningRate, "radius");
+			summarisationDescription = "Radius centroids, horizon: " + horizon + ", radius: " + radius
 					+ ", learning rate: " + learningRate;
 			break;
 		default:
@@ -243,7 +279,7 @@ public class SubspaceRBF {
 	}
 
 	private SubspaceBuilder createSubspaceBuilder(SubspaceBuildup sb) {
-		pruningDifference = 0.15;
+		pruningDifference = 0.2;
 		boolean addDescription = false;
 		if (builderDescription == null) {
 			addDescription = true;
@@ -251,7 +287,7 @@ public class SubspaceRBF {
 		SubspaceBuilder builder = null;
 		switch (sb) {
 		case APRIORI:
-			cutoff = 20;
+			cutoff = numberOfDimensions;
 			builder = new AprioriBuilder(numberOfDimensions, aprioriThreshold, cutoff, contrastEvaluator, null);
 			builderDescription = "Apriori, threshold:" + aprioriThreshold + "cutoff: " + cutoff;
 			break;

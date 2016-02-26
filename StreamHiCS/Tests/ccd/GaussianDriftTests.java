@@ -55,7 +55,7 @@ public class GaussianDriftTests {
 	private double pruningDifference;
 	private int numberOfDimensions;
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 100;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -64,6 +64,7 @@ public class GaussianDriftTests {
 	private SubspaceChangeDetectors scd;
 	private SubspaceClassifiersChangeDetector sccd;
 	private FullSpaceChangeDetector refDetector;
+	private double radius;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
@@ -81,7 +82,7 @@ public class GaussianDriftTests {
 				builderDescription = null;
 				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS
 						&& buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					for (int test = 7; test <= 7; test++) {
+					for (int test = 5; test <= 7; test++) {
 						stopwatch.reset();
 						double threshold = 1;
 
@@ -116,6 +117,7 @@ public class GaussianDriftTests {
 							default:
 								break;
 							}
+							radius = 1;
 							numberOfDimensions = 5;
 							numInstances = 20000;
 							GaussianStream s1 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.5);
@@ -163,7 +165,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.25;
 								hierarchicalThreshold = 0.3;
-								connectedComponentThreshold = 0.3;
+								connectedComponentThreshold = 0.25;
 								break;
 							default:
 								break;
@@ -182,6 +184,7 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 5;
 							numInstances = 20000;
+							radius = 1;
 							s1 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 0.5);
 
 							s2 = new GaussianStream(null, csvReader.read(path + "Test5.csv"), 1.0);
@@ -250,6 +253,7 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 5;
 							numInstances = 30000;
+							radius = 1;
 							s1 = new GaussianStream(null, csvReader.read(path + "Test1.csv"), 0.5);
 
 							s2 = new GaussianStream(null, csvReader.read(path + "Test2.csv"), 0.5);
@@ -318,7 +322,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.45;
-								connectedComponentThreshold = 0.5;
+								connectedComponentThreshold = 0.45;
 								break;
 							default:
 								break;
@@ -338,6 +342,7 @@ public class GaussianDriftTests {
 							}
 							numberOfDimensions = 10;
 							numInstances = 25000;
+							radius = 1.5;
 							s1 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 0.5);
 
 							s2 = new GaussianStream(null, csvReader.read(path + "Test25.csv"), 1.5);
@@ -394,7 +399,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.5;
-								connectedComponentThreshold = 0.45;
+								connectedComponentThreshold = 0.35;
 								break;
 							default:
 								break;
@@ -415,6 +420,7 @@ public class GaussianDriftTests {
 							numberOfDimensions = 10;
 							numInstances = 40000;
 							epsilon = 0.15;
+							radius = 1.5;
 							s1 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 0.5);
 
 							s2 = new GaussianStream(null, csvReader.read(path + "Test24.csv"), 0.9);
@@ -525,6 +531,7 @@ public class GaussianDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 25000;
 							epsilon = 0.2;
+							radius = 6;
 							int[] blockBeginnings = { 0, 10 };
 							int[] blockSizes = { 10, 10 };
 							double[][] covarianceMatrix1 = CovarianceMatrixGenerator
@@ -586,7 +593,7 @@ public class GaussianDriftTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.45;
-								connectedComponentThreshold = 0.45;
+								connectedComponentThreshold = 0.5;
 								break;
 							default:
 								break;
@@ -607,6 +614,7 @@ public class GaussianDriftTests {
 							numberOfDimensions = 50;
 							numInstances = 30000;
 							epsilon = 0.15;
+							radius = 6;
 							int[] blockBeginnings1 = { 0, 10 };
 							int[] blockSizes1 = { 10, 10 };
 							covarianceMatrix1 = CovarianceMatrixGenerator.generateCovarianceMatrix(numberOfDimensions,
@@ -686,6 +694,8 @@ public class GaussianDriftTests {
 						changeChecker1.setCallback(streamHiCS1);
 						scd = new SubspaceChangeDetectors(numberOfDimensions, streamHiCS1);
 						scd.useRestspaceOption.setValue(true);
+						scd.addOption.set();
+						scd.initOption.setValue(1000);
 						scd.prepareForUse();
 						streamHiCS1.addCallback(scd);
 
@@ -704,6 +714,7 @@ public class GaussianDriftTests {
 						*/
 						sccd = new SubspaceClassifiersChangeDetector(numberOfDimensions, streamHiCS1);
 						sccd.useRestspaceOption.setValue(true);
+						sccd.initOption.setValue(1000);
 						sccd.prepareForUse();
 						streamHiCS1.addCallback(sccd);
 
@@ -794,7 +805,7 @@ public class GaussianDriftTests {
 			Instance inst = conceptDriftStream.nextInstance();
 
 			if (numberSamples % 1000 == 0) {
-				// System.out.println(cscd.getNumberOfElements());
+				//System.out.println(scd.getNumberOfElements());
 			}
 
 			// For accuracy
@@ -919,7 +930,8 @@ public class GaussianDriftTests {
 			summarisationDescription = "ClusTree, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			double radius = 4 * Math.sqrt(numberOfDimensions) - 1;
+			//double radius = 0.4 * Math.sqrt(numberOfDimensions) - 3.5;
+			//double radius = 1.5;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius

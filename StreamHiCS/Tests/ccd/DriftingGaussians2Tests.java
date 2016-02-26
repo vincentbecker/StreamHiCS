@@ -32,7 +32,7 @@ import streamdatastructures.MCAdapter;
 import streamdatastructures.CorrelationSummary;
 import streamdatastructures.MicroclusteringAdapter;
 import streamdatastructures.SummarisationAdapter;
-import streams.DriftingGaussians;
+import streams.DriftingGaussians2;
 import subspacebuilder.AprioriBuilder;
 import subspacebuilder.CliqueBuilder;
 import subspacebuilder.ComponentBuilder;
@@ -41,8 +41,8 @@ import subspacebuilder.SubspaceBuilder;
 import weka.core.Instance;
 import weka.core.Utils;
 
-public class DriftingGaussiansTests {
-	private DriftingGaussians stream;
+public class DriftingGaussians2Tests {
+	private DriftingGaussians2 stream;
 	private int numInstances;
 	private final int horizon = 1000;
 	private final int m = 50;
@@ -136,7 +136,7 @@ public class DriftingGaussiansTests {
 							epsilon = 0.15;
 							numberOfDimensions = 6;
 							numInstances = 25000;
-							stream = new DriftingGaussians();
+							stream = new DriftingGaussians2();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
@@ -194,7 +194,7 @@ public class DriftingGaussiansTests {
 							numberOfDimensions = 10;
 							epsilon = 0.15;
 							numInstances = 25000;
-							stream = new DriftingGaussians();
+							stream = new DriftingGaussians2();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(2);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 2);
@@ -255,7 +255,7 @@ public class DriftingGaussiansTests {
 							numberOfDimensions = 50;
 							numInstances = 75000;
 							epsilon = 0.1;
-							stream = new DriftingGaussians();
+							stream = new DriftingGaussians2();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(4);
 							stream.avgSubspaceSizeOption.setValue(5);
@@ -263,6 +263,8 @@ public class DriftingGaussiansTests {
 							stream.sameSubspaceOption.setValue(true);
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
+							stream.disjointSubspacesOption.set();
+							stream.numSubspacesOption.setValue(2);
 							stream.scaleIrrelevantDimensionsOption.setValue(10);
 							changePoints = new int[4];
 							changePoints[0] = 10000;
@@ -293,7 +295,7 @@ public class DriftingGaussiansTests {
 							case ADAPTINGCENTROIDS:
 								aprioriThreshold = 0.3;
 								hierarchicalThreshold = 0.65;
-								connectedComponentsThreshold = 0.35;
+								connectedComponentsThreshold = 0.4;
 								cliqueThreshold = 0.5;
 								radius = 18;
 								break;
@@ -317,7 +319,7 @@ public class DriftingGaussiansTests {
 							numberOfDimensions = 50;
 							numInstances = 75000;
 							epsilon = 0.1;
-							stream = new DriftingGaussians();
+							stream = new DriftingGaussians2();
 							stream.numAttsOption.setValue(numberOfDimensions);
 							stream.numClassesOption.setValue(4);
 							stream.avgSubspaceSizeOption.setValue(numberOfDimensions / 10);
@@ -326,6 +328,8 @@ public class DriftingGaussiansTests {
 							stream.randomSubspaceSizeOption.setValue(false);
 							stream.numDriftCentroidsOption.setValue(2);
 							stream.scaleIrrelevantDimensionsOption.setValue(10);
+							stream.disjointSubspacesOption.set();
+							stream.numSubspacesOption.setValue(2);
 							changePoints = new int[4];
 							changePoints[0] = 10000;
 							changePoints[1] = 30000;
@@ -478,7 +482,7 @@ public class DriftingGaussiansTests {
 		}
 
 		// Write the results
-		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/DriftingGaussians/Tests.txt";
+		String filePath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/DriftingGaussians2/Tests.txt";
 
 		try {
 			Files.write(Paths.get(filePath), results, StandardOpenOption.APPEND);

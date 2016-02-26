@@ -178,6 +178,7 @@ public class SubspaceChangeDetectors extends AbstractClassifier implements Callb
 				}
 				// If the subspace is new we start a new change detector on it
 				if (!found) {
+					//System.out.println("SCD: Not found!");
 					scd = createSubspaceChangeDetector(s);
 					temp.add(scd);
 				}

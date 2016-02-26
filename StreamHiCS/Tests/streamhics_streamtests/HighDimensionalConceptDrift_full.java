@@ -98,7 +98,7 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.RADIUSCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
 				stopwatch.reset();
 				double sumTPvsFP = 0;
 				double sumAMJS = 0;
@@ -351,9 +351,9 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = "ClusTree breadthFirst, horizon: " + horizon;
 			break;
 		case ADAPTINGCENTROIDS:
-			aprioriThreshold = 0.3;
-			hierarchicalThreshold = 0.35;
-			double radius = 45;
+			aprioriThreshold = 0.2;
+			hierarchicalThreshold = 0.3;
+			double radius = 21;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius

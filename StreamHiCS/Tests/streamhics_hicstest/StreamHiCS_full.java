@@ -81,7 +81,7 @@ public class StreamHiCS_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.HIERARCHICAL) {
+				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL)) {
 					resultSummary = new double[7];
 					for (int test = 1; test <= 29; test++) {
 						stopwatch.reset();
@@ -97,6 +97,9 @@ public class StreamHiCS_full {
 							break;
 						case HIERARCHICAL:
 							threshold = hierarchicalThreshold;
+							break;
+						default:
+							System.out.println("Error");
 							break;
 						}
 
@@ -336,7 +339,7 @@ public class StreamHiCS_full {
 		case ADAPTINGCENTROIDS:
 			aprioriThreshold = 0.3;
 			hierarchicalThreshold = 0.3;
-			double radius = 3.5;
+			double radius = 1.25;
 			double learningRate = 1;
 			adapter = new MCAdapter(horizon, radius, learningRate, "adapting");
 			summarisationDescription = "Adapting centroids, horizon: " + horizon + ", radius: " + radius
@@ -399,7 +402,7 @@ public class StreamHiCS_full {
 			stopwatch.stop("Total");
 			numberSamples++;
 		}
-
+		
 		SubspaceSet result = streamHiCS.getCurrentlyCorrelatedSubspaces();
 		for (Subspace s : correctResult.getSubspaces()) {
 			s.sort();

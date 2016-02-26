@@ -103,7 +103,7 @@ public class FadingMicroclusters extends AbstractClusterer {
 	 * The option to decide which version of micro-clusters. Either adapting or radius. 
 	 */
 	public StringOption microclusterVersionOption = new StringOption("microclusterVersion", 'c', "Select the micro-cluster version",
-			"adapting");
+			"error");
 
 	/**
 	 * An array containing all the currently held {@link Microcluster}s.
