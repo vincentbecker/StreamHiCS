@@ -51,7 +51,7 @@ public class HighDimRuntime {
 		}
 	};
 	private static Stopwatch stopwatch;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 2;
 	private List<String> results;
 
 	@BeforeClass
@@ -62,7 +62,6 @@ public class HighDimRuntime {
 	@Test
 	public void test1() {
 		int horizon = 2000;
-		pruningDifference = 0.2;
 		double aprioriThreshold = 0.3;
 		double hierarchicalThreshold = 0.45;
 		double connectedComponentsThreshold = 0.5;
@@ -82,9 +81,11 @@ public class HighDimRuntime {
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				if (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL
 						|| buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
+					if(useCorrSummary == true && buildup == SubspaceBuildup.HIERARCHICAL){				
 					String summarisationDescription = null;
 					String builderDescription = null;
 					boolean addDescription = false;
+					pruningDifference = 0.2;
 					for (int d = 5; d <= 100; d += 5) {
 						// double radius = 0.4 * Math.sqrt(d) + 0.1;
 						double radius = 1;
@@ -120,7 +121,7 @@ public class HighDimRuntime {
 							cutoff = 100;
 							subspaceBuilder = new AprioriBuilder(d, threshold, cutoff, contrastEvaluator,
 									correlationSummary);
-							builderDescription = "Apriori, threshold: " + threshold + "cutoff: " + cutoff
+							builderDescription = "Apriori, threshold: " + threshold + ", cutoff: " + cutoff
 									+ ", correlationSummary: " + useCorrSummary;
 							break;
 						case HIERARCHICAL:
@@ -135,7 +136,7 @@ public class HighDimRuntime {
 							threshold = connectedComponentsThreshold;
 							pruningDifference = -1;
 							subspaceBuilder = new ComponentBuilder(d, threshold, contrastEvaluator, correlationSummary);
-							builderDescription = "Union, threshold: " + threshold + ", correlationSummary: "
+							builderDescription = "Connected components, threshold: " + threshold + ", correlationSummary: "
 									+ useCorrSummary;
 							break;
 						}
@@ -199,7 +200,7 @@ public class HighDimRuntime {
 						System.out.println(measures);
 						results.add(measures);
 					}
-				}
+				}}
 			}
 		}
 
