@@ -81,7 +81,7 @@ public class HighDimRuntime {
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				if (buildup == SubspaceBuildup.APRIORI || buildup == SubspaceBuildup.HIERARCHICAL
 						|| buildup == SubspaceBuildup.CONNECTED_COMPONENTS) {
-					if(useCorrSummary == true && buildup == SubspaceBuildup.HIERARCHICAL){				
+					if(useCorrSummary == true && buildup == SubspaceBuildup.APRIORI){				
 					String summarisationDescription = null;
 					String builderDescription = null;
 					boolean addDescription = false;

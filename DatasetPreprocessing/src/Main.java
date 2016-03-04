@@ -17,7 +17,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Dataset set = Dataset.COVERTYPE_FILTERED;
+		Dataset set = Dataset.INTRUSION_DETECTION;
 
 		String headerPath = null;
 		String inputPath = null;
@@ -52,15 +52,14 @@ public class Main {
 			// outputPath = "D:/Informatik/MSc/IV/Masterarbeit
 			// Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddcup99_sorted.txt";
 			comparator = new IntrusionDetectionComparator();
-			filterColumns = new int[8];
-			filterColumns[0] = 0;
-			filterColumns[1] = 1;
-			filterColumns[2] = 2;
-			filterColumns[3] = 3;
-			filterColumns[4] = 6;
-			filterColumns[5] = 11;
-			filterColumns[6] = 20;
-			filterColumns[7] = 21;
+			filterColumns = new int[7];
+			filterColumns[0] = 1;
+			filterColumns[1] = 2;
+			filterColumns[2] = 3;
+			filterColumns[3] = 6;
+			filterColumns[4] = 11;
+			filterColumns[5] = 20;
+			filterColumns[6] = 21;
 			break;
 		case INTRUSION_DETECTION_FILTERED:
 			headerPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Implementation/StreamHiCS/StreamHiCS/Tests/RealWorldData/kddHeader_filtered.txt";
@@ -131,8 +130,8 @@ public class Main {
 							newLine += splitLine[j] + ",";
 						}
 					}
-					//String classLabel = splitLine[splitLine.length - 1].replace(".", "");
-					String classLabel = splitLine[splitLine.length - 1];
+					String classLabel = splitLine[splitLine.length - 1].replace(".", "");
+					//String classLabel = splitLine[splitLine.length - 1];
 					newLine += classLabel;
 					lines.set(i, newLine);
 				}

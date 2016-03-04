@@ -96,7 +96,7 @@ public class RealWorldDatasets {
 
 	@Test
 	public void runDataset() {
-		dataset = Dataset.ELECTRICITY;
+		dataset = Dataset.INTRUSIONDETECTION;
 		StreamSummarisation summarisation = StreamSummarisation.ADAPTINGCENTROIDS;
 		SubspaceBuildup buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 		double threshold = 0;
@@ -111,20 +111,27 @@ public class RealWorldDatasets {
 
 		switch (dataset) {
 		case COVERTYPE:
-			path = "Tests/RealWorldData/covertypeNorm_filtered.arff";
+			//path = "Tests/RealWorldData/covertypeNorm_filtered.arff";
+			path = "Tests/RealWorldData/covertypeNorm.arff";
 			// Class index is last attribute but not relevant for this task
 			stream = new ArffFileStream(path, -1);
 
 			outputPath = "D:/Informatik/MSc/IV/Masterarbeit Porto/Results/ConceptChangeDetection/RealWorldData/ForestCovertype_Results.txt";
 			
 			summarisation = StreamSummarisation.CLUSTREE_DEPTHFIRST;
-			buildup = SubspaceBuildup.APRIORI;
+			buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 
-			numberOfDimensions = 10;
-			originalNumDimensions = 10;
+			//numberOfDimensions = 10;
+			numberOfDimensions = 54;
+			//originalNumDimensions = 10;
+			originalNumDimensions = 54;
 			switch (summarisation) {
 			case CLUSTREE_DEPTHFIRST:
-				threshold = 0.3;
+				if(numberOfDimensions == 10){
+					threshold = 0.3;
+				}else{
+					threshold = 0.65;
+				}
 				break;
 			case ADAPTINGCENTROIDS:
 				if (numberOfDimensions == 10) {
@@ -168,7 +175,7 @@ public class RealWorldDatasets {
 			System.out.println("ForestCovertype filtered unsorted");
 			break;
 		case INTRUSIONDETECTION:
-			path = "Tests/RealWorldData/kddcup99_10_percent_filtered.arff";
+			path = "Tests/RealWorldData/kddcup99_10_percent.arff";
 			// Class index is last attribute but not relevant for this task
 			stream = new ArffFileStream(path, -1);
 
@@ -177,8 +184,10 @@ public class RealWorldDatasets {
 			summarisation = StreamSummarisation.RADIUSCENTROIDS;
 			buildup = SubspaceBuildup.CONNECTED_COMPONENTS;
 
-			numberOfDimensions = 23;
-			originalNumDimensions = 23;
+			//numberOfDimensions = 23;
+			//originalNumDimensions = 23;
+			numberOfDimensions = 34;
+			originalNumDimensions = 34;
 			switch (summarisation) {
 			case CLUSTREE_DEPTHFIRST:
 				threshold = 0.55;
@@ -198,7 +207,7 @@ public class RealWorldDatasets {
 					radius = 100;
 				} else {
 					threshold = 0.6;
-					radius = 125;
+					radius = 100;
 				}
 				break;
 			default:
@@ -417,9 +426,9 @@ public class RealWorldDatasets {
 		Random rand = new Random();
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
-
+			
 			if (numberSamples % 10000 == 0) {
-				//System.out.println(scd.getNumberOfElements());
+				System.out.println(scd.getNumberOfElements());
 			}
 
 			if (numberOfDimensions > originalNumDimensions) {

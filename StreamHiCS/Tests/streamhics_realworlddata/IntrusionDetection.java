@@ -130,8 +130,10 @@ public class IntrusionDetection {
 		changeChecker.setCallback(streamHiCS);
 		
 		int attackCounter = 0;
+		ArrayList<String> numberElements = new ArrayList<String>();
 		while (stream.hasMoreInstances()) {
 			Instance inst = stream.nextInstance();
+			/*
 			if(numberSamples == attackPoints[attackCounter]){
 				streamHiCS.evaluateCorrelatedSubspaces();
 				System.out.println("Number samples: " + numberSamples);
@@ -139,8 +141,20 @@ public class IntrusionDetection {
 				System.out.println(streamHiCS.toString());
 				attackCounter++;
 			}
+			*/
 			streamHiCS.add(inst);
+			if(numberSamples % 10 == 0){
+				numberElements.add(numberSamples + "," + streamHiCS.getNumberOfElements());
+			}
 			numberSamples++;
+		}
+		String filePath = "C:/Users/Vincent/Desktop/IntrusionDetection_numberElements.csv";
+
+		try {
+			Files.write(Paths.get(filePath), numberElements);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

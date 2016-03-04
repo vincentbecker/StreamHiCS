@@ -55,7 +55,7 @@ public class HighDimensionalConceptDrift_full {
 	private int cutoff;
 	private double pruningDifference;
 	private Contrast contrastEvaluator;
-	private static final int numberTestRuns = 10;
+	private static final int numberTestRuns = 1;
 	private List<String> results;
 	private String summarisationDescription = null;
 	private String builderDescription = null;
@@ -98,7 +98,7 @@ public class HighDimensionalConceptDrift_full {
 			summarisationDescription = null;
 			for (SubspaceBuildup buildup : SubspaceBuildup.values()) {
 				builderDescription = null;
-				if (summarisation == StreamSummarisation.ADAPTINGCENTROIDS && buildup == SubspaceBuildup.APRIORI) {
+				if (summarisation == StreamSummarisation.CLUSTREE_DEPTHFIRST && buildup == SubspaceBuildup.APRIORI) {
 				stopwatch.reset();
 				double sumTPvsFP = 0;
 				double sumAMJS = 0;
@@ -277,7 +277,7 @@ public class HighDimensionalConceptDrift_full {
 			s.sort();
 		}
 		correctResult.sort();
-		//Evaluator.displayResult(result, correctResult);
+		Evaluator.displayResult(result, correctResult);
 		double[] performanceMeasures = new double[4];
 		performanceMeasures[0] = Evaluator.evaluateTPvsFP(result, correctResult);
 		performanceMeasures[1] = Evaluator.evaluateJaccardIndex(result, correctResult);
